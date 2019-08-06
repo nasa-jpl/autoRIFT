@@ -149,7 +149,6 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
        
        ------------------parameter list: miscellaneous------------------
        fillFiltWidth               light interpolation filling filter width (default = 3)
-       
        sparseSearchSampleRate      sparse search sample rate (default = 4)
        BuffDistanceC               buffer coarse correlation mask by this many pixels for use as fine search mask (default = 8)
        CoarseCorCutoff             coarse correlation search cutoff (default = 0.01)
