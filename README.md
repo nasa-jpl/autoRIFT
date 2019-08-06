@@ -38,7 +38,7 @@ This module comprises two parts or sub-modules: "geogrid" and "autorift".
 * another chip size that progresses iteratively is used to determine the chip displacement results that have not been estimated from the previous iterations
 * a slight interpolation is done to fill the missing (unreliable) chip displacement results using bicubic mode (that can remove pixel discrepancy when using other modes) and an interpolation mask is returned
 * the core image processing is coded by calling OpenCV's Python and/or C++ functions for efficiency 
-* the sub-module is not necessarily suitable for radar images, and can also be used for optical, etc
+* the sub-module is not only suitable for radar images, but also for optical, etc
 
 
 ## Install
