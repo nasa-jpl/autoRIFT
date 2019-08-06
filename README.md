@@ -60,6 +60,7 @@ For modular use:
 * In Python environment, after importing ISCE "import isce", type "from components.contrib.geoAutorift.geogrid.Geogrid import Geogrid" to import the "geogrid" sub-module, and then type "obj = Geogrid()" followed by "obj.configure()" to initialize the "geogrid" object
 * The "geogrid" object has several parameters that has to be set up: 
 startingRange 
+
 rangePixelSize
 sensingStart
 prf
