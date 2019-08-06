@@ -29,6 +29,6 @@ This module comprises two parts or sub-modules: "geogrid" and "autorift".
 
 * First install ISCE
 * Put the folder "geoAutorift" and the file "Sconscript" under the ISCE's source folder (where you started installing ISCE; see the snapshot "install_snapshot.png")
-* run "scons install" again from command line, which finishes the install
+* run "scons install" again from command line
 
 
