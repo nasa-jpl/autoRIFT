@@ -36,7 +36,7 @@ This module comprises two parts or sub-modules: "geogrid" and "autorift".
 * a Normalized Displacement Coherence (NDC) Filter has been developed to filter image chip displacemnt results based on displacement difference thresholds that are scaled to the search limit
 * sparse search is used to first eliminate the unreliable chip displacement results that will not be further used for fine search or following chip size iterations
 * another chip size that progresses iteratively is used to determine the chip displacement results that have not been estimated from the previous iterations
-* a slight interpolation is done to fill the missing (unreliable) chip displacement results using bicubic mode (that can remove pixel discrepancy when using other modes) and an interpolation mask is returned
+* a light interpolation is done to fill the missing (unreliable) chip displacement results using bicubic mode (that can remove pixel discrepancy when using other modes) and an interpolation mask is returned
 * the core image processing is coded by calling OpenCV's Python and/or C++ functions for efficiency 
 * the sub-module is not only suitable for radar images, but also for optical, etc
 
@@ -121,13 +121,15 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
        ------------------output------------------
        Dx:                  estimated range displacement
        Dy:                  estimated azimuth displacement
-       InterpMask:          slight interpolation mask
+       InterpMask:          light interpolation mask
        ChipSizeX:           iterative chip size used (range-direction; different chip sizes allowed for range and azimuth)
 
 * The "autorift" object has many parameters that can be flexibly tweaked by the users for their own purpose (listed below; can also be obtained by referring to "geoAutorift/autorift/Autorift.py"):
 
-       ------------------parameter list------------------
+       ------------------parameter list: about preprocessing------------------
        WallisFilterWidth:          Width of the Wallis filter to be used for the pre-processing (default = 21)
+       
+       ------------------parameter list: general function------------------
        ChipSizeMinX:               Minimum size (in X direction) of the reference data window to be used for correlation (default = 32)
        ChipSizeMaxX:               Maximum size (in X direction) of the reference data window to be used for correlation (default = 64)
        ChipSize0X:                 Minimum acceptable size (in X direction) of the reference data window to be used for correlation (default = 32)
@@ -136,15 +138,20 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
        SearchLimitY                Limit (in Y direction) of the search data window to be used for correlation (default = 25)
        SkipSampleX                 Number of samples to skip between windows in X (range) direction (default = 32)
        SkipSampleY                 Number of lines to skip between windows in Y ( "-" azimuth) direction (default = 32)
-       fillFiltWidth               light interpolation Fill Filter width (default = 3)
        minSearch                   minimum search limit (default = 6)
-       sparseSearchSampleRate      sparse search sample rate (default = 4)
+       
+       ------------------parameter list: about Normalized Displacement Coherence (NDC) filter ------------------
        FracValid                   Fraction of valid displacements (default = 8/25)
        FracSearch                  Fraction of search (default = 0.25)
        FiltWidth                   Disparity Filter width (default = 5)
        Iter                        Number of iterations (default = 3)
        MadScalar                   Mad Scalar (default = 4)
-       BuffDistanceC               buffer coarse corr mask by this many pixels for use as fine search mask (default = 8)
+       
+       ------------------parameter list: miscellaneous------------------
+       fillFiltWidth               light interpolation filling filter width (default = 3)
+       
+       sparseSearchSampleRate      sparse search sample rate (default = 4)
+       BuffDistanceC               buffer coarse correlation mask by this many pixels for use as fine search mask (default = 8)
        CoarseCorCutoff             coarse correlation search cutoff (default = 0.01)
        OverSampleRatio             factor for pyramid up sampling for sub-pixel level offset refinement (default = 16)
-       DataTypeInput               data type: 0 -> uint8, 1 -> float32 (default = 0)
+       DataTypeInput               image data type: 0 -> uint8, 1 -> float32 (default = 0)
