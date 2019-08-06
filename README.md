@@ -63,8 +63,7 @@ For modular use:
        startingRange 
 
        rangePixelSize
-
-sensingStart
+       sensingStart
 prf
 lookSide
 repeatTime
