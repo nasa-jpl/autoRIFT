@@ -69,15 +69,15 @@ For modular use:
        numberOfLines:       number of lines (in azimuth)
        numberOfSamples:     number of samples (in range)
        orbit:               ISCE orbit data structure
-       demname:             name of the DEM file
-       dhdxname:            name of the local surface slope in x-coodinate file
-       dhdyname:            name of the local surface slope in y-coodinate file
-       vxname:              name of the motion velocity in x-coodinate file
-       vyname:              name of the motion velocity in y-coodinate file
-       winlocname:          name of the range and azimuth pixel indices (at each grid point) file
-       winoffname:          name of the range and azimuth coarse displacement (at each grid point) file
-       winro2vxname:        name of the conversion coefficients from radar displacement (range and azimuth) to motion velocity in x-coordinate (at each grid point) file
-       winro2vyname:        name of the conversion coefficients from radar displacement (range and azimuth) to motion velocity in y-coordinate (at each grid point) file
+       demname:             (input) name of the DEM file
+       dhdxname:            (input; not required) name of the local surface slope in x-coodinate file
+       dhdyname:            (input; not required) name of the local surface slope in y-coodinate file
+       vxname:              (input; not required) name of the motion velocity in x-coodinate file
+       vyname:              (input; not required) name of the motion velocity in y-coodinate file
+       winlocname:          (output) name of the range and azimuth pixel indices (at each grid point) file
+       winoffname:          (output) name of the range and azimuth coarse displacement (at each grid point) file
+       winro2vxname:        (output) name of the conversion coefficients from radar displacement (range and azimuth) to motion velocity in x-coordinate (at each grid point) file
+       winro2vyname:        (output) name of the conversion coefficients from radar displacement (range and azimuth) to motion velocity in y-coordinate (at each grid point) file
 
 * After the above parameters are set, run the sub-module by typing "obj.geogrid()" to create the output files
 
