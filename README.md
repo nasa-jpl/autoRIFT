@@ -60,24 +60,24 @@ For modular use:
 * In Python environment, after importing ISCE "import isce", type "from components.contrib.geoAutorift.geogrid.Geogrid import Geogrid" to import the "geogrid" sub-module, and then type "obj = Geogrid()" followed by "obj.configure()" to initialize the "geogrid" object
 * The "geogrid" object has several parameters that has to be set up (that are listed below; can be obtained by referring to "testGeogrid.py"): 
 
-       startingRange: starting range
-       rangePixelSize: range pixel size
-       sensingStart: starting azimuth time
-       prf: pulse repition frequency 
-       lookSide: the look side, e.g. -1 for right looking 
-       repeatTime: the time period between the acquisition of the two radar images
-       numberOfLines: number of lines (in azimuth)
-       numberOfSamples: number of samples (in range)
-       orbit: ISCE orbit data structure
-       demname: the name of the DEM file
-       dhdxname: the name of the local surface slope in x-coodinate file
-       dhdyname: the name of the local surface slope in y-coodinate file
-       vxname: the name of the motion velocity in x-coodinate file
-       vyname: the name of the motion velocity in y-coodinate file
-       winlocname: the name of the range and azimuth pixel indices (at each grid point) file
-       winoffname: the name of the range and azimuth coarse displacement (at each grid point) file
-       winro2vxname: the name of the conversion coefficients from radar displacement (range and azimuth) to motion velocity in x-coordinate (at each grid point) file
-       winro2vyname: the name of the conversion coefficients from radar displacement (range and azimuth) to motion velocity in y-coordinate (at each grid point) file
+       startingRange:       starting range
+       rangePixelSize:      range pixel size
+       sensingStart:        starting azimuth time
+       prf:                 pulse repition frequency 
+       lookSide:            look side, e.g. -1 for right looking 
+       repeatTime:          time period between the acquisition of the two radar images
+       numberOfLines:       number of lines (in azimuth)
+       numberOfSamples:     number of samples (in range)
+       orbit:               ISCE orbit data structure
+       demname:             name of the DEM file
+       dhdxname:            name of the local surface slope in x-coodinate file
+       dhdyname:            name of the local surface slope in y-coodinate file
+       vxname:              name of the motion velocity in x-coodinate file
+       vyname:              name of the motion velocity in y-coodinate file
+       winlocname:          name of the range and azimuth pixel indices (at each grid point) file
+       winoffname:          name of the range and azimuth coarse displacement (at each grid point) file
+       winro2vxname:        name of the conversion coefficients from radar displacement (range and azimuth) to motion velocity in x-coordinate (at each grid point) file
+       winro2vyname:        name of the conversion coefficients from radar displacement (range and azimuth) to motion velocity in y-coordinate (at each grid point) file
 
 * After the above parameters are set, run the sub-module by typing "obj.geogrid()" to create the output files
 
