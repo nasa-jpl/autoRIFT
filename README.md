@@ -23,3 +23,12 @@ This module comprises two parts or sub-modules: "geogrid" and "autorift".
 * another chip size that progresses iteratively is used to determine the chip displacement results that have not been estimated from the previous iterations
 * a slight interpolation is done to fill the missing (unreliable) chip displacement results using bicubic mode (that can remove pixel discrepancy when using other modes) and an interpolation mask is returned
 * the core image processing is coded by calling OpenCV's Python and/or C++ functions for efficiency 
+
+
+## Install
+
+* First install ISCE
+* Put the folder "geoAutorift" and the file "Sconscript" under the ISCE's source folder (where you started installing ISCE; see the snapshot "install_snapshot.png")
+* run "scons install" again from command line, which finishes the install
+
+
