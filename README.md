@@ -86,3 +86,65 @@ For modular use:
 * After the above parameters are set, run the sub-module by typing "obj.geogrid()" to create the output files
 
 
+### autorift
+
+* It is recommended to run the "geogrid" sub-module first before running "autorift". In other words, the outputs from "testGeogrid.py" (a.k.a winlocname, winoffname, winro2vxname, winro2vyname) will serve as the inputs for running "autorift".
+
+For quick use:
+* Refer to the file "testAutorift.py" for the usage of the sub-module and modify it for your own purpose
+* Input files include the master image (required), slave image (required), and the four outputs from running "testGeogrid.py"
+
+For modular use:
+* In Python environment, after importing ISCE "import isce", type "from components.contrib.geoAutorift.autorift.Autorift import Autorift" to import the "autorift" sub-module, and then type "obj = Autorift()" followed by "obj.configure()" to initialize the "autorift" object
+* The "autorift" object has several inputs that has to be assigned (listed below; can also be obtained by referring to "testAutorift.py"): 
+       
+       ------------------input------------------
+       I1:                  reference image
+       I2:                  test image
+       xGrid:               range pixel index at each grid point
+       yGrid:               azimuth pixel index at each grid point
+       (if xGrid and yGrid not provided, a regular grid spanning the entire image will be automatically set up, which is similar to the conventional ISCE module, ampcor)
+       Dx0:                 range coarse displacement at each grid point
+       Dy0:                 azimuth coarse displacement at each grid point
+       (if Dx0 and Dy0 not provided, an array with zero values will be automatically assigned for them)
+
+* After the inputs are specified, run the sub-module as below
+       
+       obj.preprocess_filt_XXX()
+       obj.uniform_data_type()
+       obj.runAutorift()
+
+where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass filter, "sob" for the Sobel filter, "lap" for the Laplacian filter, and also a logarithmic operator without filtering is adopted for occasions where low-frequency components are desired, e.g. "obj.preprocess_db()".
+
+* The "autorift" object has the following four outputs: 
+       
+       ------------------output------------------
+       Dx:                  estimated range displacement
+       Dy:                  estimated azimuth displacement
+       InterpMask:          slight interpolation mask
+       ChipSizeX:           iterative chip size used (range-direction; different chip sizes allowed for range and azimuth)
+
+* The "autorift" object has many parameters that can be flexibly tweaked by the users for their own purpose (listed below; can also be obtained by referring to "geoAutorift/autorift/Autorift.py"):
+
+       ------------------parameter list------------------
+       WallisFilterWidth:          Width of the Wallis filter to be used for the pre-processing (default = 21)
+       ChipSizeMinX:               Minimum size (in X direction) of the reference data window to be used for correlation (default = 32)
+       ChipSizeMaxX:               Maximum size (in X direction) of the reference data window to be used for correlation (default = 64)
+       ChipSize0X:                 Minimum acceptable size (in X direction) of the reference data window to be used for correlation (default = 32)
+       ScaleChipSizeY              Scaling factor to get the Y-directed chip size in reference to the X-directed sizes (default = 1)
+       SearchLimitX                Limit (in X direction) of the search data window to be used for correlation (default = 25)
+       SearchLimitY                Limit (in Y direction) of the search data window to be used for correlation (default = 25)
+       SkipSampleX                 Number of samples to skip between windows in X (range) direction (default = 32)
+       SkipSampleY                 Number of lines to skip between windows in Y ( "-" azimuth) direction (default = 32)
+       fillFiltWidth               light interpolation Fill Filter width (default = 3)
+       minSearch                   minimum search limit (default = 6)
+       sparseSearchSampleRate      sparse search sample rate (default = 4)
+       FracValid                   Fraction of valid displacements (default = 8/25)
+       FracSearch                  Fraction of search (default = 0.25)
+       FiltWidth                   Disparity Filter width (default = 5)
+       Iter                        Number of iterations (default = 3)
+       MadScalar                   Mad Scalar (default = 4)
+       BuffDistanceC               buffer coarse corr mask by this many pixels for use as fine search mask (default = 8)
+       CoarseCorCutoff             coarse correlation search cutoff (default = 0.01)
+       OverSampleRatio             factor for pyramid up sampling for sub-pixel level offset refinement (default = 16)
+       DataTypeInput               data type: 0 -> uint8, 1 -> float32 (default = 0)
