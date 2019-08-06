@@ -1,6 +1,20 @@
 # geoAutorift
 ISCE module for finding displacement and motion velocity between two images over user-defined geographic-coordinate grid
 
+Copyright (C) 2019 California Institute of Technology.  Government Sponsorship Acknowledged.
+
+Citation: https://github.com/leiyangleon/geoAutorift
+
+## Authors
+
+### geogrid: 
+Piyush Agram (JPL/Caltech; piyush.agram@jpl.nasa.gov), Yang Lei (GPS/Caltech; ylei@caltech.edu)
+
+### autorift
+
+Alex Gardner (JPL/Caltech; alex.s.gardner@jpl.nasa.gov) conceived the algorithm and developed the first version in MATLAB, and has been translated to Python, further optimized and incoporated to ISCE by Yang Lei (GPS/Caltech; ylei@caltech.edu).
+       
+       
 ## Features
 This module comprises two parts or sub-modules: "geogrid" and "autorift".
 
