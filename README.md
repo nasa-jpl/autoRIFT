@@ -38,6 +38,7 @@ This module comprises two parts or sub-modules: "geogrid" and "autorift".
 * another chip size that progresses iteratively is used to determine the chip displacement results that have not been estimated from the previous iterations
 * a light interpolation is done to fill the missing (unreliable) chip displacement results using bicubic mode (that can remove pixel discrepancy when using other modes) and an interpolation mask is returned
 * the core image processing is coded by calling OpenCV's Python and/or C++ functions for efficiency 
+* sub-pixel displacement estimation using the pyramid upsampling algorithm
 * the sub-module is not only suitable for radar images, but also for optical, etc
 
 
@@ -126,9 +127,6 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
 
 * The "autorift" object has many parameters that can be flexibly tweaked by the users for their own purpose (listed below; can also be obtained by referring to "geoAutorift/autorift/Autorift.py"):
 
-       ------------------parameter list: about preprocessing------------------
-       WallisFilterWidth:          Width of the Wallis filter to be used for the pre-processing (default = 21)
-       
        ------------------parameter list: general function------------------
        ChipSizeMinX:               Minimum size (in X direction) of the reference data window to be used for correlation (default = 32)
        ChipSizeMaxX:               Maximum size (in X direction) of the reference data window to be used for correlation (default = 64)
@@ -142,15 +140,17 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
        
        ------------------parameter list: about Normalized Displacement Coherence (NDC) filter ------------------
        FracValid                   Fraction of valid displacements (default = 8/25)
-       FracSearch                  Fraction of search (default = 0.25)
+       FracSearch                  Fraction of search limit used as threshold for disparity filtering (default = 0.25)
        FiltWidth                   Disparity Filter width (default = 5)
        Iter                        Number of iterations (default = 3)
-       MadScalar                   Mad Scalar (default = 4)
+       MadScalar                   Scalar to be multiplied by Mad used as threshold for disparity filtering (default = 4)
        
        ------------------parameter list: miscellaneous------------------
+       WallisFilterWidth:          Width of the filter to be used for the preprocessing (default = 21)
        fillFiltWidth               light interpolation filling filter width (default = 3)
        sparseSearchSampleRate      sparse search sample rate (default = 4)
        BuffDistanceC               buffer coarse correlation mask by this many pixels for use as fine search mask (default = 8)
        CoarseCorCutoff             coarse correlation search cutoff (default = 0.01)
-       OverSampleRatio             factor for pyramid up sampling for sub-pixel level offset refinement (default = 16)
+       OverSampleRatio             factor for pyramid upsampling for sub-pixel level offset refinement (default = 16)
        DataTypeInput               image data type: 0 -> uint8, 1 -> float32 (default = 0)
+       zeroMask                    force the margin (no data) to zeros which is useful for Wallis preprocessed images (default = 1)
