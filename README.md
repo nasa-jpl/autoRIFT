@@ -19,7 +19,13 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
        
        
 ## Features
+
+
 <img src="figures/optical1.png" width="50%">
+** optical image over the Jakobshavn glacier where the red rectangle marks boundary of the Sentinel-1A image pair 
+
+
+
 ### geogrid
 * user can define a grid in geographic coordinates provided in the form of a DEM with arbitrary EPSG code, 
 * the program will extract the portion of the grid that overlaps with the given coregistered radar image pair, 
