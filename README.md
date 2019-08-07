@@ -153,4 +153,4 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
        CoarseCorCutoff             coarse correlation search cutoff (default = 0.01)
        OverSampleRatio             factor for pyramid upsampling for sub-pixel level offset refinement (default = 16)
        DataTypeInput               image data type: 0 -> uint8, 1 -> float32 (default = 0)
-       zeroMask                    force the margin (no data) to zeros which is useful for Wallis preprocessed images (default = 1)
+       zeroMask                    force the margin (no data) to zeros which is useful for Wallis-filter-preprocessed images (default = None; when using Wallis filter, set it to 1)
