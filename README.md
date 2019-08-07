@@ -7,18 +7,18 @@ Copyright (C) 2019 California Institute of Technology.  Government Sponsorship A
 
 Citation: https://github.com/leiyangleon/geoAutorift
 
-## Authors
+## 1. Authors
 
-### geogrid
+### 1.1 geogrid
 Piyush Agram (JPL/Caltech; piyush.agram@jpl.nasa.gov), Yang Lei (GPS/Caltech; ylei@caltech.edu)
 
-### autorift
+### 1.2 autorift
 
 Alex Gardner (JPL/Caltech; alex.s.gardner@jpl.nasa.gov) conceived the algorithm and developed the first version in MATLAB;
 Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimized and incoporated to ISCE.
        
        
-## Features
+## 2. Features
 
 
 <img src="figures/optical1.png" width="50%">
@@ -29,7 +29,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 
 
-### geogrid
+### 2.1 geogrid
 * user can define a grid in geographic coordinates provided in the form of a DEM with arbitrary EPSG code, 
 * the program will extract the portion of the grid that overlaps with the given coregistered radar image pair, 
 * return the range and azimuth pixel indices in the radar image pair for each grid point
@@ -41,7 +41,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 ***Output of "geogrid" sub-module: (a) range pixel index at each grid point, (b) azimuth pixel index at each grid point, (c) range coarse displacement at each grid point, (d) azimuth coarse displacement at each grid point. Note: only the portion of the grid overlapping with the radar image has been extracted and shown.***
 
 
-### autorift
+### 2.2 autorift
 
 * fast algorithm that finds displacement between the two images using sparse search and progressive and iterative chip sizes
 * faster than the conventional ampcor algorithm in ISCE by at least an order of magnitude
@@ -67,16 +67,16 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 ***Final motion velocity results by combining outputs from "geogrid" and "autorift" sub-modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 
-## Install
+## 3. Install
 
 * First install ISCE
 * Put the folder "geoAutorift" and the file "Sconscript" under the ISCE's source folder (where you started installing ISCE; see the snapshot "install_snapshot.png")
 * run "scons install" again from command line
 
 
-## Instructions
+## 4. Instructions
 
-### geogrid
+### 4.1 geogrid
 
 * It is recommended to run ISCE up to the step where coregistered SLC's are done, e.g. "mergebursts" for using topsApp.
 
@@ -112,7 +112,7 @@ For modular use:
 * After the above parameters are set, run the sub-module by typing "obj.geogrid()" to create the output files
 
 
-### autorift
+### 4.2 autorift
 
 * It is recommended to run the "geogrid" sub-module first before running "autorift". In other words, the outputs from "testGeogrid.py" (a.k.a winlocname, winoffname, winro2vxname, winro2vyname) will serve as the inputs for running "autorift".
 
