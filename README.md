@@ -1,5 +1,5 @@
 # geoAutorift
-ISCE module for finding displacement and motion velocity between two images over user-defined geographic-coordinate grid
+ISCE module for finding pixel displacement and motion velocity between two images over user-defined geographic-coordinate grid
 
 Copyright (C) 2019 California Institute of Technology.  Government Sponsorship Acknowledged.
 
