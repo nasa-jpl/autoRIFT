@@ -1,6 +1,8 @@
 # geoAutorift
 ISCE module for finding pixel displacement and motion velocity between two images over user-defined geographic-coordinate grid
 
+This module comprises two parts or sub-modules: "geogrid" and "autorift".
+
 Copyright (C) 2019 California Institute of Technology.  Government Sponsorship Acknowledged.
 
 Citation: https://github.com/leiyangleon/geoAutorift
@@ -17,7 +19,6 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
        
        
 ## Features
-This module comprises two parts or sub-modules: "geogrid" and "autorift".
 
 ### geogrid
 * user can define a grid in geographic coordinates provided in the form of a DEM with arbitrary EPSG code, 
@@ -61,7 +62,7 @@ For quick use:
 
 For modular use:
 * In Python environment, after importing ISCE "import isce", type "from components.contrib.geoAutorift.geogrid.Geogrid import Geogrid" to import the "geogrid" sub-module, and then type "obj = Geogrid()" followed by "obj.configure()" to initialize the "geogrid" object
-* The "geogrid" object has several parameters that has to be set up (listed below; can also be obtained by referring to "testGeogrid.py"): 
+* The "geogrid" object has several parameters that have to be set up (listed below; can also be obtained by referring to "testGeogrid.py"): 
 
        startingRange:       starting range
        rangePixelSize:      range pixel size
@@ -97,7 +98,7 @@ For quick use:
 
 For modular use:
 * In Python environment, after importing ISCE "import isce", type "from components.contrib.geoAutorift.autorift.Autorift import Autorift" to import the "autorift" sub-module, and then type "obj = Autorift()" followed by "obj.configure()" to initialize the "autorift" object
-* The "autorift" object has several inputs that has to be assigned (listed below; can also be obtained by referring to "testAutorift.py"): 
+* The "autorift" object has several inputs that have to be assigned (listed below; can also be obtained by referring to "testAutorift.py"): 
        
        ------------------input------------------
        I1:                  reference image
