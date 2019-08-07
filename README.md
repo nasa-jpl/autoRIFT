@@ -23,7 +23,9 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 <img src="figures/optical1.png" width="50%">
 
-***optical image over the Jakobshavn glacier where the red rectangle marks boundary of the Sentinel-1A image pair***
+***Optical image over the Jakobshavn glacier where the red rectangle marks boundary of the Sentinel-1A/B image pair (20170221-20170227)***
+
+
 
 
 
@@ -33,6 +35,11 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 * return the range and azimuth pixel indices in the radar image pair for each grid point
 * return the range and azimuth coarse displacement given the motion velocity maps and the local surface slope maps in the direction of both geographic x- and y-coordinates (they must be provided at the same grid as the DEM)
 * return the matrix of conversion coefficients that can convert the range and azimuth displacement between the two radar images (precisely estimated later with the sub-module "autorift") to motion velocity in geographic x- and y-coordinates
+
+<img src="figures/geogrid.png" width="100%">
+
+***Output of "geogrid" sub-module: (a) range pixel index at each grid point, (b) azimuth pixel index at each grid point, (c) range coarse displacement at each grid point, (d) azimuth coarse displacement at each grid point. Note: only the portion of the grid overlapping with the radar image has been shown.***
+
 
 ### autorift
 
