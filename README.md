@@ -111,11 +111,11 @@ For modular use:
 
 * After the inputs are specified, run the sub-module as below
        
-       obj.preprocess_filt_XXX()
+       obj.preprocess_filt_XXX() or obj.preprocess_db()
        obj.uniform_data_type()
        obj.runAutorift()
 
-where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass filter, "sob" for the Sobel filter, "lap" for the Laplacian filter, and also a logarithmic operator without filtering is adopted for occasions where low-frequency components are desired, e.g. "obj.preprocess_db()".
+where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass filter, "sob" for the Sobel filter, "lap" for the Laplacian filter, and also a logarithmic operator without filtering is adopted for occasions where low-frequency components are desired, i.e. "obj.preprocess_db()".
 
 * The "autorift" object has the following four outputs: 
        
