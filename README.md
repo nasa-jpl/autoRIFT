@@ -22,7 +22,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 
 <img src="figures/optical1.png" width="50%">
-**optical image over the Jakobshavn glacier where the red rectangle marks boundary of the Sentinel-1A image pair 
+**_optical image over the Jakobshavn glacier where the red rectangle marks boundary of the Sentinel-1A image pair_**
 
 
 
