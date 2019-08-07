@@ -38,7 +38,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 <img src="figures/geogrid.png" width="100%">
 
-***Output of "geogrid" sub-module: (a) range pixel index at each grid point, (b) azimuth pixel index at each grid point, (c) range coarse displacement at each grid point, (d) azimuth coarse displacement at each grid point. Note: only the portion of the grid overlapping with the radar image has been shown.***
+***Output of "geogrid" sub-module: (a) range pixel index at each grid point, (b) azimuth pixel index at each grid point, (c) range coarse displacement at each grid point, (d) azimuth coarse displacement at each grid point. Note: only the portion of the grid overlapping with the radar image has been extracted and shown.***
 
 
 ### autorift
@@ -55,6 +55,16 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 * the core image processing is coded by calling OpenCV's Python and/or C++ functions for efficiency 
 * sub-pixel displacement estimation using the pyramid upsampling algorithm
 * this sub-module is not only suitable for radar images, but also for optical, etc
+
+
+<img src="figures/autorift1.png" width="100%">
+
+***Output of "autorift" sub-module: (a) estimated range pixel displacement, (b) estimated azimuth coarse displacement, (c) light interpolation mask, (b) chip size (x-direction) used.***
+
+
+<img src="figures/autorift2.png" width="100%">
+
+***Final motion velocity results from running "autorift" sub-module: (a) estimated motion velocity (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr).***
 
 
 ## Install
