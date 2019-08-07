@@ -40,7 +40,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 * a light interpolation is done to fill the missing (unreliable) chip displacement results using bicubic mode (that can remove pixel discrepancy when using other modes) and an interpolation mask is returned
 * the core image processing is coded by calling OpenCV's Python and/or C++ functions for efficiency 
 * sub-pixel displacement estimation using the pyramid upsampling algorithm
-* the sub-module is not only suitable for radar images, but also for optical, etc
+* this sub-module is not only suitable for radar images, but also for optical, etc
 
 
 ## Install
