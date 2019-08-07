@@ -29,7 +29,7 @@ This module comprises two parts or sub-modules: "geogrid" and "autorift".
 ### autorift
 
 * fast algorithm that finds displacement between the two images using sparse search and progressive and iterative chip sizes
-* faster than the conventional ampcor algorithm in ISCE by an order of magnitude
+* faster than the conventional ampcor algorithm in ISCE by at least an order of magnitude
 * support various preprocessing modes on the given image pair, e.g. either the raw image (both texture and topography) or the texture only (high-frequency components without the topography) can be used with various choices of the high-pass filter options 
 * support data format of either unsigned integer 8 (uint8) or single-precision float (float32)
 * user can adjust all of the relevant parameters, e.g. search limit, chip size range, etc
