@@ -59,12 +59,12 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 <img src="figures/autorift1.png" width="100%">
 
-***Output of "autorift" sub-module: (a) estimated range pixel displacement, (b) estimated azimuth coarse displacement, (c) light interpolation mask, (b) chip size (x-direction) used.***
+***Output of "autorift" sub-module: (a) radar-estimated range pixel displacement, (b) radar-estimated azimuth coarse displacement, (c) light interpolation mask, (b) chip size (x-direction) used.***
 
 
 <img src="figures/autorift2.png" width="100%">
 
-***Final motion velocity results from running "autorift" sub-module: (a) estimated motion velocity (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr).***
+***Final motion velocity results from running "autorift" sub-module: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr).***
 
 
 ## Install
