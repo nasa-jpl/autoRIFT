@@ -19,7 +19,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
        
        
 ## Features
-
+<img src="figures/optical.png" width="50%">
 ### geogrid
 * user can define a grid in geographic coordinates provided in the form of a DEM with arbitrary EPSG code, 
 * the program will extract the portion of the grid that overlaps with the given coregistered radar image pair, 
