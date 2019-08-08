@@ -44,13 +44,14 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 ### 2.2 autorift
 
-* fast algorithm that finds displacement between the two images using sparse search and progressive and iterative chip sizes
+* fast algorithm that finds displacement between the two images using sparse search and iteratively progressive chip sizes
 * faster than the conventional ampcor algorithm in ISCE by almost an order of magnitude
 * support various preprocessing modes on the given image pair, e.g. either the raw image (both texture and topography) or the texture only (high-frequency components without the topography) can be used with various choices of the high-pass filter options 
-* support data format of either unsigned integer 8 (uint8) or single-precision float (float32)
+* support data format of either unsigned integer 8 (uint8; faster) or single-precision float (float32)
 * user can adjust all of the relevant parameters, e.g. search limit, chip size range, etc
-* a Normalized Displacement Coherence (NDC) Filter has been developed to filter image chip displacemnt results based on displacement difference thresholds that are scaled to the search limit
+* a Normalized Displacement Coherence (NDC) filter has been developed to filter image chip displacemnt results based on displacement difference thresholds that are scaled to the search limit
 * sparse search is used to first eliminate the unreliable chip displacement results that will not be further used for fine search or following chip size iterations
+* novel nested grid design that allows chip size to progress
 * another chip size that progresses iteratively is used to determine the chip displacement results that have not been estimated from the previous iterations
 * a light interpolation is done to fill the missing (unreliable) chip displacement results using bicubic mode (that can remove pixel discrepancy when using other modes) and an interpolation mask is returned
 * the core image processing is coded by calling OpenCV's Python and/or C++ functions for efficiency 
@@ -79,11 +80,11 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 ## 3. Install
 
 * First install ISCE
-* Put the "geoAutorift" folder and the "Sconscript" file under the "contrib" folder that is one level down ISCE's source directory (denoted as "ISCE_src"; where you started installing ISCE), i.e. "ISCE_src/contrib/" (see the snapshot below)
+* Put the "geoAutorift" folder and the "Sconscript" file under the "contrib" folder that is one level down ISCE's source directory (denoted as "isce-version"; where you started installing ISCE), i.e. "isce-version/contrib/" (see the snapshot below)
 
 <img src="figures/install_snapshot.png" width="35%">
 
-* run "scons install" again from ISCE's source directory "ISCE_src" using command line
+* run "scons install" again from ISCE's source directory "isce-version" using command line
 
 
 ## 4. Instructions
@@ -97,7 +98,13 @@ For quick use:
 * Input files include the master image folder (required), slave image folder (required), a DEM (required), local surface slope maps, velocity maps
 
 For modular use:
-* In Python environment, after importing ISCE "import isce", type "from components.contrib.geoAutorift.geogrid.Geogrid import Geogrid" to import the "geogrid" sub-module, and then type "obj = Geogrid()" followed by "obj.configure()" to initialize the "geogrid" object
+* In Python environment, type the following to import the "geogrid" sub-module and initialize the "geogrid" object
+
+       import isce
+       from components.contrib.geoAutorift.geogrid.Geogrid import Geogrid
+       obj = Geogrid()
+       obj.configure()
+
 * The "geogrid" object has several parameters that have to be set up (listed below; can also be obtained by referring to "testGeogrid.py"): 
 
        ------------------radar parameters------------------
@@ -122,7 +129,9 @@ For modular use:
        winro2vxname:        (output) name of the conversion coefficients from radar displacement (range and azimuth) to motion velocity in x-coordinate (at each grid point) file
        winro2vyname:        (output) name of the conversion coefficients from radar displacement (range and azimuth) to motion velocity in y-coordinate (at each grid point) file
 
-* After the above parameters are set, run the sub-module by typing "obj.geogrid()" to create the output files
+* After the above parameters are set, run the sub-module as below to create the output files
+
+       obj.geogrid()
 
 
 ### 4.2 autorift
@@ -134,7 +143,13 @@ For quick use:
 * Input files include the master image (required), slave image (required), and the four outputs from running "testGeogrid.py"
 
 For modular use:
-* In Python environment, after importing ISCE "import isce", type "from components.contrib.geoAutorift.autorift.Autorift import Autorift" to import the "autorift" sub-module, and then type "obj = Autorift()" followed by "obj.configure()" to initialize the "autorift" object
+* In Python environment, type the following to import the "autorift" sub-module and initialize the "autorift" object
+
+       import isce
+       from components.contrib.geoAutorift.autorift.Autorift import Autorift
+       obj = Autorift()
+       obj.configure()
+
 * The "autorift" object has several inputs that have to be assigned (listed below; can also be obtained by referring to "testAutorift.py"): 
        
        ------------------input------------------
@@ -153,7 +168,7 @@ For modular use:
        obj.uniform_data_type()
        obj.runAutorift()
 
-where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass filter, "sob" for the Sobel filter, "lap" for the Laplacian filter, and also a logarithmic operator without filtering is adopted for occasions where low-frequency components are desired, i.e. "obj.preprocess_db()".
+where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass filter, "sob" for the Sobel filter, "lap" for the Laplacian filter, and also a logarithmic operator without filtering is adopted for occasions where low-frequency components (i.e. topography) are desired, i.e. "obj.preprocess_db()".
 
 * The "autorift" object has the following four outputs: 
        
@@ -161,34 +176,34 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
        Dx:                  estimated range displacement
        Dy:                  estimated azimuth displacement
        InterpMask:          light interpolation mask
-       ChipSizeX:           iterative chip size used (range-direction; different chip sizes allowed for range and azimuth)
+       ChipSizeX:           iteratively progressive chip size used (range-direction; different chip sizes allowed for range and azimuth)
 
 * The "autorift" object has many parameters that can be flexibly tweaked by the users for their own purpose (listed below; can also be obtained by referring to "geoAutorift/autorift/Autorift.py"):
 
        ------------------parameter list: general function------------------
-       ChipSizeMinX:               Minimum size (in X direction) of the reference data window to be used for correlation (default = 32)
-       ChipSizeMaxX:               Maximum size (in X direction) of the reference data window to be used for correlation (default = 64)
+       ChipSizeMinX:               Minimum size (in X direction) of the reference data window to be used for correlation (default = 32; could be scalar or array with same dimension as xGrid)
+       ChipSizeMaxX:               Maximum size (in X direction) of the reference data window to be used for correlation (default = 64; could be scalar or array with same dimension as xGrid)
        ChipSize0X:                 Minimum acceptable size (in X direction) of the reference data window to be used for correlation (default = 32)
        ScaleChipSizeY              Scaling factor to get the Y-directed chip size in reference to the X-directed sizes (default = 1)
-       SearchLimitX                Limit (in X direction) of the search data window to be used for correlation (default = 25)
-       SearchLimitY                Limit (in Y direction) of the search data window to be used for correlation (default = 25)
-       SkipSampleX                 Number of samples to skip between windows in X (range) direction (default = 32)
-       SkipSampleY                 Number of lines to skip between windows in Y ( "-" azimuth) direction (default = 32)
-       minSearch                   minimum search limit (default = 6)
+       SearchLimitX                Limit (in X direction) of the search data window to be used for correlation (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
+       SearchLimitY                Limit (in Y direction) of the search data window to be used for correlation (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
+       SkipSampleX                 Number of samples to skip between windows in X (range) direction for automatically creating the grid that is not specified by the user (default = 32)
+       SkipSampleY                 Number of lines to skip between windows in Y ( "-" azimuth) direction for automatically creating the grid that is not specified by the user (default = 32)
+       minSearch                   Minimum search limit (default = 6)
        
        ------------------parameter list: about Normalized Displacement Coherence (NDC) filter ------------------
-       FracValid                   Fraction of valid displacements (default = 8/25)
-       FracSearch                  Fraction of search limit used as threshold for disparity filtering (default = 0.25)
-       FiltWidth                   Disparity Filter width (default = 5)
+       FracValid                   Fraction of valid displacements (default = 8/25) to be multiplied by filter window size "FiltWidth^2" and then used for thresholding the number of chip displacements that have passed the "FracSearch" disparity filtering
+       FracSearch                  Fraction of search limit used as threshold for disparity filtering of the chip displacement difference that is normalized by the search limit (default = 0.25)
+       FiltWidth                   Disparity filter width (default = 5)
        Iter                        Number of iterations (default = 3)
-       MadScalar                   Scalar to be multiplied by Mad used as threshold for disparity filtering (default = 4)
+       MadScalar                   Scalar to be multiplied by Mad used as threshold for disparity filtering of the chip displacement deviation from the median (default = 4)
        
        ------------------parameter list: miscellaneous------------------
        WallisFilterWidth:          Width of the filter to be used for the preprocessing (default = 21)
-       fillFiltWidth               light interpolation filling filter width (default = 3)
-       sparseSearchSampleRate      sparse search sample rate (default = 4)
-       BuffDistanceC               buffer coarse correlation mask by this many pixels for use as fine search mask (default = 8)
-       CoarseCorCutoff             coarse correlation search cutoff (default = 0.01)
-       OverSampleRatio             factor for pyramid upsampling for sub-pixel level offset refinement (default = 16)
-       DataTypeInput               image data type: 0 -> uint8, 1 -> float32 (default = 0)
-       zeroMask                    force the margin (no data) to zeros which is useful for Wallis-filter-preprocessed images (default = None; 1 for Wallis filter)
+       fillFiltWidth               Light interpolation filling filter width (default = 3)
+       sparseSearchSampleRate      Sparse search sample rate (default = 4)
+       BuffDistanceC               Buffer coarse correlation mask by this many pixels for use as fine search mask (default = 8)
+       CoarseCorCutoff             Coarse correlation search cutoff (default = 0.01)
+       OverSampleRatio             Factor for pyramid upsampling for sub-pixel level offset refinement (default = 16)
+       DataTypeInput               Image data type: 0 -> uint8, 1 -> float32 (default = 0)
+       zeroMask                    Force the margin (no data) to zeros which is useful for Wallis-filter-preprocessed images (default = None; 1 for Wallis filter)
