@@ -35,6 +35,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 * return the range and azimuth pixel indices in the radar image pair for each grid point
 * return the range and azimuth coarse displacement given the motion velocity maps and the local surface slope maps in the direction of both geographic x- and y-coordinates (they must be provided at the same grid as the DEM)
 * return the matrix of conversion coefficients that can convert the range and azimuth displacement between the two radar images (precisely estimated later with the sub-module "autorift") to motion velocity in geographic x- and y-coordinates
+* all outputs are in the format of GeoTIFF with the same EPSG code as input
 
 <img src="figures/geogrid.png" width="100%">
 
@@ -55,6 +56,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 * the core image processing is coded by calling OpenCV's Python and/or C++ functions for efficiency 
 * sub-pixel displacement estimation using the pyramid upsampling algorithm
 * this sub-module is not only suitable for radar images, but also for optical, etc
+* all outputs are in the format of GeoTIFF with the same EPSG code as input
 
 
 <img src="figures/autorift1.png" width="100%">
@@ -79,7 +81,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 * First install ISCE
 * Put the "geoAutorift" folder and the "Sconscript" file under the contrib folder that is one level down ISCE's source directory (denoted as "ISCE_src"; where you started installing ISCE), i.e. "ISCE_src/contrib/" (see the snapshot "install_snapshot.png")
 
-<img src="figures/install_snapshot.png" width="25%">
+<img src="figures/install_snapshot.png" width="35%">
 
 * run "scons install" again from ISCE's source directory "ISCE_src" using command line
 
