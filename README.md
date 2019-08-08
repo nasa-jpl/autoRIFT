@@ -62,9 +62,9 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 ***Output of "autorift" sub-module: (a) radar-estimated range pixel displacement, (b) radar-estimated azimuth coarse displacement, (c) light interpolation mask, (b) chip size (x-direction) used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 
-***Runtime of this test:***
-* geoAutorift: 10 mins
-* dense ampcor from ISCE: 90 mins
+***Runtime comparison for this test:***
+__* geoAutorift: 10 mins__
+__* dense ampcor from ISCE: 90 mins__
 
 
 <img src="figures/autorift2.png" width="100%">
