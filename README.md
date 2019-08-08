@@ -79,7 +79,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 * First install ISCE
 * Put the "geoAutorift" folder and the "Sconscript" file under the contrib folder that is one level down ISCE's source directory (denoted as "ISCE_src"; where you started installing ISCE), i.e. "ISCE_src/contrib/" (see the snapshot "install_snapshot.png")
 
-<img src="figures/install_snapshot.png" width="50%">
+<img src="figures/install_snapshot.png" width="25%">
 
 * run "scons install" again from ISCE's source directory "ISCE_src" using command line
 
