@@ -154,7 +154,7 @@ For modular use:
        
        ------------------input------------------
        I1:                  reference image
-       I2:                  test image
+       I2:                  test image (displacement = motion vector of I2 relative to I1)
        xGrid:               range pixel index at each grid point
        yGrid:               azimuth pixel index at each grid point
        (if xGrid and yGrid not provided, a regular grid spanning the entire image will be automatically set up, which is similar to the conventional ISCE module, ampcor)
@@ -181,12 +181,12 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
 * The "autorift" object has many parameters that can be flexibly tweaked by the users for their own purpose (listed below; can also be obtained by referring to "geoAutorift/autorift/Autorift.py"):
 
        ------------------parameter list: general function------------------
-       ChipSizeMinX:               Minimum size (in X direction) of the reference data window to be used for correlation (default = 32; could be scalar or array with same dimension as xGrid)
-       ChipSizeMaxX:               Maximum size (in X direction) of the reference data window to be used for correlation (default = 64; could be scalar or array with same dimension as xGrid)
-       ChipSize0X:                 Minimum acceptable size (in X direction) of the reference data window to be used for correlation (default = 32)
+       ChipSizeMinX:               Minimum size (in X direction) of the image template (chip) to correlate (default = 32; could be scalar or array with same dimension as xGrid)
+       ChipSizeMaxX:               Maximum size (in X direction) of the image template (chip) to correlate (default = 64; could be scalar or array with same dimension as xGrid)
+       ChipSize0X:                 Minimum acceptable size (in X direction) of the image template (chip) to correlate (default = 32)
        ScaleChipSizeY              Scaling factor to get the Y-directed chip size in reference to the X-directed sizes (default = 1)
-       SearchLimitX                Limit (in X direction) of the search data window to be used for correlation (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
-       SearchLimitY                Limit (in Y direction) of the search data window to be used for correlation (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
+       SearchLimitX                Range (in X direction) to search for displacement in the image (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
+       SearchLimitY                Range (in Y direction) to search for displacement in the image (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
        SkipSampleX                 Number of samples to skip between windows in X (range) direction for automatically creating the grid that is not specified by the user (default = 32)
        SkipSampleY                 Number of lines to skip between windows in Y ( "-" azimuth) direction for automatically creating the grid that is not specified by the user (default = 32)
        minSearch                   Minimum search limit (default = 6)
