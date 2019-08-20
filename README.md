@@ -51,7 +51,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 <img src="figures/autorift1.png" width="100%">
 
-***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/geogrid) at Jakobshavn Glacier of Greenland over user-defined geographic-coordinate grid: (a) estimated x-direction (range) pixel displacement, (b) estimated y-direction (minus azimuth) pixel displacement, (c) light interpolation mask, (b) x-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/geogrid) at Jakobshavn Glacier of Greenland over user-defined geographic-coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/geogrid): (a) estimated x-direction (range) pixel displacement, (b) estimated y-direction (minus azimuth) pixel displacement, (c) light interpolation mask, (b) x-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 
 
@@ -63,7 +63,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 <img src="figures/autorift2.png" width="100%">
 
-***Final motion velocity results by combining outputs from "geogrid" and "autorift" modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+***Final motion velocity results by combining outputs from "geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/geogrid) and "autorift" modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 
 ## 4. Install
@@ -87,7 +87,9 @@ For quick use:
 
 _Note: if the four outputs from running the "geogrid" module are not provided, a regular grid will be assigned_
 
-* Output files include 1) estimated x-direction displacement (equivalent to range for radar), 2) estimated y-direction displacement (equivalent to minus azimuth for radar), 3) light interpolation mask, 4) iteratively progressive chip size used in x direction. _Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF consisting of the final converted motion velocity in geographic x- and y-coordinates will be created and named "velocity.tif"._
+* Output files include 1) estimated x-direction displacement (equivalent to range for radar), 2) estimated y-direction displacement (equivalent to minus azimuth for radar), 3) light interpolation mask, 4) iteratively progressive chip size used in x direction. 
+
+_Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF consisting of the final converted motion velocity in geographic x- and y-coordinates will be created and named "velocity.tif"._
 
 For modular use:
 * In Python environment, type the following to import the "autorift" module and initialize the "autorift" object
