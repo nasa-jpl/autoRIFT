@@ -56,7 +56,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 
 **Runtime comparison for this test:**
-* __geoAutorift: 10 mins__
+* __Autorift: 10 mins__
 * __dense ampcor from ISCE: 90 mins__
 
 
