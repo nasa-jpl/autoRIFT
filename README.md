@@ -86,8 +86,8 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 <img src="figures/install_snapshot.png" width="35%">
 
-* run "scons install" again from ISCE's source directory "isce-version" using command line
-
+* Run "scons install" again from ISCE's source directory "isce-version" using command line
+* This distribution automatically installs the "autorift" module as well as the "geogrid" module (https://github.com/leiyangleon/Geogrid).
 
 ## 4. Instructions
 
