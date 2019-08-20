@@ -40,7 +40,7 @@ This is done by implementing the following command line:
 
        testAutorift.py -m I1 -s I2 -fo 1
 
-where "I1" and "I2" are the images as defined in the instructions below. The "-fo" option indicates whether or not to read optical image data.
+where "I1" and "I2" are the reference and test images as defined in the instructions below. The "-fo" option indicates whether or not to read optical image data.
 
 ### 3.2 Radar image over regular grid in imaging coordinates
 
@@ -53,7 +53,7 @@ This is obtained by implementing the following command line:
 
        testAutorift.py -m I1 -s I2
 
-where "I1" and "I2" are the images as defined in the instructions below. 
+where "I1" and "I2" are the reference and test images as defined in the instructions below. 
 
 
 ### 3.3 Radar image over user-defined geographic-coordinate grid
@@ -66,7 +66,7 @@ This is done by implementing the following command line:
 
        testAutorift.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname
 
-where "I1" and "I2" are the images as defined in the instructions below, and "winlocname", "winoffname", "winro2vxname", "winro2vyname" are the four outputs from running "testGeogrid.py" as defined at https://github.com/leiyangleon/geogrid.
+where "I1" and "I2" are the reference and test images as defined in the instructions below, and "winlocname", "winoffname", "winro2vxname", "winro2vyname" are the four outputs from running "testGeogrid.py" as defined at https://github.com/leiyangleon/geogrid.
 
 **Runtime comparison for this test:**
 * __Autorift: 10 mins__
@@ -96,7 +96,7 @@ where "I1" and "I2" are the images as defined in the instructions below, and "wi
 
 For quick use:
 * Refer to the file "testAutorift.py" for the usage of the module and modify it for your own purpose
-* Input files include the master image (required), slave image (required), and the four outputs from running "testGeogrid.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname"). 
+* Input files include the reference image (required), test image (required), and the four outputs from running "testGeogrid.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname"). 
 
 _Note: if the four outputs from running the "geogrid" module are not provided, a regular grid will be assigned_
 
