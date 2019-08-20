@@ -13,15 +13,6 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
        
 ## 2. Features
 
-
-<img src="figures/optical1.png" width="50%">
-
-***Test area and dataset: optical image over the Jakobshavn glacier where the red rectangle marks boundary of the Sentinel-1A/B image pair (20170221-20170227). Input files in this test scenario consist of the Digital Elevation Model (DEM), local surface slope maps (in both x- and y-direction) and coarse motion velocity maps (in both x- and y-direction) over the entire Greenland, where all maps share the same geographic-coordinate grid with 240-m spacing and spatial reference system with EPSG code 3413 (a.k.a WGS 84 / NSIDC Sea Ice Polar Stereographic North).***
-
-
-
-
-
 * fast algorithm that finds displacement between the two images using sparse search and iteratively progressive chip sizes
 * faster than the conventional "ampcor"/"denseampcor" algorithm in ISCE by almost an order of magnitude
 * support various preprocessing modes on the given image pair, e.g. either the raw image (both texture and topography) or the texture only (high-frequency components without the topography) can be used with various choices of the high-pass filter options 
@@ -41,16 +32,26 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 ### 3.1 Optical image over regular grid in imaging coordinates
 
+<img src="figures/regular_grid_optical.png" width="100%">
+
+***Output of "autorift" module for a pair of Landsat-8 images (20170708-20170724) in Greenland over a regular-spacing grid: (a) estimated x-direction pixel displacement, (b) estimated y-direction pixel displacement, (c) light interpolation mask, (b) x-direction chip size used.***
+
+
+
 
 
 ### 3.2 Radar image over regular grid in imaging coordinates
+
+<img src="figures/regular_grid.png" width="100%">
+
+***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227) at Jakobshavn Glacier of Greenland over a regular-spacing grid: (a) estimated x-direction (range) pixel displacement, (b) estimated y-direction (minus azimuth) pixel displacement, (c) light interpolation mask, (b) x-direction chip size used.***
 
 
 ### 3.3 Radar image over user-defined geographic-coordinate grid
 
 <img src="figures/autorift1.png" width="100%">
 
-***Output of "autorift" sub-module: (a) radar-estimated range pixel displacement, (b) radar-estimated azimuth coarse displacement, (c) light interpolation mask, (b) chip size (x-direction) used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227) at Jakobshavn Glacier of Greenland over user-defined geographic-coordinate grid (same as the Demo at https://github.com/leiyangleon/geogrid): (a) estimated x-direction (range) pixel displacement, (b) estimated y-direction (minus azimuth) pixel displacement, (c) light interpolation mask, (b) x-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 
 
@@ -62,7 +63,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 <img src="figures/autorift2.png" width="100%">
 
-***Final motion velocity results by combining outputs from "geogrid" and "autorift" sub-modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+***Final motion velocity results by combining outputs from "geogrid" and "autorift" modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 
 ## 4. Install
@@ -82,8 +83,9 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 For quick use:
 * Refer to the file "testAutorift.py" for the usage of the module and modify it for your own purpose
-* Input files include the master image (required), slave image (required), and the four outputs from running "testGeogrid.py" (a.k.a winlocname, winoffname, winro2vxname, winro2vyname)
-* Output files include 1) estimated displacement in x-coordinate, 2) estimated displacement in y-coordinate, 3) light interpolation mask, 4) iteratively progressive chip size used. _Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF consisting of the final converted motion velocity in geographic x- and y-coordinates will be created and named "velocity.tif"._
+* Input files include the master image (required), slave image (required), and the four outputs from running "testGeogrid.py" (a.k.a winlocname, winoffname, winro2vxname, winro2vyname). 
+_Note: if the four outputs from running the "geogrid" module are not provided, a regular grid will be assigned_
+* Output files include 1) estimated x-direction displacement (equivalent to range for radar), 2) estimated y-direction displacement (equivalent to minus azimuth for radar), 3) light interpolation mask, 4) iteratively progressive chip size used in x direction. _Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF consisting of the final converted motion velocity in geographic x- and y-coordinates will be created and named "velocity.tif"._
 
 For modular use:
 * In Python environment, type the following to import the "autorift" module and initialize the "autorift" object
@@ -98,11 +100,11 @@ For modular use:
        ------------------input------------------
        I1:                  reference image
        I2:                  test image (displacement = motion vector of I2 relative to I1)
-       xGrid:               x-coordinate pixel index at each grid point
-       yGrid:               y-coordinate pixel index at each grid point
+       xGrid:               x-direction pixel index at each grid point
+       yGrid:               y-direction pixel index at each grid point
        (if xGrid and yGrid not provided, a regular grid spanning the entire image will be automatically set up, which is similar to the conventional ISCE module, "ampcor" or "denseampcor")
-       Dx0:                 x-coordinate coarse displacement at each grid point
-       Dy0:                 y-coordinate coarse displacement at each grid point
+       Dx0:                 x-direction coarse displacement at each grid point
+       Dy0:                 y-direction coarse displacement at each grid point
        (if Dx0 and Dy0 not provided, an array with zero values will be automatically assigned)
 
 * After the inputs are specified, run the module as below
@@ -116,10 +118,10 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
 * The "autorift" object has the following four outputs: 
        
        ------------------output------------------
-       Dx:                  estimated displacement in x-coordinate
-       Dy:                  estimated displacement in y-coordinate
+       Dx:                  estimated displacement in x-direction
+       Dy:                  estimated displacement in y-direction
        InterpMask:          light interpolation mask
-       ChipSizeX:           iteratively progressive chip size used (x-direction; different chip sizes allowed for x and y)
+       ChipSizeX:           iteratively progressive chip size used in x-direction (different chip sizes allowed for x and y)
 
 * The "autorift" object has many parameters that can be flexibly tweaked by the users for their own purpose (listed below; can also be obtained by referring to "geoAutorift/autorift/Autorift.py"):
 
@@ -130,8 +132,8 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
        ScaleChipSizeY              Scaling factor to get the Y-directed chip size in reference to the X-directed sizes (default = 1)
        SearchLimitX                Range (in X direction) to search for displacement in the image (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
        SearchLimitY                Range (in Y direction) to search for displacement in the image (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
-       SkipSampleX                 Number of samples to skip between windows in X (equivalent to range for radar) direction for automatically creating the grid if not specified by the user (default = 32)
-       SkipSampleY                 Number of lines to skip between windows in Y (equivalent to minus azimuth for radar) direction for automatically creating the grid if not specified by the user (default = 32)
+       SkipSampleX                 Number of samples to skip between windows in X direction for automatically creating the grid if not specified by the user (default = 32)
+       SkipSampleY                 Number of lines to skip between windows in Y direction for automatically creating the grid if not specified by the user (default = 32)
        minSearch                   Minimum search limit (default = 6)
        
        ------------------parameter list: about Normalized Displacement Coherence (NDC) filter ------------------
