@@ -44,14 +44,14 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 <img src="figures/regular_grid.png" width="100%">
 
-***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227) at Jakobshavn Glacier of Greenland over a regular-spacing grid: (a) estimated x-direction (range) pixel displacement, (b) estimated y-direction (minus azimuth) pixel displacement, (c) light interpolation mask, (b) x-direction chip size used.***
+***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/geogrid) at Jakobshavn Glacier of Greenland over a regular-spacing grid: (a) estimated x-direction (range) pixel displacement, (b) estimated y-direction (minus azimuth) pixel displacement, (c) light interpolation mask, (b) x-direction chip size used.***
 
 
 ### 3.3 Radar image over user-defined geographic-coordinate grid
 
 <img src="figures/autorift1.png" width="100%">
 
-***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227) at Jakobshavn Glacier of Greenland over user-defined geographic-coordinate grid (same as the Demo at https://github.com/leiyangleon/geogrid): (a) estimated x-direction (range) pixel displacement, (b) estimated y-direction (minus azimuth) pixel displacement, (c) light interpolation mask, (b) x-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/geogrid) at Jakobshavn Glacier of Greenland over user-defined geographic-coordinate grid: (a) estimated x-direction (range) pixel displacement, (b) estimated y-direction (minus azimuth) pixel displacement, (c) light interpolation mask, (b) x-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 
 
@@ -84,7 +84,9 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 For quick use:
 * Refer to the file "testAutorift.py" for the usage of the module and modify it for your own purpose
 * Input files include the master image (required), slave image (required), and the four outputs from running "testGeogrid.py" (a.k.a winlocname, winoffname, winro2vxname, winro2vyname). 
+
 _Note: if the four outputs from running the "geogrid" module are not provided, a regular grid will be assigned_
+
 * Output files include 1) estimated x-direction displacement (equivalent to range for radar), 2) estimated y-direction displacement (equivalent to minus azimuth for radar), 3) light interpolation mask, 4) iteratively progressive chip size used in x direction. _Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF consisting of the final converted motion velocity in geographic x- and y-coordinates will be created and named "velocity.tif"._
 
 For modular use:
