@@ -36,9 +36,11 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 ***Output of "autorift" module for a pair of Landsat-8 images (20170708-20170724) in Greenland over a regular-spacing grid: (a) estimated x-direction pixel displacement, (b) estimated y-direction pixel displacement, (c) light interpolation mask, (b) x-direction chip size used.***
 
+This is done by implementing the following command line:
 
+       testAutorift.py -m I1 -s I2 -fo 1
 
-
+where "I1" and "I2" are the images as defined in the instructions below. The "-fo" option indicates whether or not to read optical image data.
 
 ### 3.2 Radar image over regular grid in imaging coordinates
 
@@ -47,13 +49,24 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 ***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/geogrid) at Jakobshavn Glacier of Greenland over a regular-spacing grid: (a) estimated x-direction (range) pixel displacement, (b) estimated y-direction (minus azimuth) pixel displacement, (c) light interpolation mask, (b) x-direction chip size used.***
 
 
+This is obtained by implementing the following command line:
+
+       testAutorift.py -m I1 -s I2
+
+where "I1" and "I2" are the images as defined in the instructions below. 
+
+
 ### 3.3 Radar image over user-defined geographic-coordinate grid
 
 <img src="figures/autorift1.png" width="100%">
 
 ***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/geogrid) at Jakobshavn Glacier of Greenland over user-defined geographic-coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/geogrid): (a) estimated x-direction (range) pixel displacement, (b) estimated y-direction (minus azimuth) pixel displacement, (c) light interpolation mask, (b) x-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
+This is done by implementing the following command line:
 
+       testAutorift.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname
+
+where "I1" and "I2" are the images as defined in the instructions below, and "winlocname", "winoffname", "winro2vxname", "winro2vyname" are the four outputs from running "testGeogrid.py" as defined at https://github.com/leiyangleon/geogrid.
 
 **Runtime comparison for this test:**
 * __Autorift: 10 mins__
@@ -79,11 +92,11 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 ## 4. Instructions
 
 
-* When the grid is provided in geographic coordinates, it is recommended to run the "geogrid" module first before running "autorift". In other words, the outputs from "testGeogrid.py" (a.k.a winlocname, winoffname, winro2vxname, winro2vyname) will serve as the inputs for running "autorift" or will be required to generate the final motion velocity maps.
+* When the grid is provided in geographic coordinates, it is recommended to run the "geogrid" module (https://github.com/leiyangleon/geogrid) first before running "autorift". In other words, the outputs from "testGeogrid.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname") will serve as the inputs for running "autorift" or will be required to generate the final motion velocity maps.
 
 For quick use:
 * Refer to the file "testAutorift.py" for the usage of the module and modify it for your own purpose
-* Input files include the master image (required), slave image (required), and the four outputs from running "testGeogrid.py" (a.k.a winlocname, winoffname, winro2vxname, winro2vyname). 
+* Input files include the master image (required), slave image (required), and the four outputs from running "testGeogrid.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname"). 
 
 _Note: if the four outputs from running the "geogrid" module are not provided, a regular grid will be assigned_
 
