@@ -68,7 +68,7 @@ This is done by implementing the following command line:
 
 where "I1" and "I2" are the reference and test images as defined in the instructions below, and "winlocname", "winoffname", "winro2vxname", "winro2vyname" are the four outputs from running "testGeogrid.py" as defined at https://github.com/leiyangleon/geogrid.
 
-**Runtime comparison for this test:**
+**Runtime comparison for this test (on a MAC OS X operating system with 2.9GHz Intel Core i7 processor and 16GB RAM):**
 * __Autorift: 10 mins__
 * __Dense ampcor from ISCE: 90 mins__
 
