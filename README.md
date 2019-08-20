@@ -1,18 +1,11 @@
-# geoAutorift
-ISCE module for finding pixel displacement and motion velocity between two images over user-defined geographic-coordinate grid
-
-This module comprises two parts or sub-modules: "geogrid" and "autorift".
+# Autorift
+ISCE module for finding pixel displacement and motion velocity between two images over both regular grid in imaging coordinates and user-defined geographic-coordinate grid
 
 Copyright (C) 2019 California Institute of Technology.  Government Sponsorship Acknowledged.
 
 Citation: https://github.com/leiyangleon/geoAutorift
 
 ## 1. Authors
-
-### 1.1 geogrid
-Piyush Agram (JPL/Caltech; piyush.agram@jpl.nasa.gov), Yang Lei (GPS/Caltech; ylei@caltech.edu)
-
-### 1.2 autorift
 
 Alex Gardner (JPL/Caltech; alex.s.gardner@jpl.nasa.gov) conceived the algorithm and developed the first version in MATLAB;
 Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimized and incoporated to ISCE.
@@ -29,27 +22,12 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 
 
-### 2.1 geogrid
-* user can define a grid in geographic coordinates provided in the form of a DEM with arbitrary EPSG code, 
-* the program will extract the portion of the grid that overlaps with the given coregistered radar image pair, 
-* return the range and azimuth pixel indices in the radar image pair for each grid point
-* return the range and azimuth coarse displacement given the motion velocity maps and the local surface slope maps in the direction of both geographic x- and y-coordinates (they must be provided at the same grid as the DEM)
-* return the matrix of conversion coefficients that can convert the range and azimuth displacement between the two radar images (precisely estimated later with the sub-module "autorift") to motion velocity in geographic x- and y-coordinates
-* all outputs are in the format of GeoTIFF with the same EPSG code as input
-
-<img src="figures/geogrid.png" width="100%">
-
-***Output of "geogrid" sub-module: (a) range pixel index at each grid point, (b) azimuth pixel index at each grid point, (c) range coarse displacement at each grid point, (d) azimuth coarse displacement at each grid point. Note: only the portion of the grid overlapping with the radar image has been extracted and shown.***
-
-
-### 2.2 autorift
-
 * fast algorithm that finds displacement between the two images using sparse search and iteratively progressive chip sizes
-* faster than the conventional ampcor algorithm in ISCE by almost an order of magnitude
+* faster than the conventional "ampcor"/"denseampcor" algorithm in ISCE by almost an order of magnitude
 * support various preprocessing modes on the given image pair, e.g. either the raw image (both texture and topography) or the texture only (high-frequency components without the topography) can be used with various choices of the high-pass filter options 
 * support data format of either unsigned integer 8 (uint8; faster) or single-precision float (float32)
 * user can adjust all of the relevant parameters, e.g. search limit, chip size range, etc
-* a Normalized Displacement Coherence (NDC) filter has been developed to filter image chip displacemnt results based on displacement difference thresholds that are scaled to the search limit
+* a Normalized Displacement Coherence (NDC) filter is developed to filter image chip displacemnt results based on displacement difference thresholds that are scaled to the search limit
 * sparse search is used to first eliminate the unreliable chip displacement results that will not be further used for fine search or following chip size iterations
 * novel nested grid design that allows chip size to progress
 * another chip size that progresses iteratively is used to determine the chip displacement results that have not been estimated from the previous iterations
@@ -57,8 +35,18 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 * the core image processing is coded by calling OpenCV's Python and/or C++ functions for efficiency 
 * sub-pixel displacement estimation using the pyramid upsampling algorithm
 * this sub-module is not only suitable for radar images, but also for optical, etc
-* all outputs are in the format of GeoTIFF with the same EPSG code as input
+* when the grid is provided in geographic coordinates, all outputs are in the format of GeoTIFF with the same EPSG code as input grid
 
+## 3. Demo
+
+### 3.1 Optical image over regular grid in imaging coordinates
+
+
+
+### 3.2 Radar image over regular grid in imaging coordinates
+
+
+### 3.3 Radar image over user-defined geographic-coordinate grid
 
 <img src="figures/autorift1.png" width="100%">
 
@@ -77,7 +65,7 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 ***Final motion velocity results by combining outputs from "geogrid" and "autorift" sub-modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 
-## 3. Install
+## 4. Install
 
 * First install ISCE
 * Put the "geoAutorift" folder and the "Sconscript" file under the "contrib" folder that is one level down ISCE's source directory (denoted as "isce-version"; where you started installing ISCE), i.e. "isce-version/contrib/" (see the snapshot below)
@@ -89,61 +77,16 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 ## 4. Instructions
 
-### 4.1 geogrid
 
-* It is recommended to run ISCE up to the step where coregistered SLC's are done, e.g. "mergebursts" for using topsApp.
-
-For quick use:
-* Refer to the file "testGeogrid.py" for the usage of the sub-module and modify it for your own purpose
-* Input files include the master image folder (required), slave image folder (required), a DEM (required), local surface slope maps, velocity maps
-
-For modular use:
-* In Python environment, type the following to import the "geogrid" sub-module and initialize the "geogrid" object
-
-       import isce
-       from components.contrib.geoAutorift.geogrid.Geogrid import Geogrid
-       obj = Geogrid()
-       obj.configure()
-
-* The "geogrid" object has several parameters that have to be set up (listed below; can also be obtained by referring to "testGeogrid.py"): 
-
-       ------------------radar parameters------------------
-       startingRange:       starting range
-       rangePixelSize:      range pixel size
-       sensingStart:        starting azimuth time
-       prf:                 pulse repition frequency 
-       lookSide:            look side, e.g. -1 for right looking 
-       repeatTime:          time period between the acquisition of the two radar images
-       numberOfLines:       number of lines (in azimuth)
-       numberOfSamples:     number of samples (in range)
-       orbit:               ISCE orbit data structure
-       ------------------input file names------------------
-       demname:             (input) name of the DEM file
-       dhdxname:            (input; not required) name of the local surface slope in x-coodinate file
-       dhdyname:            (input; not required) name of the local surface slope in y-coodinate file
-       vxname:              (input; not required) name of the motion velocity in x-coodinate file
-       vyname:              (input; not required) name of the motion velocity in y-coodinate file
-       ------------------output file names------------------
-       winlocname:          (output) name of the range and azimuth pixel indices (at each grid point) file
-       winoffname:          (output) name of the range and azimuth coarse displacement (at each grid point) file
-       winro2vxname:        (output) name of the conversion coefficients from radar displacement (range and azimuth) to motion velocity in x-coordinate (at each grid point) file
-       winro2vyname:        (output) name of the conversion coefficients from radar displacement (range and azimuth) to motion velocity in y-coordinate (at each grid point) file
-
-* After the above parameters are set, run the sub-module as below to create the output files
-
-       obj.geogrid()
-
-
-### 4.2 autorift
-
-* It is recommended to run the "geogrid" sub-module first before running "autorift". In other words, the outputs from "testGeogrid.py" (a.k.a winlocname, winoffname, winro2vxname, winro2vyname) will serve as the inputs for running "autorift".
+* When the grid is provided in geographic coordinates, it is recommended to run the "geogrid" module first before running "autorift". In other words, the outputs from "testGeogrid.py" (a.k.a winlocname, winoffname, winro2vxname, winro2vyname) will serve as the inputs for running "autorift" or will be required to generate the final motion velocity maps.
 
 For quick use:
-* Refer to the file "testAutorift.py" for the usage of the sub-module and modify it for your own purpose
-* Input files include the master image (required), slave image (required), and the four outputs from running "testGeogrid.py"
+* Refer to the file "testAutorift.py" for the usage of the module and modify it for your own purpose
+* Input files include the master image (required), slave image (required), and the four outputs from running "testGeogrid.py" (a.k.a winlocname, winoffname, winro2vxname, winro2vyname)
+* Output files include 1) estimated displacement in x-coordinate, 2) estimated displacement in y-coordinate, 3) light interpolation mask, 4) iteratively progressive chip size used. _Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF consisting of the final converted motion velocity in geographic x- and y-coordinates will be created and named "velocity.tif"._
 
 For modular use:
-* In Python environment, type the following to import the "autorift" sub-module and initialize the "autorift" object
+* In Python environment, type the following to import the "autorift" module and initialize the "autorift" object
 
        import isce
        from components.contrib.geoAutorift.autorift.Autorift import Autorift
@@ -155,14 +98,14 @@ For modular use:
        ------------------input------------------
        I1:                  reference image
        I2:                  test image (displacement = motion vector of I2 relative to I1)
-       xGrid:               range pixel index at each grid point
-       yGrid:               azimuth pixel index at each grid point
-       (if xGrid and yGrid not provided, a regular grid spanning the entire image will be automatically set up, which is similar to the conventional ISCE module, ampcor)
-       Dx0:                 range coarse displacement at each grid point
-       Dy0:                 azimuth coarse displacement at each grid point
-       (if Dx0 and Dy0 not provided, an array with zero values will be automatically assigned for them)
+       xGrid:               x-coordinate pixel index at each grid point
+       yGrid:               y-coordinate pixel index at each grid point
+       (if xGrid and yGrid not provided, a regular grid spanning the entire image will be automatically set up, which is similar to the conventional ISCE module, "ampcor" or "denseampcor")
+       Dx0:                 x-coordinate coarse displacement at each grid point
+       Dy0:                 y-coordinate coarse displacement at each grid point
+       (if Dx0 and Dy0 not provided, an array with zero values will be automatically assigned)
 
-* After the inputs are specified, run the sub-module as below
+* After the inputs are specified, run the module as below
        
        obj.preprocess_filt_XXX() or obj.preprocess_db()
        obj.uniform_data_type()
@@ -173,10 +116,10 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
 * The "autorift" object has the following four outputs: 
        
        ------------------output------------------
-       Dx:                  estimated range displacement
-       Dy:                  estimated azimuth displacement
+       Dx:                  estimated displacement in x-coordinate
+       Dy:                  estimated displacement in y-coordinate
        InterpMask:          light interpolation mask
-       ChipSizeX:           iteratively progressive chip size used (range-direction; different chip sizes allowed for range and azimuth)
+       ChipSizeX:           iteratively progressive chip size used (x-direction; different chip sizes allowed for x and y)
 
 * The "autorift" object has many parameters that can be flexibly tweaked by the users for their own purpose (listed below; can also be obtained by referring to "geoAutorift/autorift/Autorift.py"):
 
@@ -187,8 +130,8 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
        ScaleChipSizeY              Scaling factor to get the Y-directed chip size in reference to the X-directed sizes (default = 1)
        SearchLimitX                Range (in X direction) to search for displacement in the image (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
        SearchLimitY                Range (in Y direction) to search for displacement in the image (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
-       SkipSampleX                 Number of samples to skip between windows in X (range) direction for automatically creating the grid that is not specified by the user (default = 32)
-       SkipSampleY                 Number of lines to skip between windows in Y ( "-" azimuth) direction for automatically creating the grid that is not specified by the user (default = 32)
+       SkipSampleX                 Number of samples to skip between windows in X (equivalent to range for radar) direction for automatically creating the grid if not specified by the user (default = 32)
+       SkipSampleY                 Number of lines to skip between windows in Y (equivalent to minus azimuth for radar) direction for automatically creating the grid if not specified by the user (default = 32)
        minSearch                   Minimum search limit (default = 6)
        
        ------------------parameter list: about Normalized Displacement Coherence (NDC) filter ------------------
@@ -201,7 +144,7 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
        ------------------parameter list: miscellaneous------------------
        WallisFilterWidth:          Width of the filter to be used for the preprocessing (default = 21)
        fillFiltWidth               Light interpolation filling filter width (default = 3)
-       sparseSearchSampleRate      Sparse search sample rate (default = 4)
+       sparseSearchSampleRate      downsampling rate for sparse search  (default = 4)
        BuffDistanceC               Buffer coarse correlation mask by this many pixels for use as fine search mask (default = 8)
        CoarseCorCutoff             Coarse correlation search cutoff (default = 0.01)
        OverSampleRatio             Factor for pyramid upsampling for sub-pixel level offset refinement (default = 16)
