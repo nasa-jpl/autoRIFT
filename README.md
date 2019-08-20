@@ -70,7 +70,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 **Runtime comparison for this test:**
 * __Autorift: 10 mins__
-* __dense ampcor from ISCE: 90 mins__
+* __Dense ampcor from ISCE: 90 mins__
 
 
 
