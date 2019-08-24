@@ -1,4 +1,4 @@
-# autoRIFT
+# autoRIFT(autonomous Repeat Image Feature Tracking)
 A fast and intelligent algorithm for finding the pixel displacement between two images
 
 Copyright (C) 2019 California Institute of Technology.  Government Sponsorship Acknowledged.
