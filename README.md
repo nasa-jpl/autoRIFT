@@ -21,8 +21,8 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
        
 ## 3. Features
 
-* fast algorithm that finds displacement between the two images (where source and template patches are extracted and correlated) using sparse search and iteratively progressive chip (template) sizes
-* user can specify unstructured search centers (center of the search window for the source), chip sizes, search offsets (center displacement of the template compared to the source) and search ranges (the extent to which the source is searched in reference to the search center)
+* fast algorithm that finds displacement between the two images (where source and template image patches are extracted and correlated) using sparse search and iteratively progressive chip (template) sizes
+* user can specify unstructured search centers (center of the source image patch), search offsets (center displacement of the template image patch compared to the source image patch), chip sizes (size of template image patch) and search ranges (size of the source image patch)
 * faster than the conventional "ampcor"/"denseampcor" algorithm in ISCE by almost an order of magnitude
 * support various preprocessing modes on the given image pair, e.g. either the raw image (both texture and topography) or the texture only (high-frequency components without the topography) can be used with various choices of the high-pass filter options 
 * support data format of either unsigned integer 8 (uint8; faster) or single-precision float (float32)
