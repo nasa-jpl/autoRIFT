@@ -1,14 +1,18 @@
-# Autorift
-ISCE module for finding pixel displacement and motion velocity between two images over both regular grid in imaging coordinates and user-defined geographic-coordinate grid
+# autoRIFT
+A fast and intelligent algorithm for finding the pixel displacement between two images
 
 Copyright (C) 2019 California Institute of Technology.  Government Sponsorship Acknowledged.
 
-Citation: https://github.com/leiyangleon/geoAutorift
+Citation: https://github.com/leiyangleon/autoRIFT
 
 ## 1. Authors
 
-Alex Gardner (JPL/Caltech; alex.s.gardner@jpl.nasa.gov) conceived the algorithm and developed the first version in MATLAB;
+Alex Gardner (JPL/Caltech; alex.s.gardner@jpl.nasa.gov) first described the algorithm "auto-RIFT" in (Gardner et al., 2018) and developed the first version in MATLAB;
 Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimized and incoporated to ISCE.
+
+Gardner, A. S., Moholdt, G., Scambos, T., Fahnstock, M., Ligtenberg, S., van den Broeke, M., & Nilsson, J. (2018). Increased West Antarctic and unchanged East Antarctic ice discharge over the last 7 years. The Cryosphere, 12(2), 521–547. https://doi.org/10.5194/tc-12-521-2018
+
+
        
        
 ## 2. Features
