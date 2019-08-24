@@ -13,9 +13,12 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 Gardner, A. S., Moholdt, G., Scambos, T., Fahnstock, M., Ligtenberg, S., van den Broeke, M., & Nilsson, J. (2018). Increased West Antarctic and unchanged East Antarctic ice discharge over the last 7 years. The Cryosphere, 12(2), 521–547. https://doi.org/10.5194/tc-12-521-2018
 
 
+## 2. Acknowledgement
+
+This effort was funded by the NASA MEaSUREs program in contribution to the Inter-mission Time Series of Land Ice Velocity and Elevation (ITS_LIVE) project (https://its-live.jpl.nasa.gov/) and through Alex Gardner’s participation in the NASA NISAR Science Team
+    
        
-       
-## 2. Features
+## 3. Features
 
 * fast algorithm that finds displacement between the two images using sparse search and iteratively progressive chip sizes
 * faster than the conventional "ampcor"/"denseampcor" algorithm in ISCE by almost an order of magnitude
@@ -32,9 +35,9 @@ Gardner, A. S., Moholdt, G., Scambos, T., Fahnstock, M., Ligtenberg, S., van den
 * this sub-module is not only suitable for radar images, but also for optical, etc
 * when the grid is provided in geographic coordinates, all outputs are in the format of GeoTIFF with the same EPSG code as input grid
 
-## 3. Demo
+## 4. Demo
 
-### 3.1 Optical image over regular grid in imaging coordinates
+### 4.1 Optical image over regular grid in imaging coordinates
 
 <img src="figures/regular_grid_optical.png" width="100%">
 
@@ -46,7 +49,7 @@ This is done by implementing the following command line:
 
 where "I1" and "I2" are the reference and test images as defined in the instructions below. The "-fo" option indicates whether or not to read optical image data.
 
-### 3.2 Radar image over regular grid in imaging coordinates
+### 4.2 Radar image over regular grid in imaging coordinates
 
 <img src="figures/regular_grid.png" width="100%">
 
@@ -60,7 +63,7 @@ This is obtained by implementing the following command line:
 where "I1" and "I2" are the reference and test images as defined in the instructions below. 
 
 
-### 3.3 Radar image over user-defined geographic-coordinate grid
+### 4.3 Radar image over user-defined geographic-coordinate grid
 
 <img src="figures/autorift1.png" width="100%">
 
@@ -83,7 +86,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 ***Final motion velocity results by combining outputs from "geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/geogrid) and "autorift" modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 
-## 4. Install
+## 5. Install
 
 * First install ISCE
 * Put the "geoAutorift" folder and the "Sconscript" file under the "contrib" folder that is one level down ISCE's source directory (denoted as "isce-version"; where you started installing ISCE), i.e. "isce-version/contrib/" (see the snapshot below)
@@ -93,7 +96,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 * Run "scons install" again from ISCE's source directory "isce-version" using command line
 * This distribution automatically installs the "autorift" module as well as the "geogrid" module (https://github.com/leiyangleon/Geogrid).
 
-## 4. Instructions
+## 6. Instructions
 
 
 * When the grid is provided in geographic coordinates, it is recommended to run the "geogrid" module (https://github.com/leiyangleon/geogrid) first before running "autorift". In other words, the outputs from "testGeogrid.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname") will serve as the inputs for running "autorift" or will be required to generate the final motion velocity maps.
