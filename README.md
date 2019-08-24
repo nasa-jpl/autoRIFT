@@ -130,8 +130,8 @@ For modular use:
 * The "autorift" object has several inputs that have to be assigned (listed below; can also be obtained by referring to "testAutorift.py"): 
        
        ------------------input------------------
-       I1:                  reference image (patches defined as "source")
-       I2:                  test image (patches defined as "template"; displacement = motion vector of I2 relative to I1)
+       I1:                  reference image (extracted image patches defined as "source")
+       I2:                  test image (extracted image patches defined as "template"; displacement = motion vector of I2 relative to I1)
        xGrid:               x-direction pixel index at each grid point
        yGrid:               y-direction pixel index at each grid point
        (if xGrid and yGrid not provided, a regular grid spanning the entire image will be automatically set up, which is similar to the conventional ISCE module, "ampcor" or "denseampcor")
