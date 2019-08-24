@@ -37,15 +37,15 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 * this sub-module is not only suitable for radar images, but also for optical, etc
 * when the grid is provided in geographic coordinates, all outputs are in the format of GeoTIFF with the same EPSG code as input grid
 
-## Possible future development
+## 4. Possible future development
 
-* for radar or SAR images, it is yet to include the complex correlation of the two images, i.e. the current version only uses the amplitude while the phase needs to be investigated
+* for radar (SAR) images, it is yet to include the complex correlation of the two images, i.e. the current version only uses the amplitude while the phase needs to be investigated
 * the current version works for single-core CPU while the multi-core parallelization or GPU implementation would be useful to extend 
 
 
-## 4. Demo
+## 5. Demo
 
-### 4.1 Optical image over regular grid in imaging coordinates
+### 5.1 Optical image over regular grid in imaging coordinates
 
 <img src="figures/regular_grid_optical.png" width="100%">
 
@@ -57,7 +57,7 @@ This is done by implementing the following command line:
 
 where "I1" and "I2" are the reference and test images as defined in the instructions below. The "-fo" option indicates whether or not to read optical image data.
 
-### 4.2 Radar image over regular grid in imaging coordinates
+### 5.2 Radar image over regular grid in imaging coordinates
 
 <img src="figures/regular_grid.png" width="100%">
 
@@ -71,7 +71,7 @@ This is obtained by implementing the following command line:
 where "I1" and "I2" are the reference and test images as defined in the instructions below. 
 
 
-### 4.3 Radar image over user-defined geographic-coordinate grid
+### 5.3 Radar image over user-defined geographic-coordinate grid
 
 <img src="figures/autorift1.png" width="100%">
 
@@ -94,7 +94,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 ***Final motion velocity results by combining outputs from "geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/geogrid) and "autorift" modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 
-## 5. Install
+## 6. Install
 
 * First install ISCE
 * Put the "geoAutorift" folder and the "Sconscript" file under the "contrib" folder that is one level down ISCE's source directory (denoted as "isce-version"; where you started installing ISCE), i.e. "isce-version/contrib/" (see the snapshot below)
@@ -104,7 +104,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 * Run "scons install" again from ISCE's source directory "isce-version" using command line
 * This distribution automatically installs the "autorift" module as well as the "geogrid" module (https://github.com/leiyangleon/Geogrid).
 
-## 6. Instructions
+## 7. Instructions
 
 
 * When the grid is provided in geographic coordinates, it is recommended to run the "geogrid" module (https://github.com/leiyangleon/geogrid) first before running "autorift". In other words, the outputs from "testGeogrid.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname") will serve as the inputs for running "autorift" or will be required to generate the final motion velocity maps.
