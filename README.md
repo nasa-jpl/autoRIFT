@@ -9,7 +9,7 @@ Citation: https://github.com/leiyangleon/autoRIFT
 
 Alex Gardner (JPL/Caltech; alex.s.gardner@jpl.nasa.gov) first described the algorithm "auto-RIFT" in (Gardner et al., 2018) and developed the first version in MATLAB;
 
-Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimized and incoporated to ISCE.
+Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimized and incoporated to the ISCE (The InSAR Scientific Computing Environment) software.
 
 Reference: Gardner, A. S., Moholdt, G., Scambos, T., Fahnstock, M., Ligtenberg, S., van den Broeke, M., & Nilsson, J. (2018). Increased West Antarctic and unchanged East Antarctic ice discharge over the last 7 years. The Cryosphere, 12(2), 521–547. https://doi.org/10.5194/tc-12-521-2018
 
