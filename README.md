@@ -21,12 +21,13 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
        
 ## 3. Features
 
-* fast algorithm that finds displacement between the two images using sparse search and iteratively progressive chip sizes
+* fast algorithm that finds displacement between the two images (a.k.a source and template) using sparse search and iteratively progressive chip (template) sizes
+* user can specify unstructured search centers (center of the search window in the source), chip sizes, search offsets (center displacement of the template compared to the source) and search ranges (the extent to which the source is searched in reference to the search center)
 * faster than the conventional "ampcor"/"denseampcor" algorithm in ISCE by almost an order of magnitude
 * support various preprocessing modes on the given image pair, e.g. either the raw image (both texture and topography) or the texture only (high-frequency components without the topography) can be used with various choices of the high-pass filter options 
 * support data format of either unsigned integer 8 (uint8; faster) or single-precision float (float32)
-* user can adjust all of the relevant parameters, e.g. search limit, chip size range, etc
-* a Normalized Displacement Coherence (NDC) filter is developed to filter image chip displacemnt results based on displacement difference thresholds that are scaled to the search limit
+* user can adjust all of the relevant parameters, as detailed below in the instructions
+* a Normalized Displacement Coherence (NDC) filter is developed (Gardner et al., 2018) to filter the chip displacemnt results based on displacement difference thresholds that are scaled to the search range
 * sparse search is used to first eliminate the unreliable chip displacement results that will not be further used for fine search or following chip size iterations
 * novel nested grid design that allows chip size to progress
 * another chip size that progresses iteratively is used to determine the chip displacement results that have not been estimated from the previous iterations
@@ -35,6 +36,12 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 * sub-pixel displacement estimation using the pyramid upsampling algorithm
 * this sub-module is not only suitable for radar images, but also for optical, etc
 * when the grid is provided in geographic coordinates, all outputs are in the format of GeoTIFF with the same EPSG code as input grid
+
+## Possible future development
+
+* for radar or SAR images, it is yet to include the complex correlation of the two images, i.e. the current version only uses the amplitude while the phase needs to be investigated
+* the current version works for single-core CPU while the multi-core parallelization or GPU implementation would be useful to extend 
+
 
 ## 4. Demo
 
@@ -123,8 +130,8 @@ For modular use:
 * The "autorift" object has several inputs that have to be assigned (listed below; can also be obtained by referring to "testAutorift.py"): 
        
        ------------------input------------------
-       I1:                  reference image
-       I2:                  test image (displacement = motion vector of I2 relative to I1)
+       I1:                  reference image (patches defined as "source")
+       I2:                  test image (patches defined as "template"; displacement = motion vector of I2 relative to I1)
        xGrid:               x-direction pixel index at each grid point
        yGrid:               y-direction pixel index at each grid point
        (if xGrid and yGrid not provided, a regular grid spanning the entire image will be automatically set up, which is similar to the conventional ISCE module, "ampcor" or "denseampcor")
@@ -151,14 +158,14 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
 * The "autorift" object has many parameters that can be flexibly tweaked by the users for their own purpose (listed below; can also be obtained by referring to "geoAutorift/autorift/Autorift.py"):
 
        ------------------parameter list: general function------------------
-       ChipSizeMinX:               Minimum size (in X direction) of the image template (chip) to correlate (default = 32; could be scalar or array with same dimension as xGrid)
-       ChipSizeMaxX:               Maximum size (in X direction) of the image template (chip) to correlate (default = 64; could be scalar or array with same dimension as xGrid)
-       ChipSize0X:                 Minimum acceptable size (in X direction) of the image template (chip) to correlate (default = 32)
+       ChipSizeMinX:               Minimum size (in X direction) of the template (chip) to correlate (default = 32; could be scalar or array with same dimension as xGrid)
+       ChipSizeMaxX:               Maximum size (in X direction) of the template (chip) to correlate (default = 64; could be scalar or array with same dimension as xGrid)
+       ChipSize0X:                 Minimum acceptable size (in X direction) of the template (chip) to correlate (default = 32)
        ScaleChipSizeY              Scaling factor to get the Y-directed chip size in reference to the X-directed sizes (default = 1)
-       SearchLimitX                Range (in X direction) to search for displacement in the image (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
-       SearchLimitY                Range (in Y direction) to search for displacement in the image (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
-       SkipSampleX                 Number of samples to skip between windows in X direction for automatically creating the grid if not specified by the user (default = 32)
-       SkipSampleY                 Number of lines to skip between windows in Y direction for automatically creating the grid if not specified by the user (default = 32)
+       SearchLimitX                Range (in X direction) to search for displacement in the source (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
+       SearchLimitY                Range (in Y direction) to search for displacement in the source (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
+       SkipSampleX                 Number of samples to skip between search windows in X direction for automatically creating the grid if not specified by the user (default = 32)
+       SkipSampleY                 Number of lines to skip between search windows in Y direction for automatically creating the grid if not specified by the user (default = 32)
        minSearch                   Minimum search limit (default = 6)
        
        ------------------parameter list: about Normalized Displacement Coherence (NDC) filter ------------------
