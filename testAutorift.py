@@ -102,13 +102,13 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, noDataMask):
     '''
 
     import isce
-    from components.contrib.geoAutorift.autorift.Autorift import Autorift
+    from components.contrib.geoAutorift.autorift import AutoriftISCE
     import numpy as np
     import isceobj
     import time
     
     
-    obj = Autorift()
+    obj = AutoriftISCE()
     obj.configure()
 
 #    #uncomment if starting from preprocessed images

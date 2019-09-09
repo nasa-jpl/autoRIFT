@@ -31,196 +31,22 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-import isce
-from iscesys.Component.Component import Component
-import pdb
-import subprocess
+#import pdb
 import re
-import string
 import sys
 
-WALLIS_FILTER_WIDTH = Component.Parameter('WallisFilterWidth',
-        public_name='WALLIS_FILTER_WIDTH',
-        default = 21,
-        type = int,
-        mandatory = False,
-        doc = 'Width of the Wallis filter to be used for the pre-processing')
 
-CHIP_SIZE_MIN_X = Component.Parameter('ChipSizeMinX',
-        public_name='CHIP_SIZE_MIN',
-        default = 32,
-        type = int,
-        mandatory = False,
-        doc = 'Minimum size (in X direction) of the reference data window to be used for correlation')
-
-CHIP_SIZE_MAX_X = Component.Parameter('ChipSizeMaxX',
-        public_name='CHIP_SIZE_MAX',
-        default = 64,
-        type = int,
-        mandatory = False,
-        doc = 'Maximum size (in X direction) of the reference data window to be used for correlation')
-
-CHIP_SIZE_0X = Component.Parameter('ChipSize0X',
-        public_name='CHIP_SIZE_0X',
-        default = 32,
-        type = int,
-        mandatory = False,
-        doc = 'Minimum acceptable size (in X direction) of the reference data window to be used for correlation')
-
-SCALE_CHIP_SIZE_Y = Component.Parameter('ScaleChipSizeY',
-        public_name='SCALE_CHIP_SIZE_Y',
-        default = 1,
-        type = int,
-        mandatory = False,
-        doc = 'Scaling factor to get the Y-directed chip size in reference to the X-directed sizes')
-
-SEARCH_LIMIT_X = Component.Parameter('SearchLimitX',
-        public_name='SEARCH_LIMIT_X',
-        default = 25,
-        type = int,
-        mandatory = False,
-        doc = 'Limit (in X direction) of the search data window to be used for correlation')
-
-SEARCH_LIMIT_Y = Component.Parameter('SearchLimitY',
-        public_name='SEARCH_LIMIT_Y',
-        default = 25,
-        type = int,
-        mandatory = False,
-        doc = 'Limit (in Y direction) of the search data window to be used for correlation')
-
-SKIP_SAMPLE_X = Component.Parameter('SkipSampleX',
-        public_name = 'SKIP_SAMPLE_X',
-        default = 32,
-        type = int,
-        mandatory = False,
-        doc = 'Number of samples to skip between windows in X (range) direction.')
-
-SKIP_SAMPLE_Y = Component.Parameter('SkipSampleY',
-        public_name = 'SKIP_SAMPLE_Y',
-        default = 32,
-        type = int,
-        mandatory=False,
-        doc = 'Number of lines to skip between windows in Y ( "-" azimuth) direction.')
-
-FILL_FILT_WIDTH = Component.Parameter('fillFiltWidth',
-        public_name = 'FILL_FILT_WIDTH',
-        default = 3,
-        type = int,
-        mandatory=False,
-        doc = 'light interpolation Fill Filter width')
-
-MIN_SEARCH = Component.Parameter('minSearch',
-        public_name = 'MIN_SEARCH',
-        default = 6,
-        type = int,
-        mandatory=False,
-        doc = 'minimum search limit')
-
-SPARSE_SEARCH_SAMPLE_RATE = Component.Parameter('sparseSearchSampleRate',
-        public_name = 'SPARSE_SEARCH_SAMPLE_RATE',
-        default = 4,
-        type = int,
-        mandatory=False,
-        doc = 'sparse search sample rate')
-
-FRAC_VALID = Component.Parameter('FracValid',
-        public_name = 'FRAC_VALID',
-        default = 8/25,
-        type = float,
-        mandatory=False,
-        doc = 'Fraction of valid displacements')
-
-FRAC_SEARCH = Component.Parameter('FracSearch',
-        public_name = 'FRAC_SEARCH',
-        default = 0.25,
-        type = float,
-        mandatory=False,
-        doc = 'Fraction of search')
-
-FILT_WIDTH = Component.Parameter('FiltWidth',
-        public_name = 'FILT_WIDTH',
-        default = 5,
-        type = int,
-        mandatory=False,
-        doc = 'Disparity Filter width')
-
-ITER = Component.Parameter('Iter',
-        public_name = 'ITER',
-        default = 3,
-        type = int,
-        mandatory=False,
-        doc = 'Number of iterations')
-
-MAD_SCALAR = Component.Parameter('MadScalar',
-        public_name = 'MAD_SCALAR',
-        default = 4,
-        type = int,
-        mandatory=False,
-        doc = 'Mad Scalar')
-
-BUFF_DISTANCE_C = Component.Parameter('BuffDistanceC',
-        public_name = 'BUFF_DISTANCE_C',
-        default = 8,
-        type = int,
-        mandatory=False,
-        doc = 'buffer coarse corr mask by this many pixels for use as fine search mask')
-
-COARSE_COR_CUTOFF = Component.Parameter('CoarseCorCutoff',
-        public_name = 'COARSE_COR_CUTOFF',
-        default = 0.01,
-        type = float,
-        mandatory=False,
-        doc = 'coarse correlation search cutoff')
-
-OVER_SAMPLE_RATIO = Component.Parameter('OverSampleRatio',
-        public_name = 'OVER_SAMPLE_RATIO',
-        default = 16,
-        type = int,
-        mandatory=False,
-        doc = 'factor for pyramid up sampling for sub-pixel level offset refinement')
-
-DATA_TYPE = Component.Parameter('DataType',
-         public_name = 'DATA_TYPE',
-         default = 0,
-         type = int,
-         mandatory=False,
-         doc = 'Input data type: 0 -> uint8, 1 -> float32')
-
-class Autorift(Component):
+class Autorift:
     '''
     Class for mapping regular geographic grid on radar imagery.
     '''
-    
-    parameter_list = (WALLIS_FILTER_WIDTH,
-                      CHIP_SIZE_MIN_X,
-                      CHIP_SIZE_MAX_X,
-                      CHIP_SIZE_0X,
-                      SCALE_CHIP_SIZE_Y,
-                      SEARCH_LIMIT_X,
-                      SEARCH_LIMIT_Y,
-                      SKIP_SAMPLE_X,
-                      SKIP_SAMPLE_Y,
-                      FILL_FILT_WIDTH,
-                      MIN_SEARCH,
-                      SPARSE_SEARCH_SAMPLE_RATE,
-                      FRAC_VALID,
-                      FRAC_SEARCH,
-                      FILT_WIDTH,
-                      ITER,
-                      MAD_SCALAR,
-                      BUFF_DISTANCE_C,
-                      COARSE_COR_CUTOFF,
-                      OVER_SAMPLE_RATIO,
-                      DATA_TYPE)
     
     def preprocess_filt_wal(self):
         '''
         Do the pre processing using wallis filter (10 min vs 15 min in Matlab).
         '''
-        import isce
         import cv2
         import numpy as np
-#        import scipy.io as sio
 
         self.I1 = np.abs(self.I1)
         
@@ -254,39 +80,10 @@ class Autorift(Component):
         self.I2 = (self.I2 - m) / s
     
     
-    
-#    ####   obsolete definition of "preprocess_filt_hps"
-#    def preprocess_filt_hps(self):
-#        '''
-#        Do the pre processing using (orig - low-pass filter) = high-pass filter filter (3.9/5.3 min).
-#        '''
-#        import isce
-#        import cv2
-#        import numpy as np
-#
-#        self.I1 = np.abs(self.I1)
-#
-#        self.I2 = np.abs(self.I2)
-#
-#        if self.zeroMask is not None:
-#            self.zeroMask = (self.I1 == 0)
-#
-#        kernel = np.ones((self.WallisFilterWidth,self.WallisFilterWidth), dtype=np.float32)
-#
-#        lp = cv2.filter2D(self.I1,-1,kernel,borderType=cv2.BORDER_CONSTANT)/np.sum(kernel)
-#
-#        self.I1 = (self.I1 - lp)
-#
-#        lp = cv2.filter2D(self.I2,-1,kernel,borderType=cv2.BORDER_CONSTANT)/np.sum(kernel)
-#
-#        self.I2 = (self.I2 - lp)
-
-    
     def preprocess_filt_hps(self):
         '''
         Do the pre processing using (orig - low-pass filter) = high-pass filter filter (3.9/5.3 min).
         '''
-        import isce
         import cv2
         import numpy as np
 
@@ -315,7 +112,6 @@ class Autorift(Component):
         '''
         Do the pre processing using db scale (4 min).
         '''
-        import isce
         import cv2
         import numpy as np
         
@@ -333,13 +129,10 @@ class Autorift(Component):
         self.I2 = 20.0 * np.log10(self.I2)
         
         
-        
-        
     def preprocess_filt_sob(self):
         '''
         Do the pre processing using sobel filter (4.5/5.8 min).
         '''
-        import isce
         import cv2
         import numpy as np
         
@@ -363,20 +156,12 @@ class Autorift(Component):
         self.I1 = cv2.filter2D(self.I1,-1,kernel,borderType=cv2.BORDER_CONSTANT)
         
         self.I2 = cv2.filter2D(self.I2,-1,kernel,borderType=cv2.BORDER_CONSTANT)
-        
-        
-        
-
-        
-
-    
     
 
     def preprocess_filt_lap(self):
         '''
         Do the pre processing using Laplacian filter (2.5 min / 4 min).
         '''
-        import isce
         import cv2
         import numpy as np
                         
@@ -394,13 +179,6 @@ class Autorift(Component):
         self.I2 = cv2.Laplacian(self.I2,-1,ksize=self.WallisFilterWidth,borderType=cv2.BORDER_CONSTANT)
     
 
-
-
-
-
-        
-        
-        
     def uniform_data_type(self):
         
         import numpy as np
@@ -448,7 +226,6 @@ class Autorift(Component):
         '''
         Do the actual processing.
         '''
-        import isce
         import numpy as np
         import cv2
         from scipy import ndimage
@@ -737,17 +514,10 @@ class Autorift(Component):
         self.ChipSizeY = ChipSizeY
 
 
-
-
-    
-
-
-
     def runAutorift(self):
         '''
         quick processing routine which calls autorift main function (user can define their own way by mimicing the workflow here).
         '''
-        import isce
         import numpy as np
         
         # create the grid if it does not exist
@@ -802,10 +572,6 @@ class Autorift(Component):
     
 
     def __init__(self):
-        
-        super(Autorift, self).__init__()
-
-        
         ##Input related parameters
         self.I1 = None
         self.I2 = None
@@ -827,19 +593,16 @@ class Autorift(Component):
 
 
 
-
-
 class AUTO_RIFT_CORE:
     def __init__(self):
         ##Pointer to C
         self._autoriftcore = None
 
 
-
 def arImgDisp_u(I1, I2, xGrid, yGrid, ChipSizeX, ChipSizeY, SearchLimitX, SearchLimitY, Dx0, Dy0, SubPixFlag, oversample):
 
     import numpy as np
-    from components.contrib.geoAutorift.autorift import autoriftcore
+    from . import autoriftcore
     
     core = AUTO_RIFT_CORE()
     if core._autoriftcore is not None:
@@ -994,13 +757,10 @@ def arImgDisp_u(I1, I2, xGrid, yGrid, ChipSizeX, ChipSizeY, SearchLimitX, Search
 
 
 
-
-
-
 def arImgDisp_s(I1, I2, xGrid, yGrid, ChipSizeX, ChipSizeY, SearchLimitX, SearchLimitY, Dx0, Dy0, SubPixFlag, oversample):
     
     import numpy as np
-    from components.contrib.geoAutorift.autorift import autoriftcore
+    from . import autoriftcore
     
     core = AUTO_RIFT_CORE()
     if core._autoriftcore is not None:
