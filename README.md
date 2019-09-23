@@ -62,6 +62,8 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 
 This is obtained by implementing the following command line:
 
+With ISCE:
+
        testautoRIFT_ISCE.py -m I1 -s I2
 
 where "I1" and "I2" are the reference and test images as defined in the instructions below. 
@@ -74,6 +76,8 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 ***Output of "autoRIFT" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) at Jakobshavn Glacier of Greenland over user-defined geographic-coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/geogrid): (a) estimated range pixel displacement, (b) estimated azimuth pixel displacement, (c) light interpolation mask, (b) range-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 This is done by implementing the following command line:
+
+With ISCE:
 
        testautoRIFT_ISCE.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname
 
@@ -143,12 +147,24 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 **With ISCE:**
 
 * First install ISCE
-* Put the "geoAutorift" folder and the "Sconscript" file under the "contrib" folder that is one level down ISCE's source directory (denoted as "isce-version"; where you started installing ISCE), i.e. "isce-version/contrib/" (see the snapshot below)
+* Put the "geo-autoRIFT" folder and the "Sconscript" file under the "contrib" folder that is one level down ISCE's source directory (denoted as "isce-version"; where you started installing ISCE), i.e. "isce-version/contrib/" (see the snapshot below)
 
-<img src="figures/install_snapshot.png" width="35%">
+<img src="figures/install_ISCE.png" width="35%">
 
 * Run "scons install" again from ISCE's source directory "isce-version" using command line
-* This distribution automatically installs the "autorift" module as well as the "geogrid" module (https://github.com/leiyangleon/Geogrid).
+* This distribution automatically installs the "autoRIFT" module as well as the "Geogrid" module (https://github.com/leiyangleon/Geogrid).
+
+
+**Standalone:**
+
+* Put the "geo-autoRIFT" folder and the "setup.py" file under some source directory (see the snapshot below)
+
+<img src="figures/install_standalone.png" width="35%">
+
+* Run "python3 setup.py install" or "sudo python3 setup.py install" (if the previous failed due to permission) using command line
+* This distribution automatically installs the "autoRIFT" module as well as the "Geogrid" module (https://github.com/leiyangleon/Geogrid)
+* This version only supports optical images.
+
 
 ## 7. Instructions
 
