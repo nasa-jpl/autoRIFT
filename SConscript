@@ -63,4 +63,4 @@ SConscript(rfi)
 SConscript('PyCuAmpcor/SConscript')
 SConscript('splitSpectrum/SConscript')
 
-SConscript('geoAutorift/SConscript')
+SConscript('geo_autoRIFT/SConscript')
