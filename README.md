@@ -1,15 +1,22 @@
 # autoRIFT (autonomous Repeat Image Feature Tracking)
-A fast and intelligent algorithm for finding the pixel displacement between two images
+
+Python module of a fast and intelligent algorithm for finding the pixel displacement between two images
+
+The current version can be installed with the ISCE (The InSAR Scientific Computing Environment) software (that supports both radar and optical images) or as a standalone Python module (only supports optical images)
+
+In combination with the Python module, Geogrid (https://github.com/leiyangleon/Geogrid), this module can be used to create feature tracking imagery (e.g. land ice motion velocity) over arbitrary geographic-coordinate grid (e.g. Digital Elevation Model)
 
 Copyright (C) 2019 California Institute of Technology.  Government Sponsorship Acknowledged.
 
-Citation: https://github.com/leiyangleon/autoRIFT
+Link: https://github.com/leiyangleon/autoRIFT
 
 ## 1. Authors
 
 Alex Gardner (JPL/Caltech; alex.s.gardner@jpl.nasa.gov) first described the algorithm "auto-RIFT" in (Gardner et al., 2018) and developed the first version in MATLAB;
 
-Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimized and incoporated to the ISCE (The InSAR Scientific Computing Environment) software.
+Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimized and incoporated to the ISCE software;
+
+Piyush Agram (JPL/Caltech; piyush.agram@jpl.nasa.gov) set up the installation as a standalone module and further cleaned the code.
 
 Reference: Gardner, A. S., Moholdt, G., Scambos, T., Fahnstock, M., Ligtenberg, S., van den Broeke, M., & Nilsson, J. (2018). Increased West Antarctic and unchanged East Antarctic ice discharge over the last 7 years. The Cryosphere, 12(2), 521–547. https://doi.org/10.5194/tc-12-521-2018
 
@@ -34,7 +41,8 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 * a light interpolation is done to fill the missing (unreliable) chip displacement results using bicubic mode (that can remove pixel discrepancy when using other modes) and an interpolation mask is returned
 * the core image processing is coded by calling OpenCV's Python and/or C++ functions for efficiency 
 * sub-pixel displacement estimation using the pyramid upsampling algorithm
-* this sub-module is not only suitable for radar images, but also for optical, etc
+* the current version can be installed with the ISCE (The InSAR Scientific Computing Environment) software (that supports both radar and optical images) or as a standalone Python module (only supports optical images)
+* in combination with the Python module, Geogrid (https://github.com/leiyangleon/Geogrid), this module can be used to create feature tracking imagery (e.g. land ice motion velocity) over arbitrary geographic-coordinate grid (e.g. Digital Elevation Model)
 * when the grid is provided in geographic coordinates, all outputs are in the format of GeoTIFF with the same EPSG code as input grid
 
 ## 4. Possible future development
