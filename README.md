@@ -140,6 +140,8 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 ## 6. Install
 
+**With ISCE:**
+
 * First install ISCE
 * Put the "geoAutorift" folder and the "Sconscript" file under the "contrib" folder that is one level down ISCE's source directory (denoted as "isce-version"; where you started installing ISCE), i.e. "isce-version/contrib/" (see the snapshot below)
 
