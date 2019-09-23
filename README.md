@@ -53,53 +53,89 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 
 ## 5. Demo
 
-### 5.1 Optical image over regular grid in imaging coordinates
-
-<img src="figures/regular_grid_optical.png" width="100%">
-
-***Output of "autorift" module for a pair of Landsat-8 images (20170708-20170724) in Greenland over a regular-spacing grid: (a) estimated x-direction pixel displacement, (b) estimated y-direction pixel displacement, (c) light interpolation mask, (b) x-direction chip size used.***
-
-This is done by implementing the following command line:
-
-       testAutorift.py -m I1 -s I2 -fo 1
-
-where "I1" and "I2" are the reference and test images as defined in the instructions below. The "-fo" option indicates whether or not to read optical image data.
-
-### 5.2 Radar image over regular grid in imaging coordinates
+### 5.1 Radar image over regular grid in imaging coordinates
 
 <img src="figures/regular_grid.png" width="100%">
 
-***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/geogrid) at Jakobshavn Glacier of Greenland over a regular-spacing grid: (a) estimated x-direction (range) pixel displacement, (b) estimated y-direction (minus azimuth) pixel displacement, (c) light interpolation mask, (b) x-direction chip size used.***
+***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) at Jakobshavn Glacier of Greenland over a regular-spacing grid: (a) estimated range pixel displacement, (b) estimated azimuth pixel displacement, (c) light interpolation mask, (b) range-direction chip size used.***
 
 
 This is obtained by implementing the following command line:
 
-       testAutorift.py -m I1 -s I2
+       testautoRIFT_ISCE.py -m I1 -s I2
 
 where "I1" and "I2" are the reference and test images as defined in the instructions below. 
 
 
-### 5.3 Radar image over user-defined geographic-coordinate grid
+### 5.2 Radar image over user-defined geographic-coordinate grid
 
 <img src="figures/autorift1.png" width="100%">
 
-***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/geogrid) at Jakobshavn Glacier of Greenland over user-defined geographic-coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/geogrid): (a) estimated x-direction (range) pixel displacement, (b) estimated y-direction (minus azimuth) pixel displacement, (c) light interpolation mask, (b) x-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) at Jakobshavn Glacier of Greenland over user-defined geographic-coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/geogrid): (a) estimated range pixel displacement, (b) estimated azimuth pixel displacement, (c) light interpolation mask, (b) range-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 This is done by implementing the following command line:
 
-       testAutorift.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname
+       testautoRIFT_ISCE.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname
 
-where "I1" and "I2" are the reference and test images as defined in the instructions below, and "winlocname", "winoffname", "winro2vxname", "winro2vyname" are the four outputs from running "testGeogrid.py" as defined at https://github.com/leiyangleon/geogrid.
+where "I1" and "I2" are the reference and test images as defined in the instructions below, and "winlocname", "winoffname", "winro2vxname", "winro2vyname" are the four outputs from running "testGeogrid.py" as defined at https://github.com/leiyangleon/Geogrid.
 
 **Runtime comparison for this test (on an OS X system with 2.9GHz Intel Core i7 processor and 16GB RAM):**
-* __Autorift: 10 mins__
-* __Dense ampcor from ISCE: 90 mins__
-
+* __autoRIFT (single core): 10 mins__
+* __Dense ampcor from ISCE (8 cores): 90 mins__
 
 
 <img src="figures/autorift2.png" width="100%">
 
-***Final motion velocity results by combining outputs from "geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/geogrid) and "autorift" modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+
+
+
+### 5.3 Optical image over regular grid in imaging coordinates
+
+<img src="figures/regular_grid_optical.png" width="100%">
+
+***Output of "autorift" module for a pair of Landsat-8 images (20170708-20170724; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) in Greenland over a regular-spacing grid: (a) estimated horizontal pixel displacement, (b) estimated vertical pixel displacement, (c) light interpolation mask, (b) horizontal-direction chip size used.***
+
+This is done by implementing the following command line:
+
+Standalone:
+       
+       testautoRIFT.py -m I1 -s I2 -fo 1
+       
+With ISCE:
+       
+       testautoRIFT_ISCE.py -m I1 -s I2 -fo 1
+
+where "I1" and "I2" are the reference and test images as defined in the instructions below. The "-fo" option indicates whether or not to read optical image data.
+
+
+### 5.4 Optical image over user-defined geographic-coordinate grid
+
+<img src="figures/autorift1_opt.png" width="100%">
+
+***Output of "autorift" module for a pair of Landsat-8 images (20170708-20170724; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) in Greenland over user-defined geographic-coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/Geogrid): (a) estimated horizontal pixel displacement, (b) estimated vertical pixel displacement, (c) light interpolation mask, (b) horizontal-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+
+This is done by implementing the following command line:
+
+Standalone:
+       
+       testautoRIFT.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname -fo 1
+       
+With ISCE:
+
+       testautoRIFT_ISCE.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname -fo 1
+       
+where "I1" and "I2" are the reference and test images as defined in the instructions below, and "winlocname", "winoffname", "winro2vxname", "winro2vyname" are the four outputs from running "testGeogrid.py" as defined at https://github.com/leiyangleon/Geogrid.
+
+
+
+
+<img src="figures/autorift2_opt.png" width="100%">
+
+***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules: (a) estimated motion velocity from Landsat-8 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Landsat-8 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+
+
+**Note: in order to use autoRIFT, the optical images have to be co-registered with the same x- and y-limits in map coordinates**
 
 
 ## 6. Install
