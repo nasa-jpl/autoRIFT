@@ -169,19 +169,23 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 ## 7. Instructions
 
 
-* When the grid is provided in geographic coordinates, it is recommended to run the "geogrid" module (https://github.com/leiyangleon/geogrid) first before running "autorift". In other words, the outputs from "testGeogrid.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname") will serve as the inputs for running "autorift" or will be required to generate the final motion velocity maps.
+* When the grid is provided in geographic coordinates, it is recommended to run the "Geogrid" module (https://github.com/leiyangleon/Geogrid) first before running "autoRIFT". In other words, the outputs from "testGeogrid.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname") will serve as the inputs for running "autoRIFT" or will be required to generate the final motion velocity maps.
 
-For quick use:
-* Refer to the file "testAutorift.py" for the usage of the module and modify it for your own purpose
+**For quick use:**
+
+* Refer to the file "testautoRIFT.py" (standalone) and "testautoRIFT_ISCE.py" (with ISCE) for the usage of the module and modify it for your own purpose
 * Input files include the reference image (required), test image (required), and the four outputs from running "testGeogrid.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname"). 
 
-_Note: if the four outputs from running the "geogrid" module are not provided, a regular grid will be assigned_
+_Note: if the four outputs from running the "Geogrid" module are not provided, a regular grid will be assigned_
 
 * Output files include 1) estimated x-direction displacement (equivalent to range for radar), 2) estimated y-direction displacement (equivalent to minus azimuth for radar), 3) light interpolation mask, 4) iteratively progressive chip size used in x direction. 
 
 _Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF consisting of the final converted motion velocity in geographic x- and y-coordinates will be created and named "velocity.tif"._
 
-For modular use:
+**For modular use:**
+
+
+
 * In Python environment, type the following to import the "autorift" module and initialize the "autorift" object
 
        import isce
