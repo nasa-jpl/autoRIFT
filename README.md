@@ -184,16 +184,21 @@ _Note: These four output files will be stored in a file named "offset.mat" that 
 
 **For modular use:**
 
+* In Python environment, type the following to import the "autoRIFT" module and initialize the "autoRIFT" object
 
-
-* In Python environment, type the following to import the "autorift" module and initialize the "autorift" object
+_With ISCE:_
 
        import isce
-       from components.contrib.geoAutorift.autorift.Autorift import Autorift
-       obj = Autorift()
+       from contrib.geo_autoRIFT.autoRIFT import autoRIFT_ISCE
+       obj = autoRIFT_ISCE()
        obj.configure()
 
-* The "autorift" object has several inputs that have to be assigned (listed below; can also be obtained by referring to "testAutorift.py"): 
+_Standalone:_
+
+       from autoRIFT import autoRIFT
+       obj = autoRIFT()
+
+* The "autoRIFT" object has several inputs that have to be assigned (listed below; can also be obtained by referring to "testautoRIFT.py"): 
        
        ------------------input------------------
        I1:                  reference image (extracted image patches defined as "source")
@@ -213,7 +218,7 @@ _Note: These four output files will be stored in a file named "offset.mat" that 
 
 where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass filter, "sob" for the Sobel filter, "lap" for the Laplacian filter, and also a logarithmic operator without filtering is adopted for occasions where low-frequency components (i.e. topography) are desired, i.e. "obj.preprocess_db()".
 
-* The "autorift" object has the following four outputs: 
+* The "autoRIFT" object has the following four outputs: 
        
        ------------------output------------------
        Dx:                  estimated displacement in x-direction
@@ -221,7 +226,7 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
        InterpMask:          light interpolation mask
        ChipSizeX:           iteratively progressive chip size used in x-direction (different chip sizes allowed for x and y)
 
-* The "autorift" object has many parameters that can be flexibly tweaked by the users for their own purpose (listed below; can also be obtained by referring to "geoAutorift/autorift/Autorift.py"):
+* The "autoRIFT" object has many parameters that can be flexibly tweaked by the users for their own purpose (listed below; can also be obtained by referring to "geo_autoRIFT/autoRIFT/autoRIFT_ISCE.py"):
 
        ------------------parameter list: general function------------------
        ChipSizeMinX:               Minimum size (in X direction) of the template (chip) to correlate (default = 32; could be scalar or array with same dimension as xGrid)
