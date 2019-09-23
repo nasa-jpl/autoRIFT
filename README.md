@@ -1,10 +1,10 @@
 # autoRIFT (autonomous Repeat Image Feature Tracking)
 
-Python module of a fast and intelligent algorithm for finding the pixel displacement between two images
+**Python module of a fast and intelligent algorithm for finding the pixel displacement between two images
 
-The current version can be installed with the ISCE (The InSAR Scientific Computing Environment) software (that supports both radar and optical images) or as a standalone Python module (only supports optical images)
+**The current version can be installed with the ISCE (The InSAR Scientific Computing Environment) software (that supports both radar and optical images) or as a standalone Python module (only supports optical images)
 
-In combination with the Python module, Geogrid (https://github.com/leiyangleon/Geogrid), this module can be used to create feature tracking imagery (e.g. land ice motion velocity) over arbitrary geographic-coordinate grid (e.g. Digital Elevation Model)
+**In combination with the Python module, Geogrid (https://github.com/leiyangleon/Geogrid), this module can be used to create feature tracking imagery (e.g. land ice motion velocity) over arbitrary geographic-coordinate grid (e.g. Digital Elevation Model)
 
 Copyright (C) 2019 California Institute of Technology.  Government Sponsorship Acknowledged.
 
