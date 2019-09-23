@@ -55,9 +55,9 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 
 ### 5.1 Radar image over regular grid in imaging coordinates
 
-<img src="figures/regular_grid.png" width="100%">
+<img src="figures/regular_grid_new.png" width="100%">
 
-***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) at Jakobshavn Glacier of Greenland over a regular-spacing grid: (a) estimated range pixel displacement, (b) estimated azimuth pixel displacement, (c) light interpolation mask, (b) range-direction chip size used.***
+***Output of "autoRIFT" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) at Jakobshavn Glacier of Greenland over a regular-spacing grid: (a) estimated range pixel displacement, (b) estimated azimuth pixel displacement, (c) light interpolation mask, (b) range-direction chip size used.***
 
 
 This is obtained by implementing the following command line:
@@ -71,7 +71,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 <img src="figures/autorift1.png" width="100%">
 
-***Output of "autorift" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) at Jakobshavn Glacier of Greenland over user-defined geographic-coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/geogrid): (a) estimated range pixel displacement, (b) estimated azimuth pixel displacement, (c) light interpolation mask, (b) range-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+***Output of "autoRIFT" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) at Jakobshavn Glacier of Greenland over user-defined geographic-coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/geogrid): (a) estimated range pixel displacement, (b) estimated azimuth pixel displacement, (c) light interpolation mask, (b) range-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 This is done by implementing the following command line:
 
@@ -94,7 +94,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 <img src="figures/regular_grid_optical.png" width="100%">
 
-***Output of "autorift" module for a pair of Landsat-8 images (20170708-20170724; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) in Greenland over a regular-spacing grid: (a) estimated horizontal pixel displacement, (b) estimated vertical pixel displacement, (c) light interpolation mask, (b) horizontal-direction chip size used.***
+***Output of "autoRIFT" module for a pair of Landsat-8 images (20170708-20170724; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) in Greenland over a regular-spacing grid: (a) estimated horizontal pixel displacement, (b) estimated vertical pixel displacement, (c) light interpolation mask, (b) horizontal-direction chip size used.***
 
 This is done by implementing the following command line:
 
@@ -113,7 +113,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 <img src="figures/autorift1_opt.png" width="100%">
 
-***Output of "autorift" module for a pair of Landsat-8 images (20170708-20170724; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) in Greenland over user-defined geographic-coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/Geogrid): (a) estimated horizontal pixel displacement, (b) estimated vertical pixel displacement, (c) light interpolation mask, (b) horizontal-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+***Output of "autoRIFT" module for a pair of Landsat-8 images (20170708-20170724; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) in Greenland over user-defined geographic-coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/Geogrid): (a) estimated horizontal pixel displacement, (b) estimated vertical pixel displacement, (c) light interpolation mask, (b) horizontal-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 This is done by implementing the following command line:
 
