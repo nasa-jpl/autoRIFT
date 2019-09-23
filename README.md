@@ -147,7 +147,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 **With ISCE:**
 
 * First install ISCE
-* Put the "geo-autoRIFT" folder and the "Sconscript" file under the "contrib" folder that is one level down ISCE's source directory (denoted as "isce-version"; where you started installing ISCE), i.e. "isce-version/contrib/" (see the snapshot below)
+* Put the "geo_autoRIFT" folder and the "Sconscript" file under the "contrib" folder that is one level down ISCE's source directory (denoted as "isce-version"; where you started installing ISCE), i.e. "isce-version/contrib/" (see the snapshot below)
 
 <img src="figures/install_ISCE.png" width="35%">
 
@@ -157,7 +157,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 **Standalone:**
 
-* Put the "geo-autoRIFT" folder and the "setup.py" file under some source directory (see the snapshot below)
+* Put the "geo_autoRIFT" folder and the "setup.py" file under some source directory (see the snapshot below)
 
 <img src="figures/install_standalone.png" width="35%">
 
