@@ -164,6 +164,7 @@ _Note: in order to use autoRIFT, the optical images have to be co-registered wit
 * Run "python3 setup.py install" or "sudo python3 setup.py install" (if the previous failed due to permission restriction) using command line
 * This distribution automatically installs the "autoRIFT" module as well as the "Geogrid" module (https://github.com/leiyangleon/Geogrid)
 * The standalone version only supports optical images.
+* If the modules cannot be imported in Python environment, please make sure the path where these modules are installed to be added to the environmental variable $PYTHONPATH.
 
 
 ## 7. Instructions
