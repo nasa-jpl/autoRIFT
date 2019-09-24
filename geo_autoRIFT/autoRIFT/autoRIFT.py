@@ -522,12 +522,15 @@ class autoRIFT:
                 dstShape = (int(Dx.shape[0]/Scale),int(Dx.shape[1]/Scale))
                 
                 # DxF0 (filtered) / Dx (unfiltered) is the result from earlier iterations, DxFM (filtered) / DxF (unfiltered) is that of the current iteration
+                # first colfilt nans within 2-by-2 area (otherwise 1 nan will contaminate all 4 points)
                 DxF0 = colfilt(Dx,(int(Scale+1),int(Scale+1)),2)
+                # then resize to half size using area (similar to averaging) to match the current iteration
                 DxF0 = cv2.resize(DxF0,dstShape[::-1],interpolation=cv2.INTER_AREA)
                 DyF0 = colfilt(Dy,(int(Scale+1),int(Scale+1)),2)
                 DyF0 = cv2.resize(DyF0,dstShape[::-1],interpolation=cv2.INTER_AREA)
                 
                 # Note this DxFM is almost the same as DxFM (same variable) in the light interpolation (only slightly better); however, only small portion of it will be used later at locations specified by M0 and MF that are determined in the light interpolation. So even without the following two lines, the final Dx and Dy result is still the same.
+                # to fill out all of the missing values in DxF
                 DxFM = colfilt(DxF, (5,5), 3)
                 DyFM = colfilt(DyF, (5,5), 3)
                 
