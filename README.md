@@ -169,6 +169,7 @@ _Note: in order to use autoRIFT, the optical images have to be co-registered wit
 
 ## 7. Instructions
 
+**Note:**
 
 * When the grid is provided in geographic coordinates, it is recommended to run the "Geogrid" module (https://github.com/leiyangleon/Geogrid) first before running "autoRIFT". In other words, the outputs from "testGeogrid.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname") will serve as the inputs for running "autoRIFT" or will be required to generate the final motion velocity maps.
 
