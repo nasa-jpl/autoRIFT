@@ -146,7 +146,7 @@ _Note: in order to use autoRIFT, the optical images have to be co-registered wit
 
 **With ISCE:**
 
-* First install ISCE
+* First install ISCE (https://github.com/isce-framework/isce2)
 * Put the "geo_autoRIFT" folder and the "Sconscript" file under the "contrib" folder that is one level down ISCE's source directory (denoted as "isce-version"; where you started installing ISCE), i.e. "isce-version/contrib/" (see the snapshot below)
 
 <img src="figures/install_ISCE.png" width="35%">
@@ -163,7 +163,7 @@ _Note: in order to use autoRIFT, the optical images have to be co-registered wit
 
 * Run "python3 setup.py install" or "sudo python3 setup.py install" (if the previous failed due to permission) using command line
 * This distribution automatically installs the "autoRIFT" module as well as the "Geogrid" module (https://github.com/leiyangleon/Geogrid)
-* This version only supports optical images.
+* The standalone version only supports optical images.
 
 
 ## 7. Instructions
