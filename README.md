@@ -41,7 +41,7 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 * a light interpolation is done to fill the missing (unreliable) chip displacement results using bicubic mode (that can remove pixel discrepancy when using other modes) and an interpolation mask is returned
 * the core image processing is coded by calling OpenCV's Python and/or C++ functions for efficiency 
 * sub-pixel displacement estimation using the pyramid upsampling algorithm
-* the current version can be installed with the ISCE (The InSAR Scientific Computing Environment) software (that supports both radar and optical images) or as a standalone Python module (only supports optical images)
+* the current version can be installed with the ISCE software (that supports both radar and optical images) or as a standalone Python module (only supports optical images)
 * in combination with the Python module, Geogrid (https://github.com/leiyangleon/Geogrid), this module can be used to create feature tracking imagery (e.g. land ice motion velocity) over arbitrary geographic-coordinate grid (e.g. Digital Elevation Model)
 * when the grid is provided in geographic coordinates, all outputs are in the format of GeoTIFF with the same EPSG code as input grid
 
