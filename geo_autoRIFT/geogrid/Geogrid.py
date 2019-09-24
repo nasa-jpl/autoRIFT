@@ -47,7 +47,7 @@ class Geogrid(Component):
         Do the actual processing.
         '''
         import isce
-        from components.contrib.geoAutorift.geogrid import geogrid
+        from components.contrib.geo_autoRIFT.geogrid import geogrid
 
         ##Determine appropriate EPSG system
         self.epsg = self.getProjectionSystem()
@@ -180,7 +180,7 @@ class Geogrid(Component):
         '''
         Create C object and populate.
         '''
-        from components.contrib.geoAutorift.geogrid import geogrid
+        from components.contrib.geo_autoRIFT.geogrid import geogrid
         from iscesys import DateTimeUtil as DTU
 
         if self._geogrid is not None:
@@ -218,7 +218,7 @@ class Geogrid(Component):
         Clean up all the C pointers.
         '''
 
-        from components.contrib.geoAutorift.geogrid import geogrid
+        from components.contrib.geo_autoRIFT.geogrid import geogrid
         from isceobj.Util import combinedlibmodule
 
         combinedlibmodule.freeCOrbit(self._orbit)
