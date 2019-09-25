@@ -170,7 +170,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 **Note:**
 
-* When the grid is provided in geographic coordinates, it is recommended to run the "Geogrid" module (https://github.com/leiyangleon/Geogrid) first before running "autoRIFT". In other words, the outputs from "testGeogrid_ISCE.py" or "testGeogridOptical.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname") will serve as the inputs for running "autoRIFT" or will be required to generate the final motion velocity maps.
+* When the grid is provided in geographic coordinates, it is required to run the "Geogrid" module (https://github.com/leiyangleon/Geogrid) first before running "autoRIFT". In other words, the outputs from "testGeogrid_ISCE.py" or "testGeogridOptical.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname") will serve as the inputs for running "autoRIFT" or will be required to generate the final motion velocity maps.
 * When the four outputs from running the "Geogrid" module are not provided, a regular grid in the imaging coordinates will be assigned
 
 **For quick use:**
