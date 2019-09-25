@@ -176,11 +176,10 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 **For quick use:**
 
 * Refer to the file "testautoRIFT.py" (standalone) and "testautoRIFT_ISCE.py" (with ISCE) for the usage of the module and modify it for your own purpose
-* Input files include the reference image (required), test image (required), and the four outputs from running "testGeogrid.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname"). 
+* Input files include the reference image (required), test image (required), and the four outputs from running "testGeogrid_ISCE.py" or "testGeogridOptical.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname"). 
+* Output files include 1) estimated horizontal displacement (equivalent to range for radar), 2) estimated vertical displacement (equivalent to minus azimuth for radar), 3) light interpolation mask, 4) iteratively progressive chip size used. 
 
-* Output files include 1) estimated x-direction displacement (equivalent to range for radar), 2) estimated y-direction displacement (equivalent to minus azimuth for radar), 3) light interpolation mask, 4) iteratively progressive chip size used in x direction. 
-
-_Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF consisting of the final converted motion velocity in geographic x- and y-coordinates will be created and named "velocity.tif"._
+_Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF of the final converted motion velocity in geographic x- and y-coordinates will be created and named "velocity.tif"._
 
 **For modular use:**
 
@@ -203,11 +202,11 @@ _Standalone:_
        ------------------input------------------
        I1:                  reference image (extracted image patches defined as "source")
        I2:                  test image (extracted image patches defined as "template"; displacement = motion vector of I2 relative to I1)
-       xGrid:               x-direction pixel index at each grid point
-       yGrid:               y-direction pixel index at each grid point
+       xGrid:               horizontal pixel index at each grid point
+       yGrid:               vertical pixel index at each grid point
        (if xGrid and yGrid not provided, a regular grid spanning the entire image will be automatically set up, which is similar to the conventional ISCE module, "ampcor" or "denseampcor")
-       Dx0:                 x-direction coarse displacement at each grid point
-       Dy0:                 y-direction coarse displacement at each grid point
+       Dx0:                 horizontal coarse displacement at each grid point
+       Dy0:                 vertical coarse displacement at each grid point
        (if Dx0 and Dy0 not provided, an array with zero values will be automatically assigned)
 
 * After the inputs are specified, run the module as below
@@ -221,22 +220,22 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
 * The "autoRIFT" object has the following four outputs: 
        
        ------------------output------------------
-       Dx:                  estimated displacement in x-direction
-       Dy:                  estimated displacement in y-direction
+       Dx:                  estimated horizontal displacement
+       Dy:                  estimated vertical displacement
        InterpMask:          light interpolation mask
-       ChipSizeX:           iteratively progressive chip size used in x-direction (different chip sizes allowed for x and y)
+       ChipSizeX:           iteratively progressive chip size in horizontal direction (different chip size allowed for vertical)
 
 * The "autoRIFT" object has many parameters that can be flexibly tweaked by the users for their own purpose (listed below; can also be obtained by referring to "geo_autoRIFT/autoRIFT/autoRIFT_ISCE.py"):
 
        ------------------parameter list: general function------------------
-       ChipSizeMinX:               Minimum size (in X direction) of the template (chip) to correlate (default = 32; could be scalar or array with same dimension as xGrid)
-       ChipSizeMaxX:               Maximum size (in X direction) of the template (chip) to correlate (default = 64; could be scalar or array with same dimension as xGrid)
-       ChipSize0X:                 Minimum acceptable size (in X direction) of the template (chip) to correlate (default = 32)
-       ScaleChipSizeY              Scaling factor to get the Y-directed chip size in reference to the X-directed sizes (default = 1)
-       SearchLimitX                Range (in X direction) to search for displacement in the source (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
-       SearchLimitY                Range (in Y direction) to search for displacement in the source (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
-       SkipSampleX                 Number of samples to skip between search windows in X direction for automatically creating the grid if not specified by the user (default = 32)
-       SkipSampleY                 Number of lines to skip between search windows in Y direction for automatically creating the grid if not specified by the user (default = 32)
+       ChipSizeMinX:               Minimum size (in horizontal direction) of the template (chip) to correlate (default = 32; could be scalar or array with same dimension as xGrid)
+       ChipSizeMaxX:               Maximum size (in horizontal direction) of the template (chip) to correlate (default = 64; could be scalar or array with same dimension as xGrid)
+       ChipSize0X:                 Minimum acceptable size (in horizontal direction) of the template (chip) to correlate (default = 32)
+       ScaleChipSizeY              Scaling factor to get the vertically-directed chip size in reference to the horizontally-directed size (default = 1)
+       SearchLimitX                Range (in horizontal direction) to search for displacement in the source (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
+       SearchLimitY                Range (in vertical direction) to search for displacement in the source (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
+       SkipSampleX                 Number of samples to skip between search windows in horizontal direction for automatically-created grid if not specified by the user (default = 32)
+       SkipSampleY                 Number of lines to skip between search windows in vertical direction for automatically-created grid if not specified by the user (default = 32)
        minSearch                   Minimum search limit (default = 6)
        
        ------------------parameter list: about Normalized Displacement Coherence (NDC) filter ------------------
