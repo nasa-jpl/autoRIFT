@@ -46,7 +46,7 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 
 ## 4. Possible future development
 
-* for radar (SAR) images, it is yet to include the complex correlation of the two images, i.e. the current version only uses the amplitude while the phase needs to be investigated
+* for radar (SAR) images, it is yet to include the complex correlation of the two images, i.e. the current version only uses the amplitude correlation while the phase needs to be investigated
 * the current version works for single-core CPU while the multi-core parallelization or GPU implementation would be useful to extend 
 
 
