@@ -44,7 +44,7 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 * in combination with the Python module, Geogrid (https://github.com/leiyangleon/Geogrid), this module can be used to create feature tracking imagery (e.g. land ice motion velocity) over arbitrary geographic-coordinate grid (e.g. Digital Elevation Model)
 * when the grid is provided in geographic coordinates, all outputs are in the format of GeoTIFF with the same EPSG code as input grid
 
-## 4. Possible future development
+## 4. Possible Future Development
 
 * for radar (SAR) images, it is yet to include the complex correlation of the two images, i.e. the current version only uses the amplitude correlation while the phase needs to be investigated
 * the current version works for single-core CPU while the multi-core parallelization or GPU implementation would be useful to extend 
