@@ -128,7 +128,7 @@ With ISCE:
 
        testautoRIFT_ISCE.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname -fo 1
        
-where "I1" and "I2" are the reference and test images as defined in the instructions below, and "winlocname", "winoffname", "winro2vxname", "winro2vyname" are the four outputs from running "testGeogrid.py" as defined at https://github.com/leiyangleon/Geogrid.
+where "I1" and "I2" are the reference and test images as defined in the instructions below, and "winlocname", "winoffname", "winro2vxname", "winro2vyname" are the four outputs from running "testGeogrid_ISCE.py" or "testGeogridOptical.py" as defined at https://github.com/leiyangleon/Geogrid.
 
 
 
@@ -138,7 +138,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 ***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules: (a) estimated motion velocity from Landsat-8 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Landsat-8 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 
-_Note: in order to use autoRIFT, the optical images have to be co-registered with the same posting as well as the same x- and y-limits in map coordinates_
+
 
 
 ## 6. Install
