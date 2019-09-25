@@ -72,7 +72,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 <img src="figures/autorift1.png" width="100%">
 
-***Output of "autoRIFT" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) at Jakobshavn Glacier of Greenland over user-defined geographic-coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/geogrid): (a) estimated range pixel displacement, (b) estimated azimuth pixel displacement, (c) light interpolation mask, (b) range-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+***Output of "autoRIFT" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) at Jakobshavn Glacier of Greenland over user-defined geographic-coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/Geogrid): (a) estimated range pixel displacement, (b) estimated azimuth pixel displacement, (c) light interpolation mask, (b) range-direction chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 This is done by implementing the following command line:
 
