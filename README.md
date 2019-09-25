@@ -37,7 +37,7 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 * a Normalized Displacement Coherence (NDC) filter is developed (Gardner et al., 2018) to filter the chip displacemnt results based on displacement difference thresholds that are scaled to the search range
 * sparse search is used to first eliminate the unreliable chip displacement results that will not be further used for fine search or following chip size iterations
 * novel nested grid design that allows chip size to progress, where another chip size that progresses iteratively is used to determine the chip displacement results that have not been estimated from the previous iterations
-* a light interpolation is done to fill the missing (unreliable) chip displacement results using bicubic mode (that can remove pixel discrepancy when using other modes) and an interpolation mask is returned
+* a light interpolation is done to fill the missing (unreliable) chip displacement results using median filtering and bicubic-mode interpolation (that can remove pixel discrepancy when using other modes) and an interpolation mask is returned
 * the core image processing is coded by calling OpenCV's Python and/or C++ functions for efficiency 
 * sub-pixel displacement estimation using the pyramid upsampling algorithm
 * the current version can be installed with the ISCE software (that supports both radar and optical images) or as a standalone Python module (only supports optical images)
