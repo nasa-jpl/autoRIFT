@@ -1,10 +1,13 @@
 # autoRIFT (autonomous Repeat Image Feature Tracking)
 
-**Python module of a fast and intelligent algorithm for finding the pixel displacement between two images**
+**A Python module of a fast and intelligent algorithm for finding the pixel displacement between two images**
 
-**The current version can be installed with the ISCE (The InSAR Scientific Computing Environment; https://github.com/isce-framework/isce2) software (that supports both radar and optical images) or as a standalone Python module (only supports optical images)**
+**autoRIFT can be installed as a standalone Python module (does not support radar coordinates) or with the The InSAR Scientific Computing Environment (ISCE: https://github.com/isce-framework/isce2) software that supports handling Cartesian and radar coordinates**
 
-**In combination with the Python module, Geogrid (https://github.com/leiyangleon/Geogrid), this module can be used to create feature tracking imagery (e.g. land ice motion velocity) over arbitrary geographic-coordinate grid (e.g. Digital Elevation Model)**
+**Use cases include all dense feature tracking applications, including the measurement of surface displacements occurring between two repeat satellite images as a result of glacier flow, large earthquake displacements, and land slides**  
+
+**autoRIFT can be used for dense feature tracking between two images over a grid defined in an arbitrary geographic-coordinate projection when used in combination with the sister Geogrid Python module (https://github.com/leiyangleon/Geogrid). Example applications include searching radar-coordinate imagery on a polar stereographic grid and searching Universal Transverse Mercator (UTM) imagery at specified geographic coordinates**
+
 
 Copyright (C) 2019 California Institute of Technology.  Government Sponsorship Acknowledged.
 
@@ -30,29 +33,72 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 
 * fast algorithm that finds displacement between the two images (where source and template image patches are extracted and correlated) using sparse search and iteratively progressive chip (template) sizes
 * user can specify unstructured search centers (center of the source image patch), search offsets (center displacement of the template image patch compared to the source image patch), chip sizes (size of template image patch) and search ranges (size of the source image patch)
-* faster than the conventional "ampcor"/"denseampcor" algorithm in ISCE by almost an order of magnitude
-* support various preprocessing modes on the given image pair, e.g. either the raw image (both texture and topography) or the texture only (high-frequency components without the topography) can be used with various choices of the high-pass filter options 
-* support data format of either unsigned integer 8 (uint8; faster) or single-precision float (float32)
+* faster than the conventional dense feature tracking "ampcor"/"denseampcor" algorithm included in ISCE by nearly 2 orders of magnitude
+* supports various preprocessing modes for specified image pair, e.g. either the raw image (both texture and topography) or the texture only (high-frequency components without the topography) can be used with various choices of the high-pass filter options 
+* supports image data format of unsigned integer 8 (uint8; faster) and single-precision float (float32)
 * user can adjust all of the relevant parameters, as detailed below in the instructions
-* a Normalized Displacement Coherence (NDC) filter is developed (Gardner et al., 2018) to filter the chip displacemnt results based on displacement difference thresholds that are scaled to the search range
-* sparse search is used to first eliminate the unreliable chip displacement results that will not be further used for fine search or following chip size iterations
-* novel nested grid design that allows chip size to progress, where another chip size that progresses iteratively is used to determine the chip displacement results that have not been estimated from the previous iterations
+* a Normalized Displacement Coherence (NDC) filter is developed (Gardner et al., 2018) to filter the chip displacemnt results based on displacement difference thresholds that are scaled to the local search range
+* a sparse integer displacement search is used to narrow the template search range and to eliminate areas of "low coherence" for fine decimal displacement search and following chip size iterations
+* novel nested grid design allows chip size progressively increase iteratively where a smaller chip size failed
 * a light interpolation is done to fill the missing (unreliable) chip displacement results using median filtering and bicubic-mode interpolation (that can remove pixel discrepancy when using other modes) and an interpolation mask is returned
-* the core image processing is coded by calling OpenCV's Python and/or C++ functions for efficiency 
-* sub-pixel displacement estimation using the pyramid upsampling algorithm
-* the current version can be installed with the ISCE software (that supports both radar and optical images) or as a standalone Python module (only supports optical images)
-* in combination with the Python module, Geogrid (https://github.com/leiyangleon/Geogrid), this module can be used to create feature tracking imagery (e.g. land ice motion velocity) over arbitrary geographic-coordinate grid (e.g. Digital Elevation Model)
-* when the grid is provided in geographic coordinates, all outputs are in the format of GeoTIFF with the same EPSG code as input grid
+* the core displacement estimator (normalized cross correlation) and image pre-processing call OpenCV's Python and/or C++ functions for efficiency 
+* sub-pixel displacement estimation using a fast Gaussian pyramid upsampling algorithm that is robust to sub-pixel locking
+* the current version can be installed with the ISCE software (that supports both Cartesian and radar coordinates) or as a standalone Python module (Cartesian coordinates only)
+* when used in combination with the Geogrid Python module (https://github.com/leiyangleon/Geogrid), autoRIFT can be used for feature tracking between image pair over a grid defined in an arbitrary geographic-coordinate projection
+* when the grid is provided in geographic coordinates, outputs are returned in geocoded GeoTIFF image file format with the same EPSG projection code as input search grid
 
 ## 4. Possible Future Development
 
-* for radar (SAR) images, it is yet to include the complex correlation of the two images, i.e. the current version only uses the amplitude correlation while the phase needs to be investigated
+* for radar (SAR) images, it is yet to include the complex correlation of the two images, i.e. the current version only uses the amplitude correlation
 * the current version works for single-core CPU while the multi-core parallelization or GPU implementation would be useful to extend 
 
 
 ## 5. Demo
 
-### 5.1 Radar image over regular grid in imaging coordinates
+### 5.1 Optical image over regular grid in imaging coordinates
+
+<img src="figures/regular_grid_optical.png" width="100%">
+
+***Output of "autoRIFT" module for a pair of Landsat-8 images (20170708-20170724; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) in Greenland over a regular-spacing grid: (a) estimated horizontal pixel displacement, (b) estimated vertical pixel displacement, (c) chip size used, (d) light interpolation mask.***
+
+This is done by implementing the following command line:
+
+Standalone:
+       
+       testautoRIFT.py -m I1 -s I2 -fo 1
+       
+With ISCE:
+       
+       testautoRIFT_ISCE.py -m I1 -s I2 -fo 1
+
+where "I1" and "I2" are the reference and test images as defined in the instructions below. The "-fo" option indicates whether or not to read optical image data.
+
+
+### 5.2 Optical image over user-defined geographic-coordinate grid
+
+<img src="figures/autorift1_opt.png" width="100%">
+
+***Output of "autoRIFT" module for a pair of Landsat-8 images (20170708-20170724; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) in Greenland over user-defined geographic-coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/Geogrid): (a) estimated horizontal pixel displacement, (b) estimated vertical pixel displacement, (c) light interpolation mask, (d) chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+
+This is done by implementing the following command line:
+
+Standalone:
+       
+       testautoRIFT.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname -fo 1
+       
+With ISCE:
+
+       testautoRIFT_ISCE.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname -fo 1
+       
+where "I1" and "I2" are the reference and test images as defined in the instructions below, and "winlocname", "winoffname", "winro2vxname", "winro2vyname" are the four outputs from running "testGeogrid_ISCE.py" or "testGeogridOptical.py" as defined at https://github.com/leiyangleon/Geogrid.
+
+
+<img src="figures/autorift2_opt.png" width="100%">
+
+***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules: (a) estimated motion velocity from Landsat-8 data (x-direction; in m/yr), (b) motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Landsat-8 data (y-direction; in m/yr), (d) motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+
+
+### 5.3 Radar image over regular grid in imaging coordinates
 
 <img src="figures/regular_grid_new.png" width="100%">
 
@@ -68,7 +114,7 @@ With ISCE:
 where "I1" and "I2" are the reference and test images as defined in the instructions below. 
 
 
-### 5.2 Radar image over user-defined geographic-coordinate grid
+### 5.4 Radar image over user-defined geographic-coordinate grid
 
 <img src="figures/autorift1.png" width="100%">
 
@@ -92,55 +138,6 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 ***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (d) motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 
-
-### 5.3 Optical image over regular grid in imaging coordinates
-
-<img src="figures/regular_grid_optical.png" width="100%">
-
-***Output of "autoRIFT" module for a pair of Landsat-8 images (20170708-20170724; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) in Greenland over a regular-spacing grid: (a) estimated horizontal pixel displacement, (b) estimated vertical pixel displacement, (c) chip size used, (d) light interpolation mask.***
-
-This is done by implementing the following command line:
-
-Standalone:
-       
-       testautoRIFT.py -m I1 -s I2 -fo 1
-       
-With ISCE:
-       
-       testautoRIFT_ISCE.py -m I1 -s I2 -fo 1
-
-where "I1" and "I2" are the reference and test images as defined in the instructions below. The "-fo" option indicates whether or not to read optical image data.
-
-
-### 5.4 Optical image over user-defined geographic-coordinate grid
-
-<img src="figures/autorift1_opt.png" width="100%">
-
-***Output of "autoRIFT" module for a pair of Landsat-8 images (20170708-20170724; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) in Greenland over user-defined geographic-coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/Geogrid): (a) estimated horizontal pixel displacement, (b) estimated vertical pixel displacement, (c) light interpolation mask, (d) chip size used. Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
-
-This is done by implementing the following command line:
-
-Standalone:
-       
-       testautoRIFT.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname -fo 1
-       
-With ISCE:
-
-       testautoRIFT_ISCE.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname -fo 1
-       
-where "I1" and "I2" are the reference and test images as defined in the instructions below, and "winlocname", "winoffname", "winro2vxname", "winro2vyname" are the four outputs from running "testGeogrid_ISCE.py" or "testGeogridOptical.py" as defined at https://github.com/leiyangleon/Geogrid.
-
-
-
-
-<img src="figures/autorift2_opt.png" width="100%">
-
-***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules: (a) estimated motion velocity from Landsat-8 data (x-direction; in m/yr), (b) motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Landsat-8 data (y-direction; in m/yr), (d) motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
-
-
-
-
-
 ## 6. Install
 
 **With ISCE:**
@@ -162,7 +159,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 * Run "python3 setup.py install" or "sudo python3 setup.py install" (if the previous failed due to permission restriction) using command line
 * This distribution automatically installs the "autoRIFT" module as well as the "Geogrid" module (https://github.com/leiyangleon/Geogrid)
-* The standalone version only supports optical images.
+* The standalone version only supports Cartesian coordinate imagery.
 * If the modules cannot be imported in Python environment, please make sure the path where these modules are installed (see "setup.py") to be added to the environmental variable $PYTHONPATH.
 
 
