@@ -89,7 +89,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 <img src="figures/autorift2.png" width="100%">
 
-***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (d) motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 
 
@@ -135,7 +135,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 <img src="figures/autorift2_opt.png" width="100%">
 
-***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules: (a) estimated motion velocity from Landsat-8 data (x-direction; in m/yr), (b) coarse motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Landsat-8 data (y-direction; in m/yr), (b) coarse motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
+***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules: (a) estimated motion velocity from Landsat-8 data (x-direction; in m/yr), (b) motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Landsat-8 data (y-direction; in m/yr), (d) motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic-coordinate grid from input.***
 
 
 
@@ -200,14 +200,14 @@ _Standalone:_
 * The "autoRIFT" object has several inputs that have to be assigned (listed below; can also be obtained by referring to "testautoRIFT.py"): 
        
        ------------------input------------------
-       I1:                  reference image (extracted image patches defined as "source")
-       I2:                  test image (extracted image patches defined as "template"; displacement = motion vector of I2 relative to I1)
-       xGrid:               horizontal pixel index at each grid point
-       yGrid:               vertical pixel index at each grid point
+       I1                  reference image (extracted image patches defined as "source")
+       I2                  test image (extracted image patches defined as "template"; displacement = motion vector of I2 relative to I1)
+       xGrid [units = integer image pixels]               horizontal pixel index at each grid point
+       yGrid [units = integer image pixels]               vertical pixel index at each grid point
        (if xGrid and yGrid not provided, a regular grid spanning the entire image will be automatically set up, which is similar to the conventional ISCE module, "ampcor" or "denseampcor")
-       Dx0:                 horizontal coarse displacement at each grid point
-       Dy0:                 vertical coarse displacement at each grid point
-       (if Dx0 and Dy0 not provided, an array with zero values will be automatically assigned)
+       Dx0 [units = integer image pixels]                 horizontal "downstream" reach location (that specifies the horizontal pixel displacement of the template's search center relative to the source's) at each grid point
+       Dy0 [units = integer image pixels]                 vertical "downstream" reach location (that specifies the vertical pixel displacement of the template's search center relative to the source's) at each grid point
+       (if Dx0 and Dy0 not provided, an array with zero values will be automatically assigned and there will be no offsets of the search centers)
 
 * After the inputs are specified, run the module as below
        
@@ -220,23 +220,23 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
 * The "autoRIFT" object has the following four outputs: 
        
        ------------------output------------------
-       Dx:                  estimated horizontal displacement
-       Dy:                  estimated vertical displacement
-       InterpMask:          light interpolation mask
-       ChipSizeX:           iteratively progressive chip size in horizontal direction (different chip size allowed for vertical)
+       Dx [units = decimal image pixels]                  estimated horizontal pixel displacement
+       Dy [units = decimal image pixels]                  estimated vertical pixel displacement
+       InterpMask [unitless; boolean data type]           light interpolation mask
+       ChipSizeX [units = integer image pixels]           iteratively progressive chip size in horizontal direction (different chip size allowed for vertical)
 
 * The "autoRIFT" object has many parameters that can be flexibly tweaked by the users for their own purpose (listed below; can also be obtained by referring to "geo_autoRIFT/autoRIFT/autoRIFT_ISCE.py"):
 
        ------------------parameter list: general function------------------
-       ChipSizeMinX:               Minimum size (in horizontal direction) of the template (chip) to correlate (default = 32; could be scalar or array with same dimension as xGrid)
-       ChipSizeMaxX:               Maximum size (in horizontal direction) of the template (chip) to correlate (default = 64; could be scalar or array with same dimension as xGrid)
-       ChipSize0X:                 Minimum acceptable size (in horizontal direction) of the template (chip) to correlate (default = 32)
-       ScaleChipSizeY              Scaling factor to get the vertically-directed chip size in reference to the horizontally-directed size (default = 1)
-       SearchLimitX                Range (in horizontal direction) to search for displacement in the source (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
-       SearchLimitY                Range (in vertical direction) to search for displacement in the source (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
-       SkipSampleX                 Number of samples to skip between search windows in horizontal direction for automatically-created grid if not specified by the user (default = 32)
-       SkipSampleY                 Number of lines to skip between search windows in vertical direction for automatically-created grid if not specified by the user (default = 32)
-       minSearch                   Minimum search limit (default = 6)
+       ChipSizeMinX [units = integer image pixels]               Minimum size (in horizontal direction) of the template (chip) to correlate (default = 32; could be scalar or array with same dimension as xGrid)
+       ChipSizeMaxX [units = integer image pixels]               Maximum size (in horizontal direction) of the template (chip) to correlate (default = 64; could be scalar or array with same dimension as xGrid)
+       ChipSize0X [units = integer image pixels]                 Minimum acceptable size (in horizontal direction) of the template (chip) to correlate (default = 32)
+       ScaleChipSizeY [unitless; integer data type]              Scaling factor to get the vertically-directed chip size in reference to the horizontally-directed size (default = 1)
+       SearchLimitX [units = integer image pixels]                Range (in horizontal direction) to search for displacement in the source (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
+       SearchLimitY [units = integer image pixels]                Range (in vertical direction) to search for displacement in the source (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
+       SkipSampleX [units = integer image pixels]                 Number of samples to skip between search windows in horizontal direction for automatically-created grid if not specified by the user (default = 32)
+       SkipSampleY [units = integer image pixels]                 Number of lines to skip between search windows in vertical direction for automatically-created grid if not specified by the user (default = 32)
+       minSearch [units = integer image pixels]                   Minimum search limit (default = 6)
        
        ------------------parameter list: about Normalized Displacement Coherence (NDC) filter ------------------
        FracValid                   Fraction of valid displacements (default = 8/25) to be multiplied by filter window size "FiltWidth^2" and then used for thresholding the number of chip displacements that have passed the "FracSearch" disparity filtering
@@ -246,9 +246,9 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
        MadScalar                   Scalar to be multiplied by Mad used as threshold for disparity filtering of the chip displacement deviation from the median (default = 4)
        
        ------------------parameter list: miscellaneous------------------
-       WallisFilterWidth:          Width of the filter to be used for the preprocessing (default = 21)
-       fillFiltWidth               Light interpolation filling filter width (default = 3)
-       sparseSearchSampleRate      downsampling rate for sparse search  (default = 4)
+       WallisFilterWidth [units = integer image pixels]          Width of the filter to be used for the preprocessing (default = 21)
+       fillFiltWidth [units = integer image pixels]               Light interpolation filling filter width (default = 3)
+       sparseSearchSampleRate [units = integer image pixels]      downsampling rate for sparse search  (default = 4)
        BuffDistanceC               Buffer coarse correlation mask by this many pixels for use as fine search mask (default = 8)
        CoarseCorCutoff             Coarse correlation search cutoff (default = 0.01)
        OverSampleRatio             Factor for pyramid upsampling for sub-pixel level offset refinement (default = 16)
