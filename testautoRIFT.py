@@ -136,8 +136,8 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, noDataMask, optflag):
         Dy0[noDataMask] = 0
         if optflag == 0:
             Dy0 = -1 * Dy0
-        obj.Dx0 = np.round(Dx0 / 100.0)
-        obj.Dy0 = np.round(Dy0 / 100.0)
+        obj.Dx0 = np.round(Dx0 / 1.0)
+        obj.Dy0 = np.round(Dy0 / 1.0)
 
 
 
