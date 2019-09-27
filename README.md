@@ -200,8 +200,8 @@ _Standalone:_
 * The "autoRIFT" object has several inputs that have to be assigned (listed below; can also be obtained by referring to "testautoRIFT.py"): 
        
        ------------------input------------------
-       I1                  reference image (extracted image patches defined as "source")
-       I2                  test image (extracted image patches defined as "template"; displacement = motion vector of I2 relative to I1)
+       I1                                                 reference image (extracted image patches defined as "source")
+       I2                                                 test image (extracted image patches defined as "template"; displacement = motion vector of I2 relative to I1)
        xGrid [units = integer image pixels]               horizontal pixel index at each grid point
        yGrid [units = integer image pixels]               vertical pixel index at each grid point
        (if xGrid and yGrid not provided, a regular grid spanning the entire image will be automatically set up, which is similar to the conventional ISCE module, "ampcor" or "denseampcor")
@@ -228,10 +228,10 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
 * The "autoRIFT" object has many parameters that can be flexibly tweaked by the users for their own purpose (listed below; can also be obtained by referring to "geo_autoRIFT/autoRIFT/autoRIFT_ISCE.py"):
 
        ------------------parameter list: general function------------------
-       ChipSizeMinX [units = integer image pixels]               Minimum size (in horizontal direction) of the template (chip) to correlate (default = 32; could be scalar or array with same dimension as xGrid)
-       ChipSizeMaxX [units = integer image pixels]               Maximum size (in horizontal direction) of the template (chip) to correlate (default = 64; could be scalar or array with same dimension as xGrid)
-       ChipSize0X [units = integer image pixels]                 Minimum acceptable size (in horizontal direction) of the template (chip) to correlate (default = 32)
-       ScaleChipSizeY [unitless; integer data type]              Scaling factor to get the vertically-directed chip size in reference to the horizontally-directed size (default = 1)
+       ChipSizeMinX [units = integer image pixels]                Minimum size (in horizontal direction) of the template (chip) to correlate (default = 32; could be scalar or array with same dimension as xGrid)
+       ChipSizeMaxX [units = integer image pixels]                Maximum size (in horizontal direction) of the template (chip) to correlate (default = 64; could be scalar or array with same dimension as xGrid)
+       ChipSize0X [units = integer image pixels]                  Minimum acceptable size (in horizontal direction) of the template (chip) to correlate (default = 32)
+       ScaleChipSizeY [unitless; integer data type]               Scaling factor to get the vertically-directed chip size in reference to the horizontally-directed size (default = 1)
        SearchLimitX [units = integer image pixels]                Range (in horizontal direction) to search for displacement in the source (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
        SearchLimitY [units = integer image pixels]                Range (in vertical direction) to search for displacement in the source (default = 25; could be scalar or array with same dimension as xGrid; when provided in array, set its elements to 0 if excluded for finding displacement)
        SkipSampleX [units = integer image pixels]                 Number of samples to skip between search windows in horizontal direction for automatically-created grid if not specified by the user (default = 32)
@@ -246,9 +246,9 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
        MadScalar                   Scalar to be multiplied by Mad used as threshold for disparity filtering of the chip displacement deviation from the median (default = 4)
        
        ------------------parameter list: miscellaneous------------------
-       WallisFilterWidth [units = integer image pixels]          Width of the filter to be used for the preprocessing (default = 21)
-       fillFiltWidth [units = integer image pixels]               Light interpolation filling filter width (default = 3)
-       sparseSearchSampleRate [units = integer image pixels]      downsampling rate for sparse search  (default = 4)
+       WallisFilterWidth           Width of the filter to be used for the preprocessing (default = 21)
+       fillFiltWidth               Light interpolation filling filter width (default = 3)
+       sparseSearchSampleRate      downsampling rate for sparse search  (default = 4)
        BuffDistanceC               Buffer coarse correlation mask by this many pixels for use as fine search mask (default = 8)
        CoarseCorCutoff             Coarse correlation search cutoff (default = 0.01)
        OverSampleRatio             Factor for pyramid upsampling for sub-pixel level offset refinement (default = 16)
