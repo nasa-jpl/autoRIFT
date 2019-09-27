@@ -45,13 +45,13 @@ def cmdLineParse():
     parser.add_argument('-s', '--input_s', dest='indir_s', type=str, required=True,
             help='Input ISCE slave image file name')
     parser.add_argument('-g', '--input_g', dest='grid_location', type=str, required=False,
-            help='Input grid location file name')
+            help='Input pixel indices file name')
     parser.add_argument('-o', '--input_o', dest='init_offset', type=str, required=False,
-            help='Input initial offset file name')
+            help='Input search center offsets ("downstream" reach location) file name')
     parser.add_argument('-vx', '--input_vx', dest='offset2vx', type=str, required=False,
-            help='Input radar offset to vx conversion coefficients file name')
+            help='Input pixel offsets to vx conversion coefficients file name')
     parser.add_argument('-vy', '--input_vy', dest='offset2vy', type=str, required=False,
-            help='Input radar offset to vy conversion coefficients file name')
+            help='Input pixel offsets to vy conversion coefficients file name')
     parser.add_argument('-fo', '--flag_optical', dest='optical_flag', type=bool, required=False, default=0,
                         help='flag for reading optical data (e.g. Landsat): use 1 for on and 0 (default) for off')
 
