@@ -169,7 +169,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 * The source code "geo_autoRIFT" folder can also be installed via conda-forge channels. Please follow the instructions on the following page:
 
-https://github.com/conda-forge/autorift-feedstock
+    https://github.com/conda-forge/autorift-feedstock
 
 * This distribution automatically installs the "autoRIFT" module as well as the "Geogrid" module (https://github.com/leiyangleon/Geogrid)
 * The standalone version only supports Cartesian coordinate imagery. However, if the above "With ISCE" version is installed independently, the standalone version can also support radar coordinate imagery.
