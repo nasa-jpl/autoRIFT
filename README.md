@@ -1,15 +1,13 @@
 # autoRIFT (autonomous Repeat Image Feature Tracking)
 
 
-.. start-badges
 
-|zenodo|
+[![Language](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/)
+[![Latest version](https://img.shields.io/badge/latest%20version-v1.0.0-yellowgreen.svg)](https://github.com/leiyangleon/autoRIFT/releases)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/leiyangleon/autoRIFT/blob/master/LICENSE)
+[![Citation](https://img.shields.io/badge/DOI-10.5281/zenodo.3523346-blue)](https://doi.org/10.5281/zenodo.3523346)
 
-.. |zenodo| image:: https://img.shields.io/badge/DOI-10.5281/zenodo.3523346-blue.svg?style=flat-square
-    :target: https://dx.doi.org/10.5281/zenodo.3523346
-    :alt: DOI
 
-.. end-badges
 
 
 **A Python module of a fast and intelligent algorithm for finding the pixel displacement between two images**
