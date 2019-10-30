@@ -1,5 +1,17 @@
 # autoRIFT (autonomous Repeat Image Feature Tracking)
 
+
+.. start-badges
+
+|zenodo|
+
+.. |zenodo| image:: https://img.shields.io/badge/DOI-10.5281/zenodo.3523346-blue.svg?style=flat-square
+    :target: https://dx.doi.org/10.5281/zenodo.3523346
+    :alt: DOI
+
+.. end-badges
+
+
 **A Python module of a fast and intelligent algorithm for finding the pixel displacement between two images**
 
 **autoRIFT can be installed as a standalone Python module (does not support radar coordinates) where both manual and conda installs (https://github.com/conda-forge/autorift-feedstock) are supported or with the InSAR Scientific Computing Environment (ISCE: https://github.com/isce-framework/isce2) software that supports handling Cartesian and radar coordinates**
