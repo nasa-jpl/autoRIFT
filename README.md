@@ -13,6 +13,9 @@ Copyright (C) 2019 California Institute of Technology.  Government Sponsorship A
 
 Link: https://github.com/leiyangleon/autoRIFT
 
+DOI: 10.5281/zenodo.3523346
+
+
 ## 1. Authors
 
 Alex Gardner (JPL/Caltech; alex.s.gardner@jpl.nasa.gov) first described the algorithm "auto-RIFT" in (Gardner et al., 2018) and developed the first version in MATLAB;
