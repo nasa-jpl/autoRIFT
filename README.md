@@ -23,7 +23,7 @@ Copyright (C) 2019 California Institute of Technology.  Government Sponsorship A
 
 Link: https://github.com/leiyangleon/autoRIFT
 
-DOI: 10.5281/zenodo.3523346
+Citation: https://doi.org/10.5281/zenodo.3523346
 
 
 ## 1. Authors
