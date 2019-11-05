@@ -137,7 +137,7 @@ class Geogrid(Component):
             for z in zrange:
                 llh = self.orbit.rdr2geo(self.sensingStart, rr, side=self.lookSide)
                 llhs.append(llh)
-                x,y,z = trans.TransformPoint(llh[1], llh[0], llh[2])
+                x,y,z = trans.TransformPoint(llh[0], llh[1], llh[2])
                 xyzs.append([x,y,z])
 
         ##Last range line
@@ -146,7 +146,7 @@ class Geogrid(Component):
             for z in zrange:
                 llh = self.orbit.rdr2geo(sensingStop, rr, side=self.lookSide)
                 llhs.append(llh)
-                x,y,z = trans.TransformPoint(llh[1], llh[0], llh[2])
+                x,y,z = trans.TransformPoint(llh[0], llh[1], llh[2])
                 xyzs.append([x,y,z])
 
 
@@ -158,7 +158,7 @@ class Geogrid(Component):
                 for z in zrange:
                     llh = self.orbit.rdr2geo(sensingTime, rr, side=self.lookSide)
                     llhs.append(llh)
-                    x,y,z = trans.TransformPoint(llh[1], llh[0], llh[2])
+                    x,y,z = trans.TransformPoint(llh[0], llh[1], llh[2])
                     xyzs.append([x,y,z])
 
 
