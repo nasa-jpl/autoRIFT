@@ -14,8 +14,8 @@
 
 import os
 
-Import('envgeo_autoRIFT')
-envgeogrid = envgeo_autoRIFT.Clone()
+Import('envgeoAutorift')
+envgeogrid = envgeoAutorift.Clone()
 package = envgeogrid['PACKAGE']
 project = 'geogrid'
 envgeogrid['PROJECT'] = project

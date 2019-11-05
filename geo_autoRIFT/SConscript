@@ -21,13 +21,13 @@
 import os
 Import('envcontrib')
 package = 'geo_autoRIFT'
-envgeo_autoRIFT = envcontrib.Clone()
-envgeo_autoRIFT['PACKAGE'] = envcontrib['PACKAGE'] + '/' + package
-install = envcontrib['PRJ_SCONS_INSTALL'] + '/' + envgeo_autoRIFT['PACKAGE']
+envgeoAutorift = envcontrib.Clone()
+envgeoAutorift['PACKAGE'] = envcontrib['PACKAGE'] + '/' + package
+install = envcontrib['PRJ_SCONS_INSTALL'] + '/' + envgeoAutorift['PACKAGE']
 listFiles = ['__init__.py']
-envgeo_autoRIFT.Install(install,listFiles)
-envgeo_autoRIFT.Alias('install',install)
-Export('envgeo_autoRIFT')
+envgeoAutorift.Install(install,listFiles)
+envgeoAutorift.Alias('install',install)
+Export('envgeoAutorift')
 
 autorift='autoRIFT/SConscript'
 SConscript(autorift)

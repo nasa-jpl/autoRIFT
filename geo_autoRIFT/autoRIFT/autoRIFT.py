@@ -632,7 +632,7 @@ class autoRIFT:
 
     def __init__(self):
         
-
+        super(autoRIFT, self).__init__()
         
         ##Input related parameters
         self.I1 = None
