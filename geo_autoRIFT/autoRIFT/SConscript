@@ -14,8 +14,8 @@
 
 import os
 
-Import('envgeo_autoRIFT')
-envautorift = envgeo_autoRIFT.Clone()
+Import('envgeoAutorift')
+envautorift = envgeoAutorift.Clone()
 package = envautorift['PACKAGE']
 project = 'autoRIFT'
 envautorift['PROJECT'] = project

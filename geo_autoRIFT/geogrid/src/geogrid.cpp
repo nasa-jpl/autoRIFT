@@ -461,8 +461,17 @@ void geoGrid::geogrid()
             fwdTrans->Transform(1, llh, llh+1, llh+2);
 
             //Bringing it into ISCE
-            llhi[0] = deg2rad * llh[1];
-            llhi[1] = deg2rad * llh[0];
+            if (GDAL_VERSION_MAJOR == 2)
+            {
+                llhi[0] = deg2rad * llh[1];
+                llhi[1] = deg2rad * llh[0];
+            }
+            else
+            {
+                llhi[0] = deg2rad * llh[0];
+                llhi[1] = deg2rad * llh[1];
+            }
+            
             llhi[2] = llh[2];
 
             //Convert to ECEF
@@ -550,8 +559,17 @@ void geoGrid::geogrid()
             latlon_C(&wgs84, llh, llhi, XYZ_2_LLH);
             
             //Bringing it from ISCE into LLH
-            llh[0] = llhi[1] / deg2rad;
-            llh[1] = llhi[0] / deg2rad;
+            if (GDAL_VERSION_MAJOR == 2)
+            {
+                llh[0] = llhi[1] / deg2rad;
+                llh[1] = llhi[0] / deg2rad;
+            }
+            else
+            {
+                llh[0] = llhi[0] / deg2rad;
+                llh[1] = llhi[1] / deg2rad;
+            }
+            
             llh[2] = llhi[2];
             
             //Convert from LLH inplace to DEM coordinates
@@ -644,8 +662,18 @@ void geoGrid::geogrid()
             }
             
             //Bringing it from ISCE into LLH
-            llh[0] = llhi[1] / deg2rad;
-            llh[1] = llhi[0] / deg2rad;
+            
+            if (GDAL_VERSION_MAJOR == 2)
+            {
+                llh[0] = llhi[1] / deg2rad;
+                llh[1] = llhi[0] / deg2rad;
+            }
+            else
+            {
+                llh[0] = llhi[0] / deg2rad;
+                llh[1] = llhi[1] / deg2rad;
+            }
+            
             llh[2] = llhi[2];
             
             //Convert from LLH inplace to DEM coordinates

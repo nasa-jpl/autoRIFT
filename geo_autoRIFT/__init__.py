@@ -16,9 +16,9 @@
 
 
 
-def createautoRIFT(name=''):
-    from contrib.geo_autoRIFT.autoRIFT import autoRIFT
-    return autoRIFT(name=name)
+def createAutorift(name=''):
+    from contrib.geo_autoRIFT.Autorift import Autorift
+    return Autorift(name=name)
 
 def createGeogrid(name=''):
     from contrib.geo_autoRIFT.Geogrid import Geogrid
@@ -26,9 +26,9 @@ def createGeogrid(name=''):
 
 
 def getFactoriesInfo():
-    return  {'autoRIFT':
+    return  {'Autorift':
                      {
-                     'factory':'createautoRIFT'
+                     'factory':'createAutorift'
                      },
              'Geogrid':
                      {

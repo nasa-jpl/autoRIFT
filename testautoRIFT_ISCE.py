@@ -217,7 +217,7 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, noDataMask, optflag):
     ########## run Autorift
     t1 = time.time()
     print("AutoRIFT Start!!!")
-    obj.runautoRIFT()
+    obj.runAutorift()
     print("AutoRIFT Done!!!")
     print(time.time()-t1)
 
