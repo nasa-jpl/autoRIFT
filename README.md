@@ -12,7 +12,7 @@
 
 **A Python module of a fast and intelligent algorithm for finding the pixel displacement between two images**
 
-**autoRIFT can be installed as a standalone Python module (does not support radar coordinates) where both manual and conda installs (https://github.com/conda-forge/autorift-feedstock) are supported or with the InSAR Scientific Computing Environment (ISCE: https://github.com/isce-framework/isce2) software that supports handling Cartesian and radar coordinates**
+**autoRIFT can be installed as a standalone Python module (only supports Cartesian coordinates) either manually or as a conda install (https://github.com/conda-forge/autorift-feedstock). To allow support for both Cartesian and radar coordinates, autoRIFT must be installed with the InSAR Scientific Computing Environment (ISCE: https://github.com/isce-framework/isce2)**
 
 **Use cases include all dense feature tracking applications, including the measurement of surface displacements occurring between two repeat satellite images as a result of glacier flow, large earthquake displacements, and land slides**  
 
