@@ -3,7 +3,7 @@
 
 
 [![Language](https://img.shields.io/badge/python-3.6%2B-blue.svg)](https://www.python.org/)
-[![Latest version](https://img.shields.io/badge/latest%20version-v1.0.3-yellowgreen.svg)](https://github.com/leiyangleon/autoRIFT/releases)
+[![Latest version](https://img.shields.io/badge/latest%20version-v1.0.4-yellowgreen.svg)](https://github.com/leiyangleon/autoRIFT/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/leiyangleon/autoRIFT/blob/master/LICENSE)
 [![Citation](https://img.shields.io/badge/DOI-10.5281/zenodo.3533455-blue)](https://doi.org/10.5281/zenodo.3533455)
 
@@ -192,7 +192,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 **Note:**
 
-* When the grid is provided in geographic Cartesian coordinates, it is required to run the "Geogrid" module (https://github.com/leiyangleon/Geogrid) first before running "autoRIFT". In other words, the outputs from "testGeogrid_ISCE.py" or "testGeogridOptical.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname") will serve as the inputs for running "autoRIFT" or will be required to generate the final motion velocity maps.
+* When the grid is provided in geographic Cartesian (northing/easting) coordinates, it is required to run the "Geogrid" module (https://github.com/leiyangleon/Geogrid) first before running "autoRIFT". In other words, the outputs from "testGeogrid_ISCE.py" or "testGeogridOptical.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname") will serve as the inputs for running "autoRIFT" or will be required to generate the final motion velocity maps.
 * When the four outputs from running the "Geogrid" module are not provided, a regular grid in the imaging coordinates will be automatically assigned
 
 **For quick use:**
@@ -201,7 +201,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 * Input files include the reference image (required), test image (required), and the four outputs from running "testGeogrid_ISCE.py" or "testGeogridOptical.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname"). 
 * Output files include 1) estimated horizontal displacement (equivalent to range for radar), 2) estimated vertical displacement (equivalent to minus azimuth for radar), 3) light interpolation mask, 4) iteratively progressive chip size used. 
 
-_Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic Cartesian coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF of the final converted motion velocity in geographic x- and y-coordinates will be created and named "velocity.tif"._
+_Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic Cartesian coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF of the final converted motion velocity in geographic x- and y-coordinates will be created and named "velocity.tif". Also, it is possible to save the outputs in a netCDF standard format by adding the "-nc" option to the "testautoRIFT.py" (standalone) and "testautoRIFT_ISCE.py" (with ISCE) command._
 
 **For modular use:**
 
