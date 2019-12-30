@@ -16,7 +16,7 @@
 
 **Use cases include all dense feature tracking applications, including the measurement of surface displacements occurring between two repeat satellite images as a result of glacier flow, large earthquake displacements, and land slides**  
 
-**autoRIFT can be used for dense feature tracking between two images over a grid defined in an arbitrary geographic Cartesian coordinate projection when used in combination with the sister Geogrid Python module (https://github.com/leiyangleon/Geogrid). Example applications include searching radar-coordinate imagery on a polar stereographic grid and searching Universal Transverse Mercator (UTM) imagery at a specified geographic Cartesian coordinate grid**
+**autoRIFT can be used for dense feature tracking between two images over a grid defined in an arbitrary geographic Cartesian (northing/easting) coordinate projection when used in combination with the sister Geogrid Python module (https://github.com/leiyangleon/Geogrid). Example applications include searching radar-coordinate imagery on a polar stereographic grid and searching Universal Transverse Mercator (UTM) imagery at a specified geographic Cartesian (northing/easting) coordinate grid**
 
 
 Copyright (C) 2019 California Institute of Technology.  Government Sponsorship Acknowledged.
@@ -57,8 +57,8 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 * the core displacement estimator (normalized cross correlation) and image pre-processing call OpenCV's Python and/or C++ functions for efficiency 
 * sub-pixel displacement estimation using a fast Gaussian pyramid upsampling algorithm that is robust to sub-pixel locking
 * the current version can be installed with the ISCE software (that supports both Cartesian and radar coordinates) or as a standalone Python module (Cartesian coordinates only)
-* when used in combination with the Geogrid Python module (https://github.com/leiyangleon/Geogrid), autoRIFT can be used for feature tracking between image pair over a grid defined in an arbitrary geographic Cartesian coordinate projection
-* when the grid is provided in geographic Cartesian coordinates, outputs are returned in geocoded GeoTIFF image file format with the same EPSG projection code as input search grid
+* when used in combination with the Geogrid Python module (https://github.com/leiyangleon/Geogrid), autoRIFT can be used for feature tracking between image pair over a grid defined in an arbitrary geographic Cartesian (northing/easting) coordinate projection
+* when the grid is provided in geographic Cartesian (northing/easting) coordinates, outputs are returned in geocoded GeoTIFF image file format with the same EPSG projection code as input search grid
 
 ## 4. Possible Future Development
 
@@ -91,7 +91,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 <img src="figures/autorift1_opt.png" width="100%">
 
-***Output of "autoRIFT" module for a pair of Landsat-8 images (20170708-20170724; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) in Greenland over user-defined geographic Cartesian coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/Geogrid): (a) estimated horizontal pixel displacement, (b) estimated vertical pixel displacement, (c) light interpolation mask, (d) chip size used. Notes: all maps are established exactly over the same geographic Cartesian coordinate grid from input.***
+***Output of "autoRIFT" module for a pair of Landsat-8 images (20170708-20170724; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) in Greenland over user-defined geographic Cartesian (northing/easting) coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/Geogrid): (a) estimated horizontal pixel displacement, (b) estimated vertical pixel displacement, (c) light interpolation mask, (d) chip size used. Notes: all maps are established exactly over the same geographic Cartesian coordinate grid from input.***
 
 This is done by implementing the following command line:
 
@@ -108,7 +108,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 <img src="figures/autorift2_opt.png" width="100%">
 
-***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules: (a) estimated motion velocity from Landsat-8 data (x-direction; in m/yr), (b) motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Landsat-8 data (y-direction; in m/yr), (d) motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic Cartesian coordinate grid from input.***
+***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules: (a) estimated motion velocity from Landsat-8 data (x-direction; in m/yr), (b) motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Landsat-8 data (y-direction; in m/yr), (d) motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic Cartesian (northing/easting) coordinate grid from input.***
 
 
 ### 5.3 Radar image over regular grid in imaging coordinates
@@ -131,7 +131,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 <img src="figures/autorift1.png" width="100%">
 
-***Output of "autoRIFT" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) at Jakobshavn Glacier of Greenland over user-defined geographic Cartesian coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/Geogrid): (a) estimated range pixel displacement, (b) estimated azimuth pixel displacement, (c) light interpolation mask, (d) chip size used. Notes: all maps are established exactly over the same geographic Cartesian coordinate grid from input.***
+***Output of "autoRIFT" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) at Jakobshavn Glacier of Greenland over user-defined geographic Cartesian (northing/easting) coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/Geogrid): (a) estimated range pixel displacement, (b) estimated azimuth pixel displacement, (c) light interpolation mask, (d) chip size used. Notes: all maps are established exactly over the same geographic Cartesian coordinate grid from input.***
 
 This is done by implementing the following command line:
 
@@ -148,7 +148,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 <img src="figures/autorift2.png" width="100%">
 
-***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (d) motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic Cartesian coordinate grid from input.***
+***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules: (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (d) motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic Cartesian (northing/easting) coordinate grid from input.***
 
 
 ## 6. Install
@@ -192,7 +192,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 **Note:**
 
-* When the grid is provided in geographic Cartesian (northing/easting) coordinates, it is required to run the "Geogrid" module (https://github.com/leiyangleon/Geogrid) first before running "autoRIFT". In other words, the outputs from "testGeogrid_ISCE.py" or "testGeogridOptical.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname") will serve as the inputs for running "autoRIFT" or will be required to generate the final motion velocity maps.
+* When the grid is provided in geographic Cartesian (northing/easting) coordinates (geographic coordinates lat/lon is not supported), it is required to run the "Geogrid" module (https://github.com/leiyangleon/Geogrid) first before running "autoRIFT". In other words, the outputs from "testGeogrid_ISCE.py" or "testGeogridOptical.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname") will serve as the inputs for running "autoRIFT" or will be required to generate the final motion velocity maps.
 * When the four outputs from running the "Geogrid" module are not provided, a regular grid in the imaging coordinates will be automatically assigned
 
 **For quick use:**
@@ -201,7 +201,7 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 * Input files include the reference image (required), test image (required), and the four outputs from running "testGeogrid_ISCE.py" or "testGeogridOptical.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname"). 
 * Output files include 1) estimated horizontal displacement (equivalent to range for radar), 2) estimated vertical displacement (equivalent to minus azimuth for radar), 3) light interpolation mask, 4) iteratively progressive chip size used. 
 
-_Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic Cartesian coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF of the final converted motion velocity in geographic x- and y-coordinates will be created and named "velocity.tif". Also, it is possible to save the outputs in a netCDF standard format by adding the "-nc" option to the "testautoRIFT.py" (standalone) and "testautoRIFT_ISCE.py" (with ISCE) command._
+_Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic Cartesian (northing/easting) coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF of the final converted motion velocity in geographic x- (easting) and y- (northing) coordinates will be created and named "velocity.tif". Also, it is possible to save the outputs in netCDF standard format by adding the "-nc" option to the "testautoRIFT.py" (standalone) and "testautoRIFT_ISCE.py" (with ISCE) command._
 
 **For modular use:**
 
