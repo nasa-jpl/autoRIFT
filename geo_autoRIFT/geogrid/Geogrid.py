@@ -134,8 +134,8 @@ class Geogrid(Component):
 
         ###First range line
         for rr in rng:
-            for z in zrange:
-                llh = self.orbit.rdr2geo(self.sensingStart, rr, side=self.lookSide)
+            for zz in zrange:
+                llh = self.orbit.rdr2geo(self.sensingStart, rr, side=self.lookSide, height=zz)
                 llhs.append(llh)
                 if gdal.__version__[0] == '2':
                     x,y,z = trans.TransformPoint(llh[1], llh[0], llh[2])
@@ -146,8 +146,8 @@ class Geogrid(Component):
         ##Last range line
         sensingStop = self.sensingStart + datetime.timedelta(seconds = (self.numberOfLines-1) / self.prf)
         for rr in rng:
-            for z in zrange:
-                llh = self.orbit.rdr2geo(sensingStop, rr, side=self.lookSide)
+            for zz in zrange:
+                llh = self.orbit.rdr2geo(sensingStop, rr, side=self.lookSide, height=zz)
                 llhs.append(llh)
                 if gdal.__version__[0] == '2':
                     x,y,z = trans.TransformPoint(llh[1], llh[0], llh[2])
@@ -161,8 +161,8 @@ class Geogrid(Component):
             sensingTime = self.sensingStart + datetime.timedelta(seconds = frac * (self.numberOfLines-1)/self.prf)
 #            print('sensing Time: %f %f %f'%(sensingTime.minute,sensingTime.second,sensingTime.microsecond))
             for rr in [rng[0], rng[-1]]:
-                for z in zrange:
-                    llh = self.orbit.rdr2geo(sensingTime, rr, side=self.lookSide)
+                for zz in zrange:
+                    llh = self.orbit.rdr2geo(sensingTime, rr, side=self.lookSide, height=zz)
                     llhs.append(llh)
                     if gdal.__version__[0] == '2':
                         x,y,z = trans.TransformPoint(llh[1], llh[0], llh[2])
@@ -218,6 +218,7 @@ class Geogrid(Component):
         geogrid.setRO2VXFilename_Py( self._geogrid, self.winro2vxname)
         geogrid.setRO2VYFilename_Py( self._geogrid, self.winro2vyname)
         geogrid.setLookSide_Py(self._geogrid, self.lookSide)
+        geogrid.setNodataOut_Py(self._geogrid, self.nodata_out)
 
         self._orbit  = self.orbit.exportToC()
         geogrid.setOrbit_Py(self._geogrid, self._orbit)
@@ -270,6 +271,7 @@ class Geogrid(Component):
         self.epsg = None
         self._xlim = None
         self._ylim = None
+        self.nodata_out = None
 
         ##Pointer to C 
         self._geogrid = None

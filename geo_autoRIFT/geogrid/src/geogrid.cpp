@@ -61,6 +61,7 @@ void geoGrid::geogrid()
     std::cout << "DEM: " << demname << "\n";
     std::cout << "Velocities: " << vxname << "  " << vyname << "\n";
     std::cout << "Slopes: " << dhdxname << "  " << dhdyname << "\n";
+    std::cout << "Output Nodata Value: " << nodata_out << "\n";
     
     std::cout << "\nOutputs: \n";
     std::cout << "Window locations: " << pixlinename << "\n";
@@ -84,10 +85,13 @@ void geoGrid::geogrid()
     double geoTrans[6];
 
     demDS = reinterpret_cast<GDALDataset *>(GDALOpenShared(demname.c_str(), GA_ReadOnly));
-    if (vxname != "")
+    if (dhdxname != "")
     {
         sxDS = reinterpret_cast<GDALDataset *>(GDALOpenShared(dhdxname.c_str(), GA_ReadOnly));
         syDS = reinterpret_cast<GDALDataset *>(GDALOpenShared(dhdyname.c_str(), GA_ReadOnly));
+    }
+    if (vxname != "")
+    {
         vxDS = reinterpret_cast<GDALDataset *>(GDALOpenShared(vxname.c_str(), GA_ReadOnly));
         vyDS = reinterpret_cast<GDALDataset *>(GDALOpenShared(vyname.c_str(), GA_ReadOnly));
     }
@@ -98,7 +102,7 @@ void geoGrid::geogrid()
         GDALDestroyDriverManager();
         exit(101);
     }
-    if (vxname != "")
+    if (dhdxname != "")
     {
         if (sxDS == NULL)
         {
@@ -114,6 +118,9 @@ void geoGrid::geogrid()
             GDALDestroyDriverManager();
             exit(101);
         }
+    }
+    if (vxname != "")
+    {
         if (vxDS == NULL)
         {
             std::cout << "Error opening x-direction velocity file { " << vxname << " }\n";
@@ -192,6 +199,7 @@ void geoGrid::geogrid()
         GDALDestroyDriverManager();
         exit(104);
     }
+    std::cout << "Center Satellite Velocity: " << satvmid[0] << " " << satvmid[1] << " " << satvmid[2] << "\n";
 //    std::cout << satxmid[0] << " " << satxmid[1] << " " << satxmid[2] << "\n";
 
     std::vector<double> demLine(pCount);
@@ -214,13 +222,13 @@ void geoGrid::geogrid()
 //    double raster2c[pCount];
 
     double nodata;
-    double nodata_out;
+//    double nodata_out;
     if (vxname != "")
     {
         int* pbSuccess = NULL;
         nodata = vxDS->GetRasterBand(1)->GetNoDataValue(pbSuccess);
     }
-    nodata_out = -2000000000;
+//    nodata_out = -2000000000;
     
     const char *pszFormat = "GTiff";
     char **papszOptions = NULL;
@@ -358,7 +366,7 @@ void geoGrid::geogrid()
             exit(105);
         }
         
-        if (vxname != "")
+        if (dhdxname != "")
         {
             status = sxDS->GetRasterBand(1)->RasterIO(GF_Read,
                                                        pOff, lOff+ii,
@@ -391,7 +399,10 @@ void geoGrid::geogrid()
                 exit(105);
             }
             
-            
+        }
+        
+        if (vxname != "")
+        {
             status = vxDS->GetRasterBand(1)->RasterIO(GF_Read,
                                                       pOff, lOff+ii,
                                                       pCount, 1,
@@ -447,11 +458,15 @@ void geoGrid::geogrid()
                 targllh0[pp] = llh[pp];
             }
             
-            if (vxname != "")
+            if (dhdxname != "")
             {
                 slp[0] = sxLine[jj];
                 slp[1] = syLine[jj];
                 slp[2] = -1.0;
+            }
+            
+            if (vxname != "")
+            {
                 vel[0] = vxLine[jj];
                 vel[1] = vyLine[jj];
             }
@@ -686,7 +701,7 @@ void geoGrid::geogrid()
             unitvec_C(alt, temp);
             
             
-            if (vxname != "")
+            if (dhdxname != "")
             {
                 //*********************Local normal vector
                 unitvec_C(slp, normal);
@@ -694,7 +709,10 @@ void geoGrid::geogrid()
                 {
                     normal[pp]  = -normal[pp];
                 }
-                
+            }
+            
+            if (vxname != "")
+            {
                 vel[2] = -(vel[0]*normal[0]+vel[1]*normal[1])/normal[2];
             }
             
@@ -783,10 +801,14 @@ void geoGrid::geogrid()
     
     GDALClose(demDS);
     
-    if (vxname != "")
+    if (dhdxname != "")
     {
         GDALClose(sxDS);
         GDALClose(syDS);
+    }
+    
+    if (vxname != "")
+    {
         GDALClose(vxDS);
         GDALClose(vyDS);
     }
