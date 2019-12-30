@@ -282,6 +282,19 @@ PyObject* setLookSide(PyObject *self, PyObject *args)
     return Py_BuildValue("i", 0);
 }
 
+PyObject* setNodataOut(PyObject *self, PyObject *args)
+{
+    uint64_t ptr;
+    int nodata;
+    if (!PyArg_ParseTuple(args, "Ki", &ptr, &nodata))
+    {
+        return NULL;
+    }
+    
+    ((geoGrid*)(ptr))->nodata_out = nodata;
+    return Py_BuildValue("i", 0);
+}
+
 PyObject* setOrbit(PyObject *self, PyObject *args)
 {
     uint64_t ptr, orb;

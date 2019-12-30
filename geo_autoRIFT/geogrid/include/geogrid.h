@@ -60,6 +60,7 @@ struct geoGrid
     double dt;
     int nPixels;
     int lookSide;
+    int nodata_out;
 
     //Output file names
     std::string pixlinename;

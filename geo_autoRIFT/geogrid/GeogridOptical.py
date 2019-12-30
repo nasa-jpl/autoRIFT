@@ -135,9 +135,9 @@ class GeogridOptical():
         ### Four corner coordinates
         for ss in samples:
             for ll in lines:
-                for z in zrange:
-                    utms.append([ss,ll,z])
-                    x,y,z = trans.TransformPoint(ss, ll, z)
+                for zz in zrange:
+                    utms.append([ss,ll,zz])
+                    x,y,z = trans.TransformPoint(ss, ll, zz)
                     xyzs.append([x,y,z])
 
         utms = np.array(utms)
@@ -189,20 +189,25 @@ class GeogridOptical():
         
 #        pdb.set_trace()
         demDS = gdal.Open(self.demname, gdal.GA_ReadOnly)
-        if (self.vxname != ""):
+        
+        if (self.dhdxname != ""):
             sxDS = gdal.Open(self.dhdxname, gdal.GA_ReadOnly)
             syDS = gdal.Open(self.dhdyname, gdal.GA_ReadOnly)
+        
+        if (self.vxname != ""):
             vxDS = gdal.Open(self.vxname, gdal.GA_ReadOnly)
             vyDS = gdal.Open(self.vyname, gdal.GA_ReadOnly)
         
         if demDS is None:
             raise Exception('Error opening DEM file {0}'.format(self.demname))
-        
-        if (self.vxname != ""):
+    
+        if (self.dhdxname != ""):
             if (sxDS is None):
                 raise Exception('Error opening x-direction slope file {0}'.format(self.dhdxname))
             if (syDS is None):
                 raise Exception('Error opening y-direction slope file {0}'.format(self.dhdyname))
+        
+        if (self.vxname != ""):
             if (vxDS is None):
                 raise Exception('Error opening x-direction velocity file {0}'.format(self.vxname))
             if (vyDS is None):
@@ -245,7 +250,7 @@ class GeogridOptical():
         if (self.vxname != ""):
             nodata = vxDS.GetRasterBand(1).GetNoDataValue()
 
-        nodata_out = -2000000000;
+        nodata_out = self.nodata_out
 
 
         pszFormat = "GTiff"
@@ -340,11 +345,13 @@ class GeogridOptical():
             demLine = demDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
             demLine = struct.unpack('d' * pCount, demLine)
             
-            if (self.vxname != ""):
+            if (self.dhdxname != ""):
                 sxLine = sxDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
                 sxLine = struct.unpack('d' * pCount, sxLine)
                 syLine = syDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
                 syLine = struct.unpack('d' * pCount, syLine)
+            
+            if (self.vxname != ""):
                 vxLine = vxDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
                 vxLine = struct.unpack('d' * pCount, vxLine)
                 vyLine = vyDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
@@ -353,8 +360,9 @@ class GeogridOptical():
             for jj in range(pCount):
                 xyzs = np.array([geoTrans[0] + (jj+pOff+0.5)*geoTrans[1], y, demLine[jj]])
                 targxyz0 = xyzs.copy()
-                if (self.vxname != ""):
+                if (self.dhdxname != ""):
                     slp = np.array([sxLine[jj], syLine[jj], -1.0])
+                if (self.vxname != ""):
                     vel = np.array([vxLine[jj], vyLine[jj], 0.0])
                 targutm0 = np.array(fwdTrans.TransformPoint(targxyz0[0],targxyz0[1],targxyz0[2]))
                 xind = np.round((targutm0[0] - self.startingX) / self.XSize) + 1.
@@ -373,8 +381,12 @@ class GeogridOptical():
                 yunit = (targxyz-targxyz0) / np.linalg.norm(targxyz-targxyz0)
 
                 #   local normal vector
-                if (self.vxname != ""):
+                if (self.dhdxname != ""):
                     normal = -slp / np.linalg.norm(slp)
+                else:
+                    normal = np.array([0., 0., 0.])
+
+                if (self.vxname != ""):
                     vel[2] = -(vel[0]*normal[0]+vel[1]*normal[1])/normal[2]
                     
 
@@ -392,13 +404,24 @@ class GeogridOptical():
                 else:
                     raster1[jj] = xind;
                     raster2[jj] = yind;
-                    if ((self.vxname != "")&(vel[0] != nodata)):
+#                    pdb.set_trace()
+#                    if ((self.vxname != "")&(vel[0] != nodata)):
+##                        pdb.set_trace()
+#                        raster11[jj] = np.round(np.dot(vel,xunit)*self.repeatTime/self.XSize/365.0/24.0/3600.0*1)
+#                        raster22[jj] = np.round(np.dot(vel,yunit)*self.repeatTime/self.YSize/365.0/24.0/3600.0*1)
+#                    else:
+#                        raster11[jj] = 0.
+#                        raster22[jj] = 0.
+                    if (self.vxname == ""):
 #                        pdb.set_trace()
-                        raster11[jj] = np.round(np.dot(vel,xunit)*self.repeatTime/self.XSize/365.0/24.0/3600.0*1)
-                        raster22[jj] = np.round(np.dot(vel,yunit)*self.repeatTime/self.YSize/365.0/24.0/3600.0*1)
-                    else:
                         raster11[jj] = 0.
                         raster22[jj] = 0.
+                    elif (vel[0] == nodata):
+                        raster11[jj] = 0.
+                        raster22[jj] = 0.
+                    else:
+                        raster11[jj] = np.round(np.dot(vel,xunit)*self.repeatTime/self.XSize/365.0/24.0/3600.0*1)
+                        raster22[jj] = np.round(np.dot(vel,yunit)*self.repeatTime/self.YSize/365.0/24.0/3600.0*1)
 
                     raster1a[jj] = normal[2]/(self.repeatTime/self.XSize/365.0/24.0/3600.0)*(normal[2]*yunit[1]-normal[1]*yunit[2])/((normal[2]*xunit[0]-normal[0]*xunit[2])*(normal[2]*yunit[1]-normal[1]*yunit[2])-(normal[2]*yunit[0]-normal[0]*yunit[2])*(normal[2]*xunit[1]-normal[1]*xunit[2]));
                     raster1b[jj] = -normal[2]/(self.repeatTime/self.YSize/365.0/24.0/3600.0)*(normal[2]*xunit[1]-normal[1]*xunit[2])/((normal[2]*xunit[0]-normal[0]*xunit[2])*(normal[2]*yunit[1]-normal[1]*yunit[2])-(normal[2]*yunit[0]-normal[0]*yunit[2])*(normal[2]*xunit[1]-normal[1]*xunit[2]));
@@ -427,10 +450,12 @@ class GeogridOptical():
         poDstDSRO2VY = None
     
         demDS = None
-            
-        if (self.vxname != ""):
+        
+        if (self.dhdxname != ""):
             sxDS = None
             syDS = None
+        
+        if (self.vxname != ""):
             vxDS = None
             vyDS = None
     
@@ -479,5 +504,6 @@ class GeogridOptical():
         self.epsgDat = None
         self._xlim = None
         self._ylim = None
+        self.nodata_out = None
 
 
