@@ -5,7 +5,7 @@
 [![Language](https://img.shields.io/badge/python-3.6%2B-blue.svg)](https://www.python.org/)
 [![Latest version](https://img.shields.io/badge/latest%20version-v1.0.4-yellowgreen.svg)](https://github.com/leiyangleon/autoRIFT/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/leiyangleon/autoRIFT/blob/master/LICENSE)
-[![Citation](https://img.shields.io/badge/DOI-10.5281/zenodo.3533455-blue)](https://doi.org/10.5281/zenodo.3533455)
+[![Citation](https://img.shields.io/badge/DOI-10.5281/zenodo.3595651-blue)](https://doi.org/10.5281/zenodo.3595651)
 
 
 
