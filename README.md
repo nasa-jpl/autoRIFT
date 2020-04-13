@@ -22,7 +22,7 @@ Copyright (C) 2019 California Institute of Technology.  Government Sponsorship A
 
 Link: https://github.com/leiyangleon/autoRIFT
 
-Citation: https://doi.org/10.5281/zenodo.3533455
+Citation: https://doi.org/10.5281/zenodo.3750242
 
 
 ## 1. Authors
@@ -272,6 +272,6 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
        sparseSearchSampleRate      downsampling rate for sparse search  (default = 4)
        BuffDistanceC               Buffer coarse correlation mask by this many pixels for use as fine search mask (default = 8)
        CoarseCorCutoff             Coarse correlation search cutoff (default = 0.01)
-       OverSampleRatio             Factor for pyramid upsampling for sub-pixel level offset refinement (default = 16)
+       OverSampleRatio             Factor for pyramid upsampling for sub-pixel level offset refinement (default = 16; can be scalar or Python dictionary for intelligent use, i.e. chip size-dependent, such as {ChipSize_1:OverSampleRatio_1,..., ChipSize_N:OverSampleRatio_N})
        DataTypeInput               Image data type: 0 -> uint8, 1 -> float32 (default = 0)
        zeroMask                    Force the margin (no data) to zeros which is useful for Wallis-filter-preprocessed images (default = None; 1 for Wallis filter)
