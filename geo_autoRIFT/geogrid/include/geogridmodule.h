@@ -45,6 +45,10 @@ extern "C"
     
         PyObject * setDEM(PyObject *, PyObject *);
         PyObject * setVelocities(PyObject*, PyObject*);
+        PyObject * setSearchRange(PyObject*, PyObject*);
+        PyObject * setChipSizeMin(PyObject*, PyObject*);
+        PyObject * setChipSizeMax(PyObject*, PyObject*);
+        PyObject * setStableSurfaceMask(PyObject*, PyObject*);
         PyObject * setSlopes(PyObject*, PyObject*);
         PyObject * setOrbit(PyObject *, PyObject *);
         PyObject * setLookSide(PyObject *, PyObject *);
@@ -52,9 +56,15 @@ extern "C"
 
         PyObject * setWindowLocationsFilename(PyObject *, PyObject *);
         PyObject * setWindowOffsetsFilename(PyObject *, PyObject *);
+        PyObject * setWindowSearchRangeFilename(PyObject *, PyObject *);
+        PyObject * setWindowChipSizeMinFilename(PyObject *, PyObject *);
+        PyObject * setWindowChipSizeMaxFilename(PyObject *, PyObject *);
+        PyObject * setWindowStableSurfaceMaskFilename(PyObject *, PyObject *);
         PyObject * setRO2VXFilename(PyObject *, PyObject *);
         PyObject * setRO2VYFilename(PyObject *, PyObject *);
         PyObject * setEPSG(PyObject *, PyObject *);
+        PyObject * setIncidenceAngle(PyObject *, PyObject *);
+        PyObject * setChipSizeX0(PyObject *, PyObject *);
         PyObject * setXLimits(PyObject *, PyObject *);
         PyObject * setYLimits(PyObject *, PyObject *);
 }
@@ -70,7 +80,13 @@ static PyMethodDef geogrid_methods[] =
         {"setRepeatTime_Py", setRepeatTime, METH_VARARGS, " "},
         {"setDEM_Py", setDEM, METH_VARARGS, " "},
         {"setEPSG_Py", setEPSG, METH_VARARGS, " "},
+        {"setIncidenceAngle_Py", setIncidenceAngle, METH_VARARGS, " "},
+        {"setChipSizeX0_Py", setChipSizeX0, METH_VARARGS, " "},
         {"setVelocities_Py", setVelocities, METH_VARARGS, " "},
+        {"setSearchRange_Py", setSearchRange, METH_VARARGS, " "},
+        {"setChipSizeMin_Py", setChipSizeMin, METH_VARARGS, " "},
+        {"setChipSizeMax_Py", setChipSizeMax, METH_VARARGS, " "},
+        {"setStableSurfaceMask_Py", setStableSurfaceMask, METH_VARARGS, " "},
         {"setSlopes_Py", setSlopes, METH_VARARGS, " "},
         {"setOrbit_Py", setOrbit, METH_VARARGS, " "},
         {"setLookSide_Py", setLookSide, METH_VARARGS, " "},
@@ -79,6 +95,10 @@ static PyMethodDef geogrid_methods[] =
         {"setYLimits_Py", setYLimits, METH_VARARGS, " "},
         {"setWindowLocationsFilename_Py", setWindowLocationsFilename, METH_VARARGS, " "},
         {"setWindowOffsetsFilename_Py", setWindowOffsetsFilename, METH_VARARGS, " "},
+        {"setWindowSearchRangeFilename_Py", setWindowSearchRangeFilename, METH_VARARGS, " "},
+        {"setWindowChipSizeMinFilename_Py", setWindowChipSizeMinFilename, METH_VARARGS, " "},
+        {"setWindowChipSizeMaxFilename_Py", setWindowChipSizeMaxFilename, METH_VARARGS, " "},
+        {"setWindowStableSurfaceMaskFilename_Py", setWindowStableSurfaceMaskFilename, METH_VARARGS, " "},
         {"setRO2VXFilename_Py", setRO2VXFilename, METH_VARARGS, " "},
         {"setRO2VYFilename_Py", setRO2VYFilename, METH_VARARGS, " "},
         {NULL, NULL, 0, NULL}

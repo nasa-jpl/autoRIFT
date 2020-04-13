@@ -263,15 +263,14 @@ class autoRIFT:
         from scipy import ndimage
 
 
-        ChipSizeUniX = np.unique([np.unique(self.ChipSizeMinX), np.unique(self.ChipSizeMaxX)])
+        ChipSizeUniX = np.unique(np.append(np.unique(self.ChipSizeMinX), np.unique(self.ChipSizeMaxX)))
         ChipSizeUniX = np.delete(ChipSizeUniX,np.where(ChipSizeUniX == 0)[0])
 
         if np.any(np.mod(ChipSizeUniX,self.ChipSize0X) != 0):
             sys.exit('chip sizes must be even integers of ChipSize0')
 
         ChipRangeX = self.ChipSize0X * np.array([1,2,4,8,16,32,64],np.float32)
-        ChipRangeX = ChipRangeX[ChipRangeX < (2**8 - 1)]
-
+#        ChipRangeX = ChipRangeX[ChipRangeX < (2**8 - 1)]
         if np.max(ChipSizeUniX) > np.max(ChipRangeX):
             sys.exit('max each chip size is out of range')
 
@@ -401,12 +400,18 @@ class autoRIFT:
             SubPixFlag = False
             ChipSizeXC = ChipSizeUniX[i]
             ChipSizeYC = np.float32(np.round(ChipSizeXC*self.ScaleChipSizeY/2)*2)
+            
+            if type(self.OverSampleRatio) is dict:
+                overSampleRatio = self.OverSampleRatio[ChipSizeUniX[i]]
+            else:
+                overSampleRatio = self.OverSampleRatio
+            
 #            pdb.set_trace()
 
             if self.I1.dtype == np.uint8:
-                DxC, DyC = arImgDisp_u(self.I2.copy(), self.I1.copy(), xGrid0C.copy(), yGrid0C.copy(), ChipSizeXC, ChipSizeYC, SearchLimitX0C.copy(), SearchLimitY0C.copy(), Dx0C.copy(), Dy0C.copy(), SubPixFlag, self.OverSampleRatio)
+                DxC, DyC = arImgDisp_u(self.I2.copy(), self.I1.copy(), xGrid0C.copy(), yGrid0C.copy(), ChipSizeXC, ChipSizeYC, SearchLimitX0C.copy(), SearchLimitY0C.copy(), Dx0C.copy(), Dy0C.copy(), SubPixFlag, overSampleRatio)
             elif self.I1.dtype == np.float32:
-                DxC, DyC = arImgDisp_s(self.I2.copy(), self.I1.copy(), xGrid0C.copy(), yGrid0C.copy(), ChipSizeXC, ChipSizeYC, SearchLimitX0C.copy(), SearchLimitY0C.copy(), Dx0C.copy(), Dy0C.copy(), SubPixFlag, self.OverSampleRatio)
+                DxC, DyC = arImgDisp_s(self.I2.copy(), self.I1.copy(), xGrid0C.copy(), yGrid0C.copy(), ChipSizeXC, ChipSizeYC, SearchLimitX0C.copy(), SearchLimitY0C.copy(), Dx0C.copy(), Dy0C.copy(), SubPixFlag, overSampleRatio)
             else:
                 sys.exit('invalid data type for the image pair which must be unsigned integer 8 or 32-bit float')
             
@@ -423,7 +428,7 @@ class autoRIFT:
                 DispFiltC.Iter = self.Iter
                 DispFiltC.MadScalar = self.MadScalar
             DispFiltC.Iter = DispFiltC.Iter - 1
-            MC = DispFiltC.filtDisp(DxC.copy(), DyC.copy(), SearchLimitX0C.copy(), SearchLimitY0C.copy(), M0C.copy())
+            MC = DispFiltC.filtDisp(DxC.copy(), DyC.copy(), SearchLimitX0C.copy(), SearchLimitY0C.copy(), M0C.copy(), overSampleRatio)
 
             MC[np.logical_not(M0C)] = False
     
@@ -454,9 +459,9 @@ class autoRIFT:
             ChipSizeYF = np.float32(np.round(ChipSizeXF*self.ScaleChipSizeY/2)*2)
 #            pdb.set_trace()
             if self.I1.dtype == np.uint8:
-                DxF, DyF = arImgDisp_u(self.I2.copy(), self.I1.copy(), xGrid0.copy(), yGrid0.copy(), ChipSizeXF, ChipSizeYF, SearchLimitX0.copy(), SearchLimitY0.copy(), Dx00.copy(), Dy00.copy(), SubPixFlag, self.OverSampleRatio)
+                DxF, DyF = arImgDisp_u(self.I2.copy(), self.I1.copy(), xGrid0.copy(), yGrid0.copy(), ChipSizeXF, ChipSizeYF, SearchLimitX0.copy(), SearchLimitY0.copy(), Dx00.copy(), Dy00.copy(), SubPixFlag, overSampleRatio)
             elif self.I1.dtype == np.float32:
-                DxF, DyF = arImgDisp_s(self.I2.copy(), self.I1.copy(), xGrid0.copy(), yGrid0.copy(), ChipSizeXF, ChipSizeYF, SearchLimitX0.copy(), SearchLimitY0.copy(), Dx00.copy(), Dy00.copy(), SubPixFlag, self.OverSampleRatio)
+                DxF, DyF = arImgDisp_s(self.I2.copy(), self.I1.copy(), xGrid0.copy(), yGrid0.copy(), ChipSizeXF, ChipSizeYF, SearchLimitX0.copy(), SearchLimitY0.copy(), Dx00.copy(), Dy00.copy(), SubPixFlag, overSampleRatio)
             else:
                 sys.exit('invalid data type for the image pair which must be unsigned integer 8 or 32-bit float')
 
@@ -470,8 +475,8 @@ class autoRIFT:
                 DispFiltF.Iter = self.Iter
                 DispFiltF.MadScalar = self.MadScalar
 
-
-            M0 = DispFiltF.filtDisp(DxF.copy(), DyF.copy(), SearchLimitX0.copy(), SearchLimitY0.copy(), np.logical_not(np.isnan(DxF)))
+            
+            M0 = DispFiltF.filtDisp(DxF.copy(), DyF.copy(), SearchLimitX0.copy(), SearchLimitY0.copy(), np.logical_not(np.isnan(DxF)), overSampleRatio)
 #            pdb.set_trace()
             DxF[np.logical_not(M0)] = np.nan
             DyF[np.logical_not(M0)] = np.nan
@@ -565,7 +570,10 @@ class autoRIFT:
         
         
         # truncate the grid to fit the nested grid
-        chopFactor = self.ChipSizeMaxX / self.ChipSize0X
+        if np.size(self.ChipSizeMaxX) == 1:
+            chopFactor = self.ChipSizeMaxX / self.ChipSize0X
+        else:
+            chopFactor = np.max(self.ChipSizeMaxX) / self.ChipSize0X
         rlim = int(np.floor(self.xGrid.shape[0] / chopFactor) * chopFactor)
         clim = int(np.floor(self.xGrid.shape[1] / chopFactor) * chopFactor)
         self.origSize = self.xGrid.shape
@@ -587,7 +595,6 @@ class autoRIFT:
         if np.size(self.ChipSizeMaxX) != 1:
             self.ChipSizeMaxX = self.ChipSizeMaxX[0:rlim,0:clim]
             self.ChipSizeMinX = self.ChipSizeMinX[0:rlim,0:clim]
-        
         
         # call autoRIFT main function
         self.autorift()
@@ -751,12 +758,12 @@ def arImgDisp_u(I1, I2, xGrid, yGrid, ChipSizeX, ChipSizeY, SearchLimitX, Search
 
 
     for jj in range(xGrid.shape[1]):
-        if np.all(SearchLimitX[:,jj] == 0) & np.all(SearchLimitX[:,jj] == 0):
+        if np.all(SearchLimitX[:,jj] == 0) & np.all(SearchLimitY[:,jj] == 0):
             continue
         Dx1 = Dx[:,jj]
         Dy1 = Dy[:,jj]
         for ii in range(xGrid.shape[0]):
-            if (SearchLimitX[ii,jj] == 0) & (SearchLimitX[ii,jj] == 0):
+            if (SearchLimitX[ii,jj] == 0) & (SearchLimitY[ii,jj] == 0):
                 continue
             
             # remember motion terms Dx and Dy correspond to I1 relative to I2 (reference)
@@ -912,12 +919,12 @@ def arImgDisp_s(I1, I2, xGrid, yGrid, ChipSizeX, ChipSizeY, SearchLimitX, Search
     
     
     for jj in range(xGrid.shape[1]):
-        if np.all(SearchLimitX[:,jj] == 0) & np.all(SearchLimitX[:,jj] == 0):
+        if np.all(SearchLimitX[:,jj] == 0) & np.all(SearchLimitY[:,jj] == 0):
             continue
         Dx1 = Dx[:,jj]
         Dy1 = Dy[:,jj]
         for ii in range(xGrid.shape[0]):
-            if (SearchLimitX[ii,jj] == 0) & (SearchLimitX[ii,jj] == 0):
+            if (SearchLimitX[ii,jj] == 0) & (SearchLimitY[ii,jj] == 0):
                 continue
         
             # remember motion terms Dx and Dy correspond to I1 relative to I2 (reference)
@@ -1025,7 +1032,7 @@ class DISP_FILT:
         self.Iter = 3
         self.MadScalar = 4
     
-    def filtDisp(self, Dx, Dy, SearchLimitX, SearchLimitY, M):
+    def filtDisp(self, Dx, Dy, SearchLimitX, SearchLimitY, M, OverSampleRatio):
         
         import numpy as np
         
@@ -1034,6 +1041,9 @@ class DISP_FILT:
 #        pdb.set_trace()
         Dx = Dx / SearchLimitX
         Dy = Dy / SearchLimitY
+        
+        DxMadmin = np.ones(Dx.shape) * OverSampleRatio / SearchLimitX * 2;
+        DyMadmin = np.ones(Dy.shape) * OverSampleRatio / SearchLimitY * 2;
         
         
         
@@ -1054,8 +1064,8 @@ class DISP_FILT:
         
             DxM = colfilt(Dx.copy(), (self.FiltWidth, self.FiltWidth), 3)
             DyM = colfilt(Dy.copy(), (self.FiltWidth, self.FiltWidth), 3)
-        
-            M = (np.abs(Dx - DxM) <= (self.MadScalar * DxMad)) & (np.abs(Dy - DyM) <= (self.MadScalar * DyMad)) & M
+            
+            M = (np.abs(Dx - DxM) <= np.maximum(self.MadScalar * DxMad, DxMadmin)) & (np.abs(Dy - DyM) <= np.maximum(self.MadScalar * DyMad, DyMadmin)) & M
         
         return M
 
