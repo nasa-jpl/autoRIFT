@@ -57,7 +57,7 @@ class Geogrid(Component):
 
         ###Load approrpriate DEM from database
         if self.demname is None:
-            self.demname, self.dhdxname, self.dhdyname, self.vxname, self.vyname = self.getDEM(bbox)
+            self.demname, self.dhdxname, self.dhdyname, self.vxname, self.vyname, self.srxname, self.sryname, self.csminxname, self.csminyname, self.csmaxxname, self.csmaxyname, self.ssmname = self.getDEM(bbox)
 
 
         ##Create and set parameters
@@ -178,6 +178,42 @@ class Geogrid(Component):
         self._xlim = [np.min(xyzs[:,0]), np.max(xyzs[:,0])]
         self._ylim = [np.min(xyzs[:,1]), np.max(xyzs[:,1])]
 
+        
+    def getIncidenceAngle(self, zrange=[-200,4000]):
+        '''
+        Dummy.
+        '''
+        import numpy as np
+        import datetime
+        from osgeo import osr,gdal
+        from isceobj.Util.geo.ellipsoid import Ellipsoid
+        from isceobj.Planet.Planet import Planet
+        
+        planet = Planet(pname='Earth')
+        refElp = Ellipsoid(a=planet.ellipsoid.a, e2=planet.ellipsoid.e2, model='WGS84')
+        
+        deg2rad = np.pi/180.0
+        
+        thetas = []
+        
+        midrng = self.startingRange + (np.floor(self.numberOfSamples/2)-1) * self.rangePixelSize
+        midsensing = self.sensingStart + datetime.timedelta(seconds = (np.floor(self.numberOfLines/2)-1) / self.prf)
+        masterSV = self.orbit.interpolateOrbit(midsensing, method='hermite')
+        mxyz = np.array(masterSV.getPosition())
+        
+        for zz in zrange:
+            llh = self.orbit.rdr2geo(midsensing, midrng, side=self.lookSide, height=zz)
+            targxyz = np.array(refElp.LLH(llh[0], llh[1], llh[2]).ecef().tolist())
+            los = (mxyz-targxyz) / np.linalg.norm(mxyz-targxyz)
+            n_vec = np.array([np.cos(llh[0]*deg2rad)*np.cos(llh[1]*deg2rad), np.cos(llh[0]*deg2rad)*np.sin(llh[1]*deg2rad), np.sin(llh[0]*deg2rad)])
+            theta = np.arccos(np.dot(los, n_vec))
+            thetas.append([theta])
+        
+        thetas = np.array(thetas)
+        
+        self.incidenceAngle = np.mean(thetas)
+        
+
     def getDEM(self, bbox):
         '''
         Look up database and return values.
@@ -202,6 +238,9 @@ class Geogrid(Component):
         geogrid.setRepeatTime_Py(self._geogrid, self.repeatTime)
 
         geogrid.setEPSG_Py(self._geogrid, self.epsg)
+        geogrid.setIncidenceAngle_Py(self._geogrid, self.incidenceAngle)
+        geogrid.setChipSizeX0_Py(self._geogrid, self.chipSizeX0)
+        
         geogrid.setXLimits_Py(self._geogrid, self._xlim[0], self._xlim[1])
         geogrid.setYLimits_Py(self._geogrid, self._ylim[0], self._ylim[1])
         if self.demname:
@@ -212,9 +251,25 @@ class Geogrid(Component):
 
         if (self.vxname is not None) and (self.vyname is not None):
             geogrid.setVelocities_Py(self._geogrid, self.vxname, self.vyname)
+        
+        if (self.srxname is not None) and (self.sryname is not None):
+            geogrid.setSearchRange_Py(self._geogrid, self.srxname, self.sryname)
+        
+        if (self.csminxname is not None) and (self.csminyname is not None):
+            geogrid.setChipSizeMin_Py(self._geogrid, self.csminxname, self.csminyname)
+        
+        if (self.csmaxxname is not None) and (self.csmaxyname is not None):
+            geogrid.setChipSizeMax_Py(self._geogrid, self.csmaxxname, self.csmaxyname)
+        
+        if (self.ssmname is not None):
+            geogrid.setStableSurfaceMask_Py(self._geogrid, self.ssmname)
 
         geogrid.setWindowLocationsFilename_Py( self._geogrid, self.winlocname)
         geogrid.setWindowOffsetsFilename_Py( self._geogrid, self.winoffname)
+        geogrid.setWindowSearchRangeFilename_Py( self._geogrid, self.winsrname)
+        geogrid.setWindowChipSizeMinFilename_Py( self._geogrid, self.wincsminname)
+        geogrid.setWindowChipSizeMaxFilename_Py( self._geogrid, self.wincsmaxname)
+        geogrid.setWindowStableSurfaceMaskFilename_Py( self._geogrid, self.winssmname)
         geogrid.setRO2VXFilename_Py( self._geogrid, self.winro2vxname)
         geogrid.setRO2VYFilename_Py( self._geogrid, self.winro2vyname)
         geogrid.setLookSide_Py(self._geogrid, self.lookSide)
@@ -250,6 +305,8 @@ class Geogrid(Component):
         self.numberOfLines = None
         self.lookSide = None
         self.repeatTime = None
+        self.incidenceAngle = None
+        self.chipSizeX0 = None
 
         ##Input related parameters
         self.demname = None
@@ -257,15 +314,25 @@ class Geogrid(Component):
         self.dhdyname = None
         self.vxname = None
         self.vyname = None
+        self.srxname = None
+        self.sryname = None
+        self.csminxname = None
+        self.csminyname = None
+        self.csmaxxname = None
+        self.csmaxyname = None
+        self.ssmname = None
         
+        ##Output related parameters
         self.winlocname = None
         self.winoffname = None
+        self.winsrname = None
+        self.wincsminname = None
+        self.wincsmaxname = None
+        self.winssmname = None
         self.winro2vxname = None
         self.winro2vyname = None
 
 
-        ##Output file
-        self.outname = None
 
         ##Coordinate system
         self.epsg = None

@@ -51,23 +51,33 @@ void geoGrid::geogrid()
     std::cout << "Range: " << startingRange << "  " << dr << "\n";
     std::cout << "Azimuth: " << sensingStart << "  " << prf << "\n";
     std::cout << "Dimensions: " << nPixels << " " << nLines << "\n";
+    std::cout << "Incidence Angle: " << incidenceAngle/deg2rad << "\n";
 
     std::cout << "\nMap inputs: \n";
     std::cout << "EPSG: " << epsgcode << "\n";
+    std::cout << "Smallest Allowable Chip Size in m: " << chipSizeX0 << "\n";
     std::cout << "Repeat Time: " << dt << "\n";
     std::cout << "XLimits: " << xmin << "  " << xmax << "\n";
     std::cout << "YLimits: " << ymin << "  " << ymax << "\n";
     std::cout << "Extent in km: " << (xmax - xmin)/1000. << "  " << (ymax - ymin)/1000. << "\n";
     std::cout << "DEM: " << demname << "\n";
     std::cout << "Velocities: " << vxname << "  " << vyname << "\n";
+    std::cout << "Search Range: " << srxname << "  " << sryname << "\n";
+    std::cout << "Chip Size Min: " << csminxname << "  " << csminyname << "\n";
+    std::cout << "Chip Size Max: " << csmaxxname << "  " << csmaxyname << "\n";
     std::cout << "Slopes: " << dhdxname << "  " << dhdyname << "\n";
+    std::cout << "Stable Surface Mask: " << ssmname << "\n";
     std::cout << "Output Nodata Value: " << nodata_out << "\n";
     
     std::cout << "\nOutputs: \n";
     std::cout << "Window locations: " << pixlinename << "\n";
     std::cout << "Window offsets: " << offsetname << "\n";
+    std::cout << "Window search range: " << searchrangename << "\n";
+    std::cout << "Window chip size min: " << chipsizeminname << "\n";
+    std::cout << "Window chip size max: " << chipsizemaxname << "\n";
     std::cout << "Window rdr_off2vel_x vector: " << ro2vx_name << "\n";
     std::cout << "Window rdr_off2vel_y vector: " << ro2vy_name << "\n";
+    std::cout << "Window stable surface mask: " << stablesurfacemaskname << "\n";
     
 
     std::cout << "\nStarting processing .... \n";
@@ -81,6 +91,13 @@ void geoGrid::geogrid()
     GDALDataset* syDS = NULL;
     GDALDataset* vxDS = NULL;
     GDALDataset* vyDS = NULL;
+    GDALDataset* srxDS = NULL;
+    GDALDataset* sryDS = NULL;
+    GDALDataset* csminxDS = NULL;
+    GDALDataset* csminyDS = NULL;
+    GDALDataset* csmaxxDS = NULL;
+    GDALDataset* csmaxyDS = NULL;
+    GDALDataset* ssmDS = NULL;
 
     double geoTrans[6];
 
@@ -94,6 +111,25 @@ void geoGrid::geogrid()
     {
         vxDS = reinterpret_cast<GDALDataset *>(GDALOpenShared(vxname.c_str(), GA_ReadOnly));
         vyDS = reinterpret_cast<GDALDataset *>(GDALOpenShared(vyname.c_str(), GA_ReadOnly));
+    }
+    if (srxname != "")
+    {
+        srxDS = reinterpret_cast<GDALDataset *>(GDALOpenShared(srxname.c_str(), GA_ReadOnly));
+        sryDS = reinterpret_cast<GDALDataset *>(GDALOpenShared(sryname.c_str(), GA_ReadOnly));
+    }
+    if (csminxname != "")
+    {
+        csminxDS = reinterpret_cast<GDALDataset *>(GDALOpenShared(csminxname.c_str(), GA_ReadOnly));
+        csminyDS = reinterpret_cast<GDALDataset *>(GDALOpenShared(csminyname.c_str(), GA_ReadOnly));
+    }
+    if (csmaxxname != "")
+    {
+        csmaxxDS = reinterpret_cast<GDALDataset *>(GDALOpenShared(csmaxxname.c_str(), GA_ReadOnly));
+        csmaxyDS = reinterpret_cast<GDALDataset *>(GDALOpenShared(csmaxyname.c_str(), GA_ReadOnly));
+    }
+    if (ssmname != "")
+    {
+        ssmDS = reinterpret_cast<GDALDataset *>(GDALOpenShared(ssmname.c_str(), GA_ReadOnly));
     }
     if (demDS == NULL)
     {
@@ -135,6 +171,64 @@ void geoGrid::geogrid()
             GDALDestroyDriverManager();
             exit(101);
         }
+    }
+    if (srxname != "")
+    {
+        if (srxDS == NULL)
+        {
+            std::cout << "Error opening x-direction search range file { " << srxname << " }\n";
+            std::cout << "Exiting with error code .... (101) \n";
+            GDALDestroyDriverManager();
+            exit(101);
+        }
+        if (sryDS == NULL)
+        {
+            std::cout << "Error opening y-direction search range file { " << sryname << " }\n";
+            std::cout << "Exiting with error code .... (101) \n";
+            GDALDestroyDriverManager();
+            exit(101);
+        }
+    }
+    if (csminxname != "")
+    {
+        if (csminxDS == NULL)
+        {
+            std::cout << "Error opening x-direction chip size min file { " << csminxname << " }\n";
+            std::cout << "Exiting with error code .... (101) \n";
+            GDALDestroyDriverManager();
+            exit(101);
+        }
+        if (csminyDS == NULL)
+        {
+            std::cout << "Error opening y-direction chip size min file { " << csminyname << " }\n";
+            std::cout << "Exiting with error code .... (101) \n";
+            GDALDestroyDriverManager();
+            exit(101);
+        }
+    }
+    if (csmaxxname != "")
+    {
+        if (csmaxxDS == NULL)
+        {
+            std::cout << "Error opening x-direction chip size max file { " << csmaxxname << " }\n";
+            std::cout << "Exiting with error code .... (101) \n";
+            GDALDestroyDriverManager();
+            exit(101);
+        }
+        if (csmaxyDS == NULL)
+        {
+            std::cout << "Error opening y-direction chip size max file { " << csmaxyname << " }\n";
+            std::cout << "Exiting with error code .... (101) \n";
+            GDALDestroyDriverManager();
+            exit(101);
+        }
+    }
+    if (ssmDS == NULL)
+    {
+        std::cout << "Error opening stable surface mask file { " << ssmname << " }\n";
+        std::cout << "Exiting with error code .... (101) \n";
+        GDALDestroyDriverManager();
+        exit(101);
     }
 
     demDS->GetGeoTransform(geoTrans);
@@ -199,7 +293,7 @@ void geoGrid::geogrid()
         GDALDestroyDriverManager();
         exit(104);
     }
-    std::cout << "Center Satellite Velocity: " << satvmid[0] << " " << satvmid[1] << " " << satvmid[2] << "\n";
+//    std::cout << "Center Satellite Velocity: " << satvmid[0] << " " << satvmid[1] << " " << satvmid[2] << "\n";
 //    std::cout << satxmid[0] << " " << satxmid[1] << " " << satxmid[2] << "\n";
 
     std::vector<double> demLine(pCount);
@@ -207,11 +301,26 @@ void geoGrid::geogrid()
     std::vector<double> syLine(pCount);
     std::vector<double> vxLine(pCount);
     std::vector<double> vyLine(pCount);
+    std::vector<double> srxLine(pCount);
+    std::vector<double> sryLine(pCount);
+    std::vector<double> csminxLine(pCount);
+    std::vector<double> csminyLine(pCount);
+    std::vector<double> csmaxxLine(pCount);
+    std::vector<double> csmaxyLine(pCount);
+    std::vector<double> ssmLine(pCount);
     
     GInt32 raster1[pCount];
     GInt32 raster2[pCount];
     GInt32 raster11[pCount];
     GInt32 raster22[pCount];
+    
+    GInt32 sr_raster11[pCount];
+    GInt32 sr_raster22[pCount];
+    GInt32 csmin_raster11[pCount];
+    GInt32 csmin_raster22[pCount];
+    GInt32 csmax_raster11[pCount];
+    GInt32 csmax_raster22[pCount];
+    GInt32 ssm_raster[pCount];
     
     double raster1a[pCount];
     double raster1b[pCount];
@@ -291,6 +400,102 @@ void geoGrid::geogrid()
     
     
     
+    GDALDriver *poDriverSch;
+    poDriverSch = GetGDALDriverManager()->GetDriverByName(pszFormat);
+    if( poDriverSch == NULL )
+    exit(107);
+    GDALDataset *poDstDSSch;
+    
+    str = searchrangename;
+    const char * pszDstFilenameSch = str.c_str();
+    poDstDSSch = poDriverSch->Create( pszDstFilenameSch, pCount, lCount, 2, GDT_Int32,
+                                     papszOptions );
+    
+    poDstDSSch->SetGeoTransform( adfGeoTransform );
+    poDstDSSch->SetProjection( pszSRS_WKT );
+    //    CPLFree( pszSRS_WKT );
+    
+    GDALRasterBand *poBand1Sch;
+    GDALRasterBand *poBand2Sch;
+    poBand1Sch = poDstDSSch->GetRasterBand(1);
+    poBand2Sch = poDstDSSch->GetRasterBand(2);
+    poBand1Sch->SetNoDataValue(nodata_out);
+    poBand2Sch->SetNoDataValue(nodata_out);
+    
+    
+    
+    GDALDriver *poDriverMin;
+    poDriverMin = GetGDALDriverManager()->GetDriverByName(pszFormat);
+    if( poDriverMin == NULL )
+    exit(107);
+    GDALDataset *poDstDSMin;
+    
+    str = chipsizeminname;
+    const char * pszDstFilenameMin = str.c_str();
+    poDstDSMin = poDriverMin->Create( pszDstFilenameMin, pCount, lCount, 2, GDT_Int32,
+                                     papszOptions );
+    
+    poDstDSMin->SetGeoTransform( adfGeoTransform );
+    poDstDSMin->SetProjection( pszSRS_WKT );
+    //    CPLFree( pszSRS_WKT );
+    
+    GDALRasterBand *poBand1Min;
+    GDALRasterBand *poBand2Min;
+    poBand1Min = poDstDSMin->GetRasterBand(1);
+    poBand2Min = poDstDSMin->GetRasterBand(2);
+    poBand1Min->SetNoDataValue(nodata_out);
+    poBand2Min->SetNoDataValue(nodata_out);
+    
+    
+    
+    
+    GDALDriver *poDriverMax;
+    poDriverMax = GetGDALDriverManager()->GetDriverByName(pszFormat);
+    if( poDriverMax == NULL )
+    exit(107);
+    GDALDataset *poDstDSMax;
+    
+    str = chipsizemaxname;
+    const char * pszDstFilenameMax = str.c_str();
+    poDstDSMax = poDriverMax->Create( pszDstFilenameMax, pCount, lCount, 2, GDT_Int32,
+                                     papszOptions );
+    
+    poDstDSMax->SetGeoTransform( adfGeoTransform );
+    poDstDSMax->SetProjection( pszSRS_WKT );
+    //    CPLFree( pszSRS_WKT );
+    
+    GDALRasterBand *poBand1Max;
+    GDALRasterBand *poBand2Max;
+    poBand1Max = poDstDSMax->GetRasterBand(1);
+    poBand2Max = poDstDSMax->GetRasterBand(2);
+    poBand1Max->SetNoDataValue(nodata_out);
+    poBand2Max->SetNoDataValue(nodata_out);
+    
+    
+    
+    
+    
+    GDALDriver *poDriverMsk;
+    poDriverMsk = GetGDALDriverManager()->GetDriverByName(pszFormat);
+    if( poDriverMsk == NULL )
+    exit(107);
+    GDALDataset *poDstDSMsk;
+    
+    str = stablesurfacemaskname;
+    const char * pszDstFilenameMsk = str.c_str();
+    poDstDSMsk = poDriverMsk->Create( pszDstFilenameMsk, pCount, lCount, 1, GDT_Int32,
+                                     papszOptions );
+    
+    poDstDSMsk->SetGeoTransform( adfGeoTransform );
+    poDstDSMsk->SetProjection( pszSRS_WKT );
+    //    CPLFree( pszSRS_WKT );
+    
+    GDALRasterBand *poBand1Msk;
+    poBand1Msk = poDstDSMsk->GetRasterBand(1);
+    poBand1Msk->SetNoDataValue(nodata_out);
+    
+    
+    
     
     GDALDriver *poDriverRO2VX;
     poDriverRO2VX = GetGDALDriverManager()->GetDriverByName(pszFormat);
@@ -345,6 +550,19 @@ void geoGrid::geogrid()
 //    poBand3Alt->SetNoDataValue(nodata_out);
     
     
+    // ground range and azimuth pixel size
+    double grd_res, azm_res;
+    
+//    double incang = 38.0*deg2rad;
+    double incang = incidenceAngle;
+    grd_res = dr / std::sin(incang);
+    azm_res = norm_C(satvmid) / prf;
+    std::cout << "Ground range pixel size: " << grd_res << "\n";
+    std::cout << "Azimuth pixel size: " << azm_res << "\n";
+//    int ChipSizeX0 = 240;
+    double ChipSizeX0 = chipSizeX0;
+    int ChipSizeX0_PIX_grd = std::ceil(ChipSizeX0 / grd_res / 4) * 4;
+    int ChipSizeX0_PIX_azm = std::ceil(ChipSizeX0 / azm_res / 4) * 4;
     
     
     
@@ -435,6 +653,134 @@ void geoGrid::geogrid()
             }
         }
         
+        if (srxname != "")
+        {
+            status = srxDS->GetRasterBand(1)->RasterIO(GF_Read,
+                                                      pOff, lOff+ii,
+                                                      pCount, 1,
+                                                      (void*) (srxLine.data()),
+                                                      pCount, 1, GDT_Float64,
+                                                      sizeof(double), sizeof(double)*pCount, NULL);
+            
+            if (status != 0)
+            {
+                std::cout << "Error read line " << lOff + ii << " from x-direction search range file: " << srxname << "\n";
+                GDALClose(srxDS);
+                GDALDestroyDriverManager();
+                exit(105);
+            }
+            
+            
+            status = sryDS->GetRasterBand(1)->RasterIO(GF_Read,
+                                                      pOff, lOff+ii,
+                                                      pCount, 1,
+                                                      (void*) (sryLine.data()),
+                                                      pCount, 1, GDT_Float64,
+                                                      sizeof(double), sizeof(double)*pCount, NULL);
+            
+            if (status != 0)
+            {
+                std::cout << "Error read line " << lOff + ii << " from y-direction search range file: " << sryname << "\n";
+                GDALClose(sryDS);
+                GDALDestroyDriverManager();
+                exit(105);
+            }
+        }
+        
+        
+        if (csminxname != "")
+        {
+            status = csminxDS->GetRasterBand(1)->RasterIO(GF_Read,
+                                                      pOff, lOff+ii,
+                                                      pCount, 1,
+                                                      (void*) (csminxLine.data()),
+                                                      pCount, 1, GDT_Float64,
+                                                      sizeof(double), sizeof(double)*pCount, NULL);
+            
+            if (status != 0)
+            {
+                std::cout << "Error read line " << lOff + ii << " from x-direction chip size min file: " << csminxname << "\n";
+                GDALClose(csminxDS);
+                GDALDestroyDriverManager();
+                exit(105);
+            }
+            
+            
+            status = csminyDS->GetRasterBand(1)->RasterIO(GF_Read,
+                                                      pOff, lOff+ii,
+                                                      pCount, 1,
+                                                      (void*) (csminyLine.data()),
+                                                      pCount, 1, GDT_Float64,
+                                                      sizeof(double), sizeof(double)*pCount, NULL);
+            
+            if (status != 0)
+            {
+                std::cout << "Error read line " << lOff + ii << " from y-direction chip size min file: " << csminyname << "\n";
+                GDALClose(csminyDS);
+                GDALDestroyDriverManager();
+                exit(105);
+            }
+        }
+        
+        
+        if (csmaxxname != "")
+        {
+            status = csmaxxDS->GetRasterBand(1)->RasterIO(GF_Read,
+                                                      pOff, lOff+ii,
+                                                      pCount, 1,
+                                                      (void*) (csmaxxLine.data()),
+                                                      pCount, 1, GDT_Float64,
+                                                      sizeof(double), sizeof(double)*pCount, NULL);
+            
+            if (status != 0)
+            {
+                std::cout << "Error read line " << lOff + ii << " from x-direction chip size max file: " << csmaxxname << "\n";
+                GDALClose(csmaxxDS);
+                GDALDestroyDriverManager();
+                exit(105);
+            }
+            
+            
+            status = csmaxyDS->GetRasterBand(1)->RasterIO(GF_Read,
+                                                      pOff, lOff+ii,
+                                                      pCount, 1,
+                                                      (void*) (csmaxyLine.data()),
+                                                      pCount, 1, GDT_Float64,
+                                                      sizeof(double), sizeof(double)*pCount, NULL);
+            
+            if (status != 0)
+            {
+                std::cout << "Error read line " << lOff + ii << " from y-direction chip size max file: " << csmaxyname << "\n";
+                GDALClose(csmaxyDS);
+                GDALDestroyDriverManager();
+                exit(105);
+            }
+        }
+        
+        
+        
+        if (ssmname != "")
+        {
+            status = ssmDS->GetRasterBand(1)->RasterIO(GF_Read,
+                                                          pOff, lOff+ii,
+                                                          pCount, 1,
+                                                          (void*) (ssmLine.data()),
+                                                          pCount, 1, GDT_Float64,
+                                                          sizeof(double), sizeof(double)*pCount, NULL);
+            
+            if (status != 0)
+            {
+                std::cout << "Error read line " << lOff + ii << " from stable surface mask file: " << ssmname << "\n";
+                GDALClose(ssmDS);
+                GDALDestroyDriverManager();
+                exit(105);
+            }
+            
+        }
+        
+        
+        
+        
         int rgind;
         int azind;
         
@@ -447,6 +793,9 @@ void geoGrid::geogrid()
             double drpos[3];
             double slp[3];
             double vel[3];
+            double schrng1[3];
+            double schrng2[3];
+            
 
             //Setup ENU with DEM
             llh[0] = geoTrans[0] + (jj+pOff+0.5)*geoTrans[1];
@@ -470,6 +819,16 @@ void geoGrid::geogrid()
                 vel[0] = vxLine[jj];
                 vel[1] = vyLine[jj];
             }
+            
+            if (srxname != "")
+            {
+                schrng1[0] = srxLine[jj];
+                schrng1[1] = sryLine[jj];
+                schrng2[0] = -srxLine[jj];
+                schrng2[1] = sryLine[jj];
+            }
+            
+            
             
 
             //Convert from DEM coordinates to LLH inplace
@@ -710,10 +1069,23 @@ void geoGrid::geogrid()
                     normal[pp]  = -normal[pp];
                 }
             }
+            else
+            {
+                for(int pp=0; pp<3; pp++)
+                {
+                    normal[pp]  = 0.0;
+                }
+            }
             
             if (vxname != "")
             {
                 vel[2] = -(vel[0]*normal[0]+vel[1]*normal[1])/normal[2];
+            }
+            
+            if (srxname != "")
+            {
+                schrng1[2] = -(schrng1[0]*normal[0]+schrng1[1]*normal[1])/normal[2];
+                schrng2[2] = -(schrng2[0]*normal[0]+schrng2[1]*normal[1])/normal[2];
             }
             
             
@@ -723,6 +1095,15 @@ void geoGrid::geogrid()
                 raster2[jj] = nodata_out;
                 raster11[jj] = nodata_out;
                 raster22[jj] = nodata_out;
+                
+                sr_raster11[jj] = nodata_out;
+                sr_raster22[jj] = nodata_out;
+                csmin_raster11[jj] = nodata_out;
+                csmin_raster22[jj] = nodata_out;
+                csmax_raster11[jj] = nodata_out;
+                csmax_raster22[jj] = nodata_out;
+                ssm_raster[jj] = nodata_out;
+                
                 raster1a[jj] = nodata_out;
                 raster1b[jj] = nodata_out;
 //                raster1c[jj] = nodata_out;
@@ -734,15 +1115,82 @@ void geoGrid::geogrid()
             {
                 raster1[jj] = rgind;
                 raster2[jj] = azind;
-                if ((vxname != "")&(vel[0] != nodata))
+                
+                if (vxname == "")
+                {
+                    raster11[jj] = 0.;
+                    raster22[jj] = 0.;
+                }
+                else if (vel[0] == nodata)
+                {
+                    raster11[jj] = 0.;
+                    raster22[jj] = 0.;
+                }
+                else
                 {
                     raster11[jj] = std::round(dot_C(vel,los)*dt/dr/365.0/24.0/3600.0*1);
                     raster22[jj] = std::round(dot_C(vel,temp)*dt/norm_C(alt)/365.0/24.0/3600.0*1);
                 }
+                
+                if (srxname == "")
+                {
+                    sr_raster11[jj] = nodata_out;
+                    sr_raster22[jj] = nodata_out;
+                }
+                else if (vel[0] == nodata)
+                {
+                    sr_raster11[jj] = 0;
+                    sr_raster22[jj] = 0;
+                }
                 else
                 {
-                    raster11[jj] = 0.;
-                    raster22[jj] = 0.;
+                    sr_raster11[jj] = std::abs(std::round(dot_C(schrng1,los)*dt/dr/365.0/24.0/3600.0*1));
+                    sr_raster22[jj] = std::abs(std::round(dot_C(schrng1,temp)*dt/norm_C(alt)/365.0/24.0/3600.0*1));
+                    if (std::abs(std::round(dot_C(schrng2,los)*dt/dr/365.0/24.0/3600.0*1)) > sr_raster11[jj])
+                    {
+                        sr_raster11[jj] = std::abs(std::round(dot_C(schrng2,los)*dt/dr/365.0/24.0/3600.0*1));
+                    }
+                    if (std::abs(std::round(dot_C(schrng2,temp)*dt/norm_C(alt)/365.0/24.0/3600.0*1)) > sr_raster22[jj])
+                    {
+                        sr_raster22[jj] = std::abs(std::round(dot_C(schrng2,temp)*dt/norm_C(alt)/365.0/24.0/3600.0*1));
+                    }
+                    if (sr_raster11[jj] == 0)
+                    {
+                        sr_raster11[jj] = 1;
+                    }
+                    if (sr_raster22[jj] == 0)
+                    {
+                        sr_raster22[jj] = 1;
+                    }
+                }
+                
+                if (csminxname != "")
+                {
+                    csmin_raster11[jj] = csminxLine[jj] / ChipSizeX0 * ChipSizeX0_PIX_grd;
+                    csmin_raster22[jj] = csminyLine[jj] / ChipSizeX0 * ChipSizeX0_PIX_azm;
+                }
+                else
+                {
+                    csmin_raster11[jj] = nodata_out;
+                    csmin_raster22[jj] = nodata_out;
+                }
+                if (csmaxxname != "")
+                {
+                    csmax_raster11[jj] = csmaxxLine[jj] / ChipSizeX0 * ChipSizeX0_PIX_grd;
+                    csmax_raster22[jj] = csmaxyLine[jj] / ChipSizeX0 * ChipSizeX0_PIX_azm;
+                }
+                else
+                {
+                    csmax_raster11[jj] = nodata_out;
+                    csmax_raster22[jj] = nodata_out;
+                }
+                if (ssmname != "")
+                {
+                    ssm_raster[jj] = ssmLine[jj];
+                }
+                else
+                {
+                    ssm_raster[jj] = nodata_out;
                 }
                 raster1a[jj] = normal[2]/(dt/dr/365.0/24.0/3600.0)*(normal[2]*temp[1]-normal[1]*temp[2])/((normal[2]*los[0]-normal[0]*los[2])*(normal[2]*temp[1]-normal[1]*temp[2])-(normal[2]*temp[0]-normal[0]*temp[2])*(normal[2]*los[1]-normal[1]*los[2]));
                 raster1b[jj] = -normal[2]/(dt/norm_C(alt)/365.0/24.0/3600.0)*(normal[2]*los[1]-normal[1]*los[2])/((normal[2]*los[0]-normal[0]*los[2])*(normal[2]*temp[1]-normal[1]*temp[2])-(normal[2]*temp[0]-normal[0]*temp[2])*(normal[2]*los[1]-normal[1]*los[2]));
@@ -772,6 +1220,22 @@ void geoGrid::geogrid()
                              raster11, pCount, 1, GDT_Int32, 0, 0 );
         poBand2Off->RasterIO( GF_Write, 0, ii, pCount, 1,
                              raster22, pCount, 1, GDT_Int32, 0, 0 );
+        
+        poBand1Sch->RasterIO( GF_Write, 0, ii, pCount, 1,
+                             sr_raster11, pCount, 1, GDT_Int32, 0, 0 );
+        poBand2Sch->RasterIO( GF_Write, 0, ii, pCount, 1,
+                             sr_raster22, pCount, 1, GDT_Int32, 0, 0 );
+        poBand1Min->RasterIO( GF_Write, 0, ii, pCount, 1,
+                             csmin_raster11, pCount, 1, GDT_Int32, 0, 0 );
+        poBand2Min->RasterIO( GF_Write, 0, ii, pCount, 1,
+                             csmin_raster22, pCount, 1, GDT_Int32, 0, 0 );
+        poBand1Max->RasterIO( GF_Write, 0, ii, pCount, 1,
+                             csmax_raster11, pCount, 1, GDT_Int32, 0, 0 );
+        poBand2Max->RasterIO( GF_Write, 0, ii, pCount, 1,
+                             csmax_raster22, pCount, 1, GDT_Int32, 0, 0 );
+        poBand1Msk->RasterIO( GF_Write, 0, ii, pCount, 1,
+                             ssm_raster, pCount, 1, GDT_Int32, 0, 0 );
+        
         poBand1RO2VX->RasterIO( GF_Write, 0, ii, pCount, 1,
                              raster1a, pCount, 1, GDT_Float64, 0, 0 );
         poBand2RO2VX->RasterIO( GF_Write, 0, ii, pCount, 1,
@@ -794,6 +1258,18 @@ void geoGrid::geogrid()
     GDALClose( (GDALDatasetH) poDstDSOff );
     
     /* Once we're done, close properly the dataset */
+    GDALClose( (GDALDatasetH) poDstDSSch );
+    
+    /* Once we're done, close properly the dataset */
+    GDALClose( (GDALDatasetH) poDstDSMin );
+    
+    /* Once we're done, close properly the dataset */
+    GDALClose( (GDALDatasetH) poDstDSMax );
+    
+    /* Once we're done, close properly the dataset */
+    GDALClose( (GDALDatasetH) poDstDSMsk );
+    
+    /* Once we're done, close properly the dataset */
     GDALClose( (GDALDatasetH) poDstDSRO2VX );
     
     /* Once we're done, close properly the dataset */
@@ -813,7 +1289,28 @@ void geoGrid::geogrid()
         GDALClose(vyDS);
     }
     
+    if (srxname != "")
+    {
+        GDALClose(srxDS);
+        GDALClose(sryDS);
+    }
     
+    if (csminxname != "")
+    {
+        GDALClose(csminxDS);
+        GDALClose(csminyDS);
+    }
+    
+    if (csmaxxname != "")
+    {
+        GDALClose(csmaxxDS);
+        GDALClose(csmaxyDS);
+    }
+    
+    if (ssmname != "")
+    {
+        GDALClose(ssmDS);
+    }
     
     GDALDestroyDriverManager();
     

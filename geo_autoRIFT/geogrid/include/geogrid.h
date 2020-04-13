@@ -44,7 +44,15 @@ struct geoGrid
     std::string dhdyname;   //Slope in Y
     std::string vxname;     //Velocity in X
     std::string vyname;     //Velocity in Y
+    std::string srxname;     //Search range in X
+    std::string sryname;     //Search range in Y
+    std::string csminxname;     //Chip size minimum in x
+    std::string csminyname;     //Chip size minimum in y
+    std::string csmaxxname;     //Chip size maximum in x
+    std::string csmaxyname;     //Chip size maximum in y
+    std::string ssmname;     //Stable surface mask
     int epsgcode;
+    double chipSizeX0;
 
     //Bounding box related
     double xmin, xmax;
@@ -61,10 +69,15 @@ struct geoGrid
     int nPixels;
     int lookSide;
     int nodata_out;
+    double incidenceAngle;
 
     //Output file names
     std::string pixlinename;
     std::string offsetname;
+    std::string searchrangename;
+    std::string chipsizeminname;
+    std::string chipsizemaxname;
+    std::string stablesurfacemaskname;
     std::string ro2vx_name;
     std::string ro2vy_name;
 
@@ -83,6 +96,7 @@ struct geoGridPoint
 
     //Velocity related info
     double vel[3];
+    double schrng[3];
 
     //Outputs
     double range;

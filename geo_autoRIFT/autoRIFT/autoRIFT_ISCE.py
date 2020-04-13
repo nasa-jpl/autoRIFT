@@ -70,7 +70,7 @@ CHIP_SIZE_0X = Component.Parameter('ChipSize0X',
 SCALE_CHIP_SIZE_Y = Component.Parameter('ScaleChipSizeY',
         public_name='SCALE_CHIP_SIZE_Y',
         default = 1,
-        type = int,
+        type = float,
         mandatory = False,
         doc = 'Scaling factor to get the Y-directed chip size in reference to the X-directed sizes')
 

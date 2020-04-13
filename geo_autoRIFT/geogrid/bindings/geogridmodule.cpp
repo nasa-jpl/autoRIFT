@@ -92,6 +92,30 @@ PyObject* setEPSG(PyObject *self, PyObject *args)
     return Py_BuildValue("i", 0);
 }
 
+PyObject* setIncidenceAngle(PyObject *self, PyObject *args)
+{
+    uint64_t ptr;
+    double incidenceAngle;
+    if (!PyArg_ParseTuple(args, "Kd", &ptr, &incidenceAngle))
+    {
+        return NULL;
+    }
+    ((geoGrid*)(ptr))->incidenceAngle = incidenceAngle;
+    return Py_BuildValue("i", 0);
+}
+
+PyObject* setChipSizeX0(PyObject *self, PyObject *args)
+{
+    uint64_t ptr;
+    double chipSizeX0;
+    if (!PyArg_ParseTuple(args, "Kd", &ptr, &chipSizeX0))
+    {
+        return NULL;
+    }
+    ((geoGrid*)(ptr))->chipSizeX0 = chipSizeX0;
+    return Py_BuildValue("i", 0);
+}
+
 PyObject* setRepeatTime(PyObject *self, PyObject *args)
 {
     uint64_t ptr;
@@ -202,6 +226,64 @@ PyObject* setVelocities(PyObject *self, PyObject* args)
     return Py_BuildValue("i", 0);
 }
 
+PyObject* setSearchRange(PyObject *self, PyObject* args)
+{
+    uint64_t ptr;
+    char *srx;
+    char *sry;
+    if (!PyArg_ParseTuple(args, "Kss", &ptr, &srx, &sry))
+    {
+        return NULL;
+    }
+    
+    ((geoGrid*)(ptr))->srxname = std::string(srx);
+    ((geoGrid*)(ptr))->sryname = std::string(sry);
+    return Py_BuildValue("i", 0);
+}
+
+PyObject* setChipSizeMin(PyObject *self, PyObject* args)
+{
+    uint64_t ptr;
+    char *csminx;
+    char *csminy;
+    if (!PyArg_ParseTuple(args, "Kss", &ptr, &csminx, &csminy))
+    {
+        return NULL;
+    }
+    
+    ((geoGrid*)(ptr))->csminxname = std::string(csminx);
+    ((geoGrid*)(ptr))->csminyname = std::string(csminy);
+    return Py_BuildValue("i", 0);
+}
+
+PyObject* setChipSizeMax(PyObject *self, PyObject* args)
+{
+    uint64_t ptr;
+    char *csmaxx;
+    char *csmaxy;
+    if (!PyArg_ParseTuple(args, "Kss", &ptr, &csmaxx, &csmaxy))
+    {
+        return NULL;
+    }
+    
+    ((geoGrid*)(ptr))->csmaxxname = std::string(csmaxx);
+    ((geoGrid*)(ptr))->csmaxyname = std::string(csmaxy);
+    return Py_BuildValue("i", 0);
+}
+
+PyObject* setStableSurfaceMask(PyObject *self, PyObject* args)
+{
+    uint64_t ptr;
+    char *ssm;
+    if (!PyArg_ParseTuple(args, "Ks", &ptr, &ssm))
+    {
+        return NULL;
+    }
+    
+    ((geoGrid*)(ptr))->ssmname = std::string(ssm);
+    return Py_BuildValue("i", 0);
+}
+
 PyObject* setSlopes(PyObject *self, PyObject* args)
 {
     uint64_t ptr;
@@ -240,6 +322,58 @@ PyObject* setWindowOffsetsFilename(PyObject *self, PyObject *args)
     }
 
     ((geoGrid*)(ptr))->offsetname = std::string(name);
+    return Py_BuildValue("i", 0);
+}
+
+PyObject* setWindowSearchRangeFilename(PyObject *self, PyObject *args)
+{
+    uint64_t ptr;
+    char* name;
+    if (!PyArg_ParseTuple(args, "Ks", &ptr, &name))
+    {
+        return NULL;
+    }
+    
+    ((geoGrid*)(ptr))->searchrangename = std::string(name);
+    return Py_BuildValue("i", 0);
+}
+
+PyObject* setWindowChipSizeMinFilename(PyObject *self, PyObject *args)
+{
+    uint64_t ptr;
+    char* name;
+    if (!PyArg_ParseTuple(args, "Ks", &ptr, &name))
+    {
+        return NULL;
+    }
+    
+    ((geoGrid*)(ptr))->chipsizeminname = std::string(name);
+    return Py_BuildValue("i", 0);
+}
+
+PyObject* setWindowChipSizeMaxFilename(PyObject *self, PyObject *args)
+{
+    uint64_t ptr;
+    char* name;
+    if (!PyArg_ParseTuple(args, "Ks", &ptr, &name))
+    {
+        return NULL;
+    }
+    
+    ((geoGrid*)(ptr))->chipsizemaxname = std::string(name);
+    return Py_BuildValue("i", 0);
+}
+
+PyObject* setWindowStableSurfaceMaskFilename(PyObject *self, PyObject *args)
+{
+    uint64_t ptr;
+    char* name;
+    if (!PyArg_ParseTuple(args, "Ks", &ptr, &name))
+    {
+        return NULL;
+    }
+    
+    ((geoGrid*)(ptr))->stablesurfacemaskname = std::string(name);
     return Py_BuildValue("i", 0);
 }
 
