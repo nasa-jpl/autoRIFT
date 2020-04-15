@@ -54,7 +54,7 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 * novel nested grid design allows chip size progressively increase iteratively where a smaller chip size failed
 * a light interpolation is done to fill the missing (unreliable) chip displacement results using median filtering and bicubic-mode interpolation (that can remove pixel discrepancy when using other modes) and an interpolation mask is returned
 * the core displacement estimator (normalized cross correlation) and image pre-processing call OpenCV's Python and/or C++ functions for efficiency 
-* sub-pixel displacement estimation using a fast Gaussian pyramid upsampling algorithm that is robust to sub-pixel locking; the intelligent selection of oversampling ratio is also supported that is chip size-dependent for a tradeoff between efficiency and accuracy
+* sub-pixel displacement estimation using a fast Gaussian pyramid upsampling algorithm that is robust to sub-pixel locking; the intelligent (chip size-dependent) selection of oversampling ratio is also supported for a tradeoff between efficiency and accuracy
 * the current version can be installed with the ISCE software (that supports both Cartesian and radar coordinates) or as a standalone Python module (Cartesian coordinates only)
 * when used in combination with the Geogrid Python module (https://github.com/leiyangleon/Geogrid), autoRIFT can be used for feature tracking between image pair over a grid defined in an arbitrary geographic Cartesian (northing/easting) coordinate projection
 * when the grid is provided in geographic Cartesian (northing/easting) coordinates, outputs are returned in geocoded GeoTIFF image file format with the same EPSG projection code as input search grid
@@ -96,13 +96,13 @@ This is done by implementing the following command line:
 
 Standalone:
        
-       testautoRIFT.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname -fo 1
+       testautoRIFT.py -m I1 -s I2 -g winlocname -o winoffname -sr winsrname -csmin wincsminname -csmax wincsmaxname -vx winro2vxname -vy winro2vyname -fo 1
        
 With ISCE:
 
-       testautoRIFT_ISCE.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname -fo 1
+       testautoRIFT_ISCE.py -m I1 -s I2 -g winlocname -o winoffname -sr winsrname -csmin wincsminname -csmax wincsmaxname -vx winro2vxname -vy winro2vyname -fo 1
        
-where "I1" and "I2" are the reference and test images as defined in the instructions below, and "winlocname", "winoffname", "winro2vxname", "winro2vyname" are the four outputs from running "testGeogrid_ISCE.py" or "testGeogridOptical.py" as defined at https://github.com/leiyangleon/Geogrid.
+where "I1" and "I2" are the reference and test images as defined in the instructions below, and the optional inputs "winlocname", "winoffname", "winsrname", "wincsminname", "wincsmaxname", "winro2vxname", "winro2vyname" are outputs from running "testGeogrid_ISCE.py" or "testGeogridOptical.py" as defined at https://github.com/leiyangleon/Geogrid. When "winlocname" (grid location) is specified, each of the rest optional input ("win * name") can be either used or omitted. 
 
 
 <img src="figures/autorift2_opt.png" width="100%">
@@ -136,9 +136,9 @@ This is done by implementing the following command line:
 
 With ISCE:
 
-       testautoRIFT_ISCE.py -m I1 -s I2 -g winlocname -o winoffname -vx winro2vxname -vy winro2vyname
+       testautoRIFT_ISCE.py -m I1 -s I2 -g winlocname -o winoffname -sr winsrname -csmin wincsminname -csmax wincsmaxname -vx winro2vxname -vy winro2vyname
 
-where "I1" and "I2" are the reference and test images as defined in the instructions below, and "winlocname", "winoffname", "winro2vxname", "winro2vyname" are the four outputs from running "testGeogrid.py" as defined at https://github.com/leiyangleon/Geogrid.
+where "I1" and "I2" are the reference and test images as defined in the instructions below, and the optional inputs "winlocname", "winoffname", "winsrname", "wincsminname", "wincsmaxname", "winro2vxname", "winro2vyname" are outputs from running "testGeogrid.py" as defined at https://github.com/leiyangleon/Geogrid. When "winlocname" (grid location) is specified, each of the rest optional input ("win * name") can be either used or omitted.
 
 **Runtime comparison for this test (on an OS X system with 2.9GHz Intel Core i7 processor and 16GB RAM):**
 * __autoRIFT (single core): 10 mins__
@@ -191,13 +191,13 @@ where "I1" and "I2" are the reference and test images as defined in the instruct
 
 **Note:**
 
-* When the grid is provided in geographic Cartesian (northing/easting) coordinates (geographic coordinates lat/lon is not supported), it is required to run the "Geogrid" module (https://github.com/leiyangleon/Geogrid) first before running "autoRIFT". In other words, the outputs from "testGeogrid_ISCE.py" or "testGeogridOptical.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname") will serve as the inputs for running "autoRIFT" or will be required to generate the final motion velocity maps.
-* When the four outputs from running the "Geogrid" module are not provided, a regular grid in the imaging coordinates will be automatically assigned
+* When the grid is provided in geographic Cartesian (northing/easting) coordinates (geographic coordinates lat/lon is not supported), it is required to run the "Geogrid" module (https://github.com/leiyangleon/Geogrid) first before running "autoRIFT". In other words, the outputs from "testGeogrid_ISCE.py" or "testGeogridOptical.py" (a.k.a "winlocname", "winoffname", "winsrname", "wincsminname", "wincsmaxname", "winro2vxname", "winro2vyname") will serve as the inputs for running "autoRIFT" or will be required to generate the final motion velocity maps.
+* When the outputs from running the "Geogrid" module are not provided, a regular grid in the imaging coordinates will be automatically assigned
 
 **For quick use:**
 
 * Refer to the file "testautoRIFT.py" (standalone) and "testautoRIFT_ISCE.py" (with ISCE) for the usage of the module and modify it for your own purpose
-* Input files include the reference image (required), test image (required), and the four outputs from running "testGeogrid_ISCE.py" or "testGeogridOptical.py" (a.k.a "winlocname", "winoffname", "winro2vxname", "winro2vyname"). 
+* Input files include the reference image (required), test image (required), and the outputs from running "testGeogrid_ISCE.py" or "testGeogridOptical.py" (a.k.a "winlocname", "winoffname", "winsrname", "wincsminname", "wincsmaxname", "winro2vxname", "winro2vyname"). 
 * Output files include 1) estimated horizontal displacement (equivalent to range for radar), 2) estimated vertical displacement (equivalent to minus azimuth for radar), 3) light interpolation mask, 4) iteratively progressive chip size used. 
 
 _Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic Cartesian (northing/easting) coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF of the final converted motion velocity in geographic x- (easting) and y- (northing) coordinates will be created and named "velocity.tif". Also, it is possible to save the outputs in netCDF standard format by adding the "-nc" option to the "testautoRIFT.py" (standalone) and "testautoRIFT_ISCE.py" (with ISCE) command._
