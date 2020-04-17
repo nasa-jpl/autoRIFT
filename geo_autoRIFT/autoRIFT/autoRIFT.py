@@ -1042,8 +1042,8 @@ class DISP_FILT:
         Dx = Dx / SearchLimitX
         Dy = Dy / SearchLimitY
         
-        DxMadmin = np.ones(Dx.shape) * OverSampleRatio / SearchLimitX * 2;
-        DyMadmin = np.ones(Dy.shape) * OverSampleRatio / SearchLimitY * 2;
+        DxMadmin = np.ones(Dx.shape) / OverSampleRatio / SearchLimitX * 2;
+        DyMadmin = np.ones(Dy.shape) / OverSampleRatio / SearchLimitY * 2;
         
         
         
