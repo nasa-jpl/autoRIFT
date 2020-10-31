@@ -48,8 +48,8 @@ class GeogridOptical():
         '''
 
         ##Determine appropriate EPSG system
-        self.epsgDem = self.getProjectionSystem(self.demname)
-        self.epsgDat = self.getProjectionSystem(self.dat1name)
+        self.epsgDem = self.getProjectionSystem(self.demname, self.urlflag)
+        self.epsgDat = self.getProjectionSystem(self.dat1name, self.urlflag)
         
         ###Determine extent of data needed
         bbox = self.determineBbox()
@@ -59,7 +59,7 @@ class GeogridOptical():
         self.geogrid()
 
 
-    def getProjectionSystem(self, filename):
+    def getProjectionSystem(self, filename, urlflag):
         '''
         Testing with Greenland.
         '''
@@ -67,7 +67,10 @@ class GeogridOptical():
             raise Exception('File {0} does not exist'.format(filename))
 
         from osgeo import gdal, osr
-        ds = gdal.Open(filename, gdal.GA_ReadOnly)
+        if urlflag is 1:
+            ds = gdal.Open('/vsicurl/%s' %(filename))
+        else:
+            ds = gdal.Open(filename, gdal.GA_ReadOnly)
         srs = osr.SpatialReference()
         srs.ImportFromWkt(ds.GetProjection())
         srs.AutoIdentifyEPSG()
@@ -83,7 +86,10 @@ class GeogridOptical():
         else:
             raise Exception('Non-standard coordinate system encountered')
         if not epsgstr:  #Empty string->use shell command gdalsrsinfo for last trial
-            cmd = 'gdalsrsinfo -o epsg {0}'.format(filename)
+            if urlflag is 1:
+                cmd = 'gdalsrsinfo -o epsg /vsicurl/{0}'.format(filename)
+            else:
+                cmd = 'gdalsrsinfo -o epsg {0}'.format(filename)
             epsgstr = subprocess.check_output(cmd, shell=True)
 #            pdb.set_trace()
             epsgstr = re.findall("EPSG:(\d+)", str(epsgstr))[0]
@@ -154,6 +160,13 @@ class GeogridOptical():
     def geogrid(self):
         
         #   For now print inputs that were obtained
+        
+        urlflag = self.urlflag
+        
+        if urlflag is 1:
+            print("\nReading input images into memory directly from URL's")
+        else:
+            print("\nReading input images locally from files")
     
         print("\nOptical Image parameters: ")
         print("X-direction coordinate: " + str(self.startingX) + "  " + str(self.XSize))
@@ -218,30 +231,56 @@ class GeogridOptical():
         import struct
         
 #        pdb.set_trace()
-        demDS = gdal.Open(self.demname, gdal.GA_ReadOnly)
+        if urlflag is 1:
+            demDS = gdal.Open('/vsicurl/%s' %(self.demname))
+        else:
+            demDS = gdal.Open(self.demname, gdal.GA_ReadOnly)
         
         if (self.dhdxname != ""):
-            sxDS = gdal.Open(self.dhdxname, gdal.GA_ReadOnly)
-            syDS = gdal.Open(self.dhdyname, gdal.GA_ReadOnly)
+            if urlflag is 1:
+                sxDS = gdal.Open('/vsicurl/%s' %(self.dhdxname))
+                syDS = gdal.Open('/vsicurl/%s' %(self.dhdyname))
+            else:
+                sxDS = gdal.Open(self.dhdxname, gdal.GA_ReadOnly)
+                syDS = gdal.Open(self.dhdyname, gdal.GA_ReadOnly)
         
         if (self.vxname != ""):
-            vxDS = gdal.Open(self.vxname, gdal.GA_ReadOnly)
-            vyDS = gdal.Open(self.vyname, gdal.GA_ReadOnly)
+            if urlflag is 1:
+                vxDS = gdal.Open('/vsicurl/%s' %(self.vxname))
+                vyDS = gdal.Open('/vsicurl/%s' %(self.vyname))
+            else:
+                vxDS = gdal.Open(self.vxname, gdal.GA_ReadOnly)
+                vyDS = gdal.Open(self.vyname, gdal.GA_ReadOnly)
         
         if (self.srxname != ""):
-            srxDS = gdal.Open(self.srxname, gdal.GA_ReadOnly)
-            sryDS = gdal.Open(self.sryname, gdal.GA_ReadOnly)
+            if urlflag is 1:
+                srxDS = gdal.Open('/vsicurl/%s' %(self.srxname))
+                sryDS = gdal.Open('/vsicurl/%s' %(self.sryname))
+            else:
+                srxDS = gdal.Open(self.srxname, gdal.GA_ReadOnly)
+                sryDS = gdal.Open(self.sryname, gdal.GA_ReadOnly)
         
         if (self.csminxname != ""):
-            csminxDS = gdal.Open(self.csminxname, gdal.GA_ReadOnly)
-            csminyDS = gdal.Open(self.csminyname, gdal.GA_ReadOnly)
+            if urlflag is 1:
+                csminxDS = gdal.Open('/vsicurl/%s' %(self.csminxname))
+                csminyDS = gdal.Open('/vsicurl/%s' %(self.csminyname))
+            else:
+                csminxDS = gdal.Open(self.csminxname, gdal.GA_ReadOnly)
+                csminyDS = gdal.Open(self.csminyname, gdal.GA_ReadOnly)
         
         if (self.csmaxxname != ""):
-            csmaxxDS = gdal.Open(self.csmaxxname, gdal.GA_ReadOnly)
-            csmaxyDS = gdal.Open(self.csmaxyname, gdal.GA_ReadOnly)
+            if urlflag is 1:
+                csmaxxDS = gdal.Open('/vsicurl/%s' %(self.csmaxxname))
+                csmaxyDS = gdal.Open('/vsicurl/%s' %(self.csmaxyname))
+            else:
+                csmaxxDS = gdal.Open(self.csmaxxname, gdal.GA_ReadOnly)
+                csmaxyDS = gdal.Open(self.csmaxyname, gdal.GA_ReadOnly)
         
         if (self.ssmname != ""):
-            ssmDS = gdal.Open(self.ssmname, gdal.GA_ReadOnly)
+            if urlflag is 1:
+                ssmDS = gdal.Open('/vsicurl/%s' %(self.ssmname))
+            else:
+                ssmDS = gdal.Open(self.ssmname, gdal.GA_ReadOnly)
         
         if demDS is None:
             raise Exception('Error opening DEM file {0}'.format(self.demname))
@@ -731,8 +770,94 @@ class GeogridOptical():
 
 
 
+    def coregister(self,in1,in2,urlflag):
+        import os
+        import numpy as np
+        
+        from osgeo import gdal, osr
+        import struct
+        
+        if urlflag is 1:
+            DS1 = gdal.Open('/vsicurl/%s' %(in1))
+        else:
+            DS1 = gdal.Open(in1, gdal.GA_ReadOnly)
+        trans1 = DS1.GetGeoTransform()
+        xsize1 = DS1.RasterXSize
+        ysize1 = DS1.RasterYSize
+        
+        if urlflag is 1:
+            DS2 = gdal.Open('/vsicurl/%s' %(in2))
+        else:
+            DS2 = gdal.Open(in2, gdal.GA_ReadOnly)
+        trans2 = DS2.GetGeoTransform()
+        xsize2 = DS2.RasterXSize
+        ysize2 = DS2.RasterYSize
+        
+        W = np.max([trans1[0],trans2[0]])
+        N = np.min([trans1[3],trans2[3]])
+        E = np.min([trans1[0]+xsize1*trans1[1],trans2[0]+xsize2*trans2[1]])
+        S = np.max([trans1[3]+ysize1*trans1[5],trans2[3]+ysize2*trans2[5]])
+        
+        x1a = int(np.round((W-trans1[0])/trans1[1]))
+        x1b = int(np.round((E-trans1[0])/trans1[1]))
+        y1a = int(np.round((N-trans1[3])/trans1[5]))
+        y1b = int(np.round((S-trans1[3])/trans1[5]))
+        
+        x2a = int(np.round((W-trans2[0])/trans2[1]))
+        x2b = int(np.round((E-trans2[0])/trans2[1]))
+        y2a = int(np.round((N-trans2[3])/trans2[5]))
+        y2b = int(np.round((S-trans2[3])/trans2[5]))
+        
+        x1a = np.min([x1a, xsize1-1])
+        x1b = np.min([x1b, xsize1-1])
+        y1a = np.min([y1a, ysize1-1])
+        y1b = np.min([y1b, ysize1-1])
+        x2a = np.min([x2a, xsize2-1])
+        x2b = np.min([x2b, xsize2-1])
+        y2a = np.min([y2a, ysize2-1])
+        y2b = np.min([y2b, ysize2-1])
+        
+        x1a = np.max([x1a, 0])
+        x1b = np.max([x1b, 0])
+        y1a = np.max([y1a, 0])
+        y1b = np.max([y1b, 0])
+        x2a = np.max([x2a, 0])
+        x2b = np.max([x2b, 0])
+        y2a = np.max([y2a, 0])
+        y2b = np.max([y2b, 0])
+        
+        x1a = int(x1a)
+        x1b = int(x1b)
+        y1a = int(y1a)
+        y1b = int(y1b)
+        x2a = int(x2a)
+        x2b = int(x2b)
+        y2a = int(y2a)
+        y2b = int(y2b)
 
+        trans = (W, trans1[1], 0.0, N, 0.0, trans1[5])
 
+        if urlflag is 0:
+            
+            I1 = DS1.ReadAsArray(xoff=x1a, yoff=y1a, xsize=x1b-x1a+1, ysize=y1b-y1a+1)
+            I2 = DS2.ReadAsArray(xoff=x2a, yoff=y2a, xsize=x2b-x2a+1, ysize=y2b-y2a+1)
+
+            fileformat = "GTiff"
+            driver = gdal.GetDriverByName(fileformat)
+            
+            DST1 = driver.Create(os.path.basename(in1), xsize=(x1b-x1a+1), ysize=(y1b-y1a+1), bands=1, eType=gdal.GDT_UInt16)
+            DST1.SetGeoTransform(trans)
+            DST1.SetProjection(DS1.GetProjectionRef())
+            DST1.GetRasterBand(1).WriteArray(I1)
+            DST1 = None
+            
+            DST2 = driver.Create(os.path.basename(in2), xsize=(x2b-x2a+1), ysize=(y2b-y2a+1), bands=1, eType=gdal.GDT_UInt16)
+            DST2.SetGeoTransform(trans)
+            DST2.SetProjection(DS2.GetProjectionRef())
+            DST2.GetRasterBand(1).WriteArray(I2)
+            DST2 = None
+        
+        return x1a, y1a, x1b-x1a+1, y1b-y1a+1, x2a, y2a, x2b-x2a+1, y2b-y2a+1, trans
 
 
 
@@ -753,6 +878,7 @@ class GeogridOptical():
         self.numberOfLines = None
         self.repeatTime = None
         self.chipSizeX0 = None
+        self.urlflag = None
 
         ##Input related parameters
         self.dat1name = None
