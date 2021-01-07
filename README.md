@@ -3,9 +3,9 @@
 
 
 [![Language](https://img.shields.io/badge/python-3.6%2B-blue.svg)](https://www.python.org/)
-[![Latest version](https://img.shields.io/badge/latest%20version-v1.0.8-yellowgreen.svg)](https://github.com/leiyangleon/autoRIFT/releases)
+[![Latest version](https://img.shields.io/badge/latest%20version-v1.1.0-yellowgreen.svg)](https://github.com/leiyangleon/autoRIFT/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/leiyangleon/autoRIFT/blob/master/LICENSE)
-[![Citation](https://img.shields.io/badge/DOI-10.5281/zenodo.4211013-blue)](https://doi.org/10.5281/zenodo.4211013)
+[![Citation](https://img.shields.io/badge/DOI-10.5281/zenodo.4426975-blue)](https://doi.org/10.5281/zenodo.4426975)
 
 
 
@@ -22,7 +22,7 @@ Copyright (C) 2019 California Institute of Technology.  Government Sponsorship A
 
 Link: https://github.com/leiyangleon/autoRIFT
 
-Citation: https://doi.org/10.5281/zenodo.4211013
+Citation: https://doi.org/10.5281/zenodo.4426975
 
 
 ## 1. Authors
