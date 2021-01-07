@@ -67,7 +67,7 @@ class GeogridOptical():
             raise Exception('File {0} does not exist'.format(filename))
 
         from osgeo import gdal, osr
-        if urlflag is 1:
+        if urlflag == 1:
             ds = gdal.Open('/vsicurl/%s' %(filename))
         else:
             ds = gdal.Open(filename, gdal.GA_ReadOnly)
@@ -86,7 +86,7 @@ class GeogridOptical():
         else:
             raise Exception('Non-standard coordinate system encountered')
         if not epsgstr:  #Empty string->use shell command gdalsrsinfo for last trial
-            if urlflag is 1:
+            if urlflag == 1:
                 cmd = 'gdalsrsinfo -o epsg /vsicurl/{0}'.format(filename)
             else:
                 cmd = 'gdalsrsinfo -o epsg {0}'.format(filename)
@@ -163,7 +163,7 @@ class GeogridOptical():
         
         urlflag = self.urlflag
         
-        if urlflag is 1:
+        if urlflag == 1:
             print("\nReading input images into memory directly from URL's")
         else:
             print("\nReading input images locally from files")
@@ -231,56 +231,45 @@ class GeogridOptical():
         import struct
         
 #        pdb.set_trace()
-        if urlflag is 1:
-            demDS = gdal.Open('/vsicurl/%s' %(self.demname))
-        else:
-            demDS = gdal.Open(self.demname, gdal.GA_ReadOnly)
+        if urlflag == 1:
+            self.demname = '/vsicurl/%s' %(self.demname)
+            self.dhdxname = '/vsicurl/%s' %(self.dhdxname)
+            self.dhdyname = '/vsicurl/%s' %(self.dhdyname)
+            self.vxname = '/vsicurl/%s' %(self.vxname)
+            self.vyname = '/vsicurl/%s' %(self.vyname)
+            self.srxname = '/vsicurl/%s' %(self.srxname)
+            self.sryname = '/vsicurl/%s' %(self.sryname)
+            self.csminxname = '/vsicurl/%s' %(self.csminxname)
+            self.csminyname = '/vsicurl/%s' %(self.csminyname)
+            self.csmaxxname = '/vsicurl/%s' %(self.csmaxxname)
+            self.csmaxyname = '/vsicurl/%s' %(self.csmaxyname)
+            self.ssmname = '/vsicurl/%s' %(self.ssmname)
+        
+
+        demDS = gdal.Open(self.demname, gdal.GA_ReadOnly)
         
         if (self.dhdxname != ""):
-            if urlflag is 1:
-                sxDS = gdal.Open('/vsicurl/%s' %(self.dhdxname))
-                syDS = gdal.Open('/vsicurl/%s' %(self.dhdyname))
-            else:
-                sxDS = gdal.Open(self.dhdxname, gdal.GA_ReadOnly)
-                syDS = gdal.Open(self.dhdyname, gdal.GA_ReadOnly)
+            sxDS = gdal.Open(self.dhdxname, gdal.GA_ReadOnly)
+            syDS = gdal.Open(self.dhdyname, gdal.GA_ReadOnly)
         
         if (self.vxname != ""):
-            if urlflag is 1:
-                vxDS = gdal.Open('/vsicurl/%s' %(self.vxname))
-                vyDS = gdal.Open('/vsicurl/%s' %(self.vyname))
-            else:
-                vxDS = gdal.Open(self.vxname, gdal.GA_ReadOnly)
-                vyDS = gdal.Open(self.vyname, gdal.GA_ReadOnly)
+            vxDS = gdal.Open(self.vxname, gdal.GA_ReadOnly)
+            vyDS = gdal.Open(self.vyname, gdal.GA_ReadOnly)
         
         if (self.srxname != ""):
-            if urlflag is 1:
-                srxDS = gdal.Open('/vsicurl/%s' %(self.srxname))
-                sryDS = gdal.Open('/vsicurl/%s' %(self.sryname))
-            else:
-                srxDS = gdal.Open(self.srxname, gdal.GA_ReadOnly)
-                sryDS = gdal.Open(self.sryname, gdal.GA_ReadOnly)
+            srxDS = gdal.Open(self.srxname, gdal.GA_ReadOnly)
+            sryDS = gdal.Open(self.sryname, gdal.GA_ReadOnly)
         
         if (self.csminxname != ""):
-            if urlflag is 1:
-                csminxDS = gdal.Open('/vsicurl/%s' %(self.csminxname))
-                csminyDS = gdal.Open('/vsicurl/%s' %(self.csminyname))
-            else:
-                csminxDS = gdal.Open(self.csminxname, gdal.GA_ReadOnly)
-                csminyDS = gdal.Open(self.csminyname, gdal.GA_ReadOnly)
+            csminxDS = gdal.Open(self.csminxname, gdal.GA_ReadOnly)
+            csminyDS = gdal.Open(self.csminyname, gdal.GA_ReadOnly)
         
         if (self.csmaxxname != ""):
-            if urlflag is 1:
-                csmaxxDS = gdal.Open('/vsicurl/%s' %(self.csmaxxname))
-                csmaxyDS = gdal.Open('/vsicurl/%s' %(self.csmaxyname))
-            else:
-                csmaxxDS = gdal.Open(self.csmaxxname, gdal.GA_ReadOnly)
-                csmaxyDS = gdal.Open(self.csmaxyname, gdal.GA_ReadOnly)
+            csmaxxDS = gdal.Open(self.csmaxxname, gdal.GA_ReadOnly)
+            csmaxyDS = gdal.Open(self.csmaxyname, gdal.GA_ReadOnly)
         
         if (self.ssmname != ""):
-            if urlflag is 1:
-                ssmDS = gdal.Open('/vsicurl/%s' %(self.ssmname))
-            else:
-                ssmDS = gdal.Open(self.ssmname, gdal.GA_ReadOnly)
+            ssmDS = gdal.Open(self.ssmname, gdal.GA_ReadOnly)
         
         if demDS is None:
             raise Exception('Error opening DEM file {0}'.format(self.demname))
@@ -777,7 +766,7 @@ class GeogridOptical():
         from osgeo import gdal, osr
         import struct
         
-        if urlflag is 1:
+        if urlflag == 1:
             DS1 = gdal.Open('/vsicurl/%s' %(in1))
         else:
             DS1 = gdal.Open(in1, gdal.GA_ReadOnly)
@@ -785,7 +774,7 @@ class GeogridOptical():
         xsize1 = DS1.RasterXSize
         ysize1 = DS1.RasterYSize
         
-        if urlflag is 1:
+        if urlflag == 1:
             DS2 = gdal.Open('/vsicurl/%s' %(in2))
         else:
             DS2 = gdal.Open(in2, gdal.GA_ReadOnly)
@@ -837,7 +826,7 @@ class GeogridOptical():
 
         trans = (W, trans1[1], 0.0, N, 0.0, trans1[5])
 
-        if urlflag is 0:
+        if urlflag == 0:
             
             I1 = DS1.ReadAsArray(xoff=x1a, yoff=y1a, xsize=x1b-x1a+1, ysize=y1b-y1a+1)
             I2 = DS2.ReadAsArray(xoff=x2a, yoff=y2a, xsize=x2b-x2a+1, ysize=y2b-y2a+1)

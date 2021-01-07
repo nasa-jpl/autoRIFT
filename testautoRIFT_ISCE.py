@@ -76,8 +76,9 @@ def cmdLineParse():
     parser.add_argument('-nc', '--sensor_flag_netCDF', dest='nc_sensor', type=str, required=False, default=None,
             help='flag for packaging output formatted for Sentinel ("S") and Landsat ("L") dataset; default is None')
     parser.add_argument('-urlflag', '--urlflag', dest='urlflag', type=int, required=False, default=0,
-            help='flag for reading and coregistering optical data (GeoTIFF images, e.g. Landsat): use 1 for url read and 0 for local machine read; if not specified (i.e. None; default), will just read from local machine without coregistration')
-
+            help='flag for reading and coregistering optical data (GeoTIFF images, e.g. Landsat): use 1 for url read and 0 (default) for local machine read')
+    parser.add_argument('-mpflag', '--mpflag', dest='mpflag', type=int, required=False, default=0,
+            help='number of threads for multiple threading (default is specified by 0, which uses the original single-core version and surpasses the multithreading routine)')
     return parser.parse_args()
 
 class Dummy(object):
@@ -143,7 +144,7 @@ def loadProductOpticalURL(file_m, file_s):
     return I1, I2
 
 
-def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0, noDataMask, optflag, nodata):
+def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0, noDataMask, optflag, nodata, mpflag):
     '''
     Wire and run geogrid.
     '''
@@ -159,10 +160,11 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     obj = autoRIFT_ISCE()
     obj.configure()
 
-#    ##########     uncomment if starting from preprocessed images
+    ##########     uncomment if starting from preprocessed images
 #    I1 = I1.astype(np.uint8)
 #    I2 = I2.astype(np.uint8)
 
+    obj.MultiThread = mpflag
 
     # take the amplitude only for the radar images
     if optflag == 0:
@@ -186,6 +188,9 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
 #    obj.SkipSampleX=8
 #    obj.SkipSampleY=8
 
+    # test with small tiff images
+#    obj.SkipSampleX=16
+#    obj.SkipSampleY=16
     
     # create the grid if it does not exist
     if xGrid is None:
@@ -279,10 +284,7 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     ######## preprocessing
     t1 = time.time()
     print("Pre-process Start!!!")
-#    obj.zeroMask = 1
     obj.preprocess_filt_hps()
-#    obj.I1 = np.abs(I1)
-#    obj.I2 = np.abs(I2)
     print("Pre-process Done!!!")
     print(time.time()-t1)
 
@@ -388,10 +390,12 @@ if __name__ == '__main__':
     
     inps = cmdLineParse()
     
+    mpflag = inps.mpflag
+    
     urlflag = inps.urlflag
     
     if inps.optical_flag == 1:
-        if urlflag is 1:
+        if urlflag == 1:
             data_m, data_s = loadProductOpticalURL(inps.indir_m, inps.indir_s)
         else:
             data_m = loadProductOptical(inps.indir_m)
@@ -481,7 +485,7 @@ if __name__ == '__main__':
 
 
 
-    Dx, Dy, InterpMask, ChipSizeX, ScaleChipSizeY, SearchLimitX, SearchLimitY, origSize, noDataMask = runAutorift(data_m, data_s, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0, noDataMask, inps.optical_flag, nodata)
+    Dx, Dy, InterpMask, ChipSizeX, ScaleChipSizeY, SearchLimitX, SearchLimitY, origSize, noDataMask = runAutorift(data_m, data_s, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0, noDataMask, inps.optical_flag, nodata, mpflag)
 
     if inps.optical_flag == 0:
         Dy = -Dy
@@ -600,7 +604,7 @@ if __name__ == '__main__':
                 xcount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[3])
                 ycount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[5])
 
-                if urlflag is 1:
+                if urlflag == 1:
                     ds = gdal.Open('/vsicurl/%s' %(vxrefname))
                 else:
                     ds = gdal.Open(vxrefname)
@@ -609,7 +613,7 @@ if __name__ == '__main__':
                 ds = None
                 band = None
                 
-                if urlflag is 1:
+                if urlflag == 1:
                     ds = gdal.Open('/vsicurl/%s' %(vyrefname))
                 else:
                     ds = gdal.Open(vyrefname)
@@ -618,7 +622,7 @@ if __name__ == '__main__':
                 ds = None
                 band = None
                 
-                if urlflag is 1:
+                if urlflag == 1:
                     ds = gdal.Open('/vsicurl/%s' %(sxname))
                 else:
                     ds = gdal.Open(sxname)
@@ -627,7 +631,7 @@ if __name__ == '__main__':
                 ds = None
                 band = None
                 
-                if urlflag is 1:
+                if urlflag == 1:
                     ds = gdal.Open('/vsicurl/%s' %(syname))
                 else:
                     ds = gdal.Open(syname)
@@ -636,7 +640,7 @@ if __name__ == '__main__':
                 ds = None
                 band = None
                 
-                if urlflag is 1:
+                if urlflag == 1:
                     ds = gdal.Open('/vsicurl/%s' %(maskname))
                 else:
                     ds = gdal.Open(maskname)
@@ -648,7 +652,7 @@ if __name__ == '__main__':
                 DXref = offset2vy_2 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VXref - offset2vx_2 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VYref
                 DYref = offset2vx_1 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VYref - offset2vy_1 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VXref
                 
-                stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)))
+                stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
                 
                 if stable_count == 0:
                     stable_shift_applied = 0
@@ -695,14 +699,15 @@ if __name__ == '__main__':
                     slave_split = str.split(slave_filename,'_')
 
                     import netcdf_output as no
-                    version = '1.0.7'
+                    version = '1.1.0'
                     pair_type = 'radar'
                     detection_method = 'feature'
                     coordinates = 'radar'
-    #                out_nc_filename = 'Jakobshavn.nc'
-                    out_nc_filename = master_filename[0:-4]+'_'+slave_filename[0:-4]+'.nc'
-                    out_nc_filename = './' + out_nc_filename
                     roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
+    #                out_nc_filename = 'Jakobshavn.nc'
+                    PPP = roi_valid_percentage * 100
+                    out_nc_filename = master_filename[0:-4]+'_X_'+slave_filename[0:-4]+'_G0240V02_P{0}{1}{2}.nc'.format(int(PPP/10),int((PPP-int(PPP/10)*10)),int((PPP-int(PPP/10)*10-int((PPP-int(PPP/10)*10)))*10))
+                    out_nc_filename = './' + out_nc_filename
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
                     
 
@@ -755,14 +760,15 @@ if __name__ == '__main__':
                     slave_time = time1(int(slave_time[0]),int(slave_time[1]),int(float(slave_time[2])))
                     
                     import netcdf_output as no
-                    version = '1.0.7'
+                    version = '1.1.0'
                     pair_type = 'optical'
                     detection_method = 'feature'
                     coordinates = 'map'
-    #                out_nc_filename = 'Jakobshavn_opt.nc'
-                    out_nc_filename = master_filename[0:-4]+'_'+slave_filename[0:-4]+'.nc'
-                    out_nc_filename = './' + out_nc_filename
                     roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
+    #                out_nc_filename = 'Jakobshavn_opt.nc'
+                    PPP = roi_valid_percentage * 100
+                    out_nc_filename = master_filename[0:-8]+'_X_'+slave_filename[0:-8]+'_G0240V02_P{0}{1}{2}.nc'.format(int(PPP/10),int((PPP-int(PPP/10)*10)),int((PPP-int(PPP/10)*10-int((PPP-int(PPP/10)*10)))*10))
+                    out_nc_filename = './' + out_nc_filename
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
                     from datetime import date
@@ -811,14 +817,14 @@ if __name__ == '__main__':
                     slave_time = time1(int(slave_time[0]),int(slave_time[1]),int(float(slave_time[2])))
                     
                     import netcdf_output as no
-                    version = '1.0.7'
+                    version = '1.1.0'
                     pair_type = 'optical'
                     detection_method = 'feature'
                     coordinates = 'map'
-                    
-                    out_nc_filename = master_filename[0:-4]+'_'+slave_filename[0:-4]+'.nc'
-                    out_nc_filename = './' + out_nc_filename
                     roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
+                    PPP = roi_valid_percentage * 100
+                    out_nc_filename = master_filename[0:-8]+'_X_'+slave_filename[0:-8]+'_G0240V02_P{0}{1}{2}.nc'.format(int(PPP/10),int((PPP-int(PPP/10)*10)),int((PPP-int(PPP/10)*10-int((PPP-int(PPP/10)*10)))*10))
+                    out_nc_filename = './' + out_nc_filename
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
                     
                     from datetime import date
