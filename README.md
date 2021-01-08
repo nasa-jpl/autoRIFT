@@ -70,7 +70,7 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 ## 4. Possible Future Development
 
 * for radar (SAR) images, it is yet to include the complex correlation of the two images, i.e. the current version only uses the amplitude correlation
-* the current version works for single-core CPU while the multi-core parallelization or GPU implementation would be useful to extend 
+* the GPU implementation would be useful to extend 
 
 
 ## 5. Demo
