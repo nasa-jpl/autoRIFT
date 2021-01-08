@@ -7,6 +7,13 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/leiyangleon/autoRIFT/blob/master/LICENSE)
 [![Citation](https://img.shields.io/badge/DOI-10.5281/zenodo.4426975-blue)](https://doi.org/10.5281/zenodo.4426975)
 
+### Update Notes:
+
+```diff
++ parallel computing for NCC
++ support of urls for input files (both images and auxiliary input files can be urls for optical data processing; only auxiliary input files can be urls for radar data processing)
++ updated NetCDF4 packaging for production
+```
 
 
 **A Python module of a fast and intelligent algorithm for finding the pixel displacement between two images**
