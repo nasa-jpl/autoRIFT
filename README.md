@@ -11,7 +11,8 @@
 
 ```diff
 + parallel computing for NCC
-+ support of urls for input files (both images and auxiliary input files can be urls for optical data processing; only auxiliary input files can be urls for radar data processing)
++ support for remote input files using GDAL virtual file systems (e.g., `/vsicurl/https://...`)
++   see: https://gdal.org/user/virtual_file_systems.html
 ```
 
 
@@ -64,7 +65,7 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 * the current version can be installed with the ISCE software (that supports both Cartesian and radar coordinates) or as a standalone Python module (Cartesian coordinates only)
 * when used in combination with the Geogrid Python module (https://github.com/leiyangleon/Geogrid), autoRIFT can be used for feature tracking between image pair over a grid defined in an arbitrary geographic Cartesian (northing/easting) coordinate projection
 * when the grid is provided in geographic Cartesian (northing/easting) coordinates, outputs are returned in geocoded GeoTIFF image file format with the same EPSG projection code as input search grid
-* **[NEW]** For feature tracking of optical images, the program now supports fetching optical images (Landsat-8 GeoTIFF and Sentinel-2 COG formats are included) as well as other inputs (e.g. DEM, slope, etc; all in GeoTIFF format) from either local machine or URL links. For feature tracking of radar images, the program now supports fetching auxilliary inputs (e.g. DEM, slope, etc; all in GeoTIFF format) from either local machine or URL links. See the changes on the Geogrid [commands](https://github.com/leiyangleon/Geogrid). When using the autoRIFT commands below, users need to append a url flag: "-urlflag 1" for using URL links, and "-urlflag 0" (default; can be omitted) for using files on local machine. 
+* **[NEW]** For feature tracking of optical images, the program now supports fetching optical images (Landsat-8 GeoTIFF and Sentinel-2 COG formats are included) as well as other inputs (e.g. DEM, slope, etc; all in GeoTIFF format) from either local machine or remotely using [GDAL virtual file systems](https://gdal.org/user/virtual_file_systems.html) (e.g., `/vsicurl/https://...`). For feature tracking of radar images, the program now supports fetching auxiliary inputs (e.g. DEM, slope, etc; all in GeoTIFF format) from either local machine or remotely. See the changes on the Geogrid [commands](https://github.com/leiyangleon/Geogrid).
 * **[NEW]** parallel computing has been added for Normalized Cross-Correlation (NCC). When using the autoRIFT commands below, users need to append a multiprocessing flag: "-mpflag $num" with "$num" being the number of threads used; if not specified, the single-core version is used. 
 
 ## 4. Possible Future Development

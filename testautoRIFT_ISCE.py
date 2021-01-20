@@ -75,8 +75,6 @@ def cmdLineParse():
             help='flag for reading optical data (e.g. Landsat): use 1 for on and 0 (default) for off')
     parser.add_argument('-nc', '--sensor_flag_netCDF', dest='nc_sensor', type=str, required=False, default=None,
             help='flag for packaging output formatted for Sentinel ("S") and Landsat ("L") dataset; default is None')
-    parser.add_argument('-urlflag', '--urlflag', dest='urlflag', type=int, required=False, default=0,
-            help='flag for reading and coregistering optical data (GeoTIFF images, e.g. Landsat): use 1 for url read and 0 (default) for local machine read')
     parser.add_argument('-mpflag', '--mpflag', dest='mpflag', type=int, required=False, default=0,
             help='number of threads for multiple threading (default is specified by 0, which uses the original single-core version and surpasses the multithreading routine)')
     return parser.parse_args()
@@ -100,24 +98,7 @@ def loadProduct(filename):
     return img
 
 
-def loadProductOptical(filename):
-    import numpy as np
-    '''
-    Load the product using Product Manager.
-    '''
-    ds = gdal.Open(filename)
-#    pdb.set_trace()
-    band = ds.GetRasterBand(1)
-    
-    img = band.ReadAsArray()
-    img = img.astype(np.float32)
-    
-    band=None
-    ds=None
-    
-    return img
-
-def loadProductOpticalURL(file_m, file_s):
+def loadProductOptical(file_m, file_s):
     import numpy as np
     '''
     Load the product using Product Manager.
@@ -127,10 +108,10 @@ def loadProductOpticalURL(file_m, file_s):
 
     obj = GeogridOptical()
     
-    x1a, y1a, xsize1, ysize1, x2a, y2a, xsize2, ysize2, trans = obj.coregister(file_m, file_s, 1)
+    x1a, y1a, xsize1, ysize1, x2a, y2a, xsize2, ysize2, trans = obj.coregister(file_m, file_s)
     
-    DS1 = gdal.Open('/vsicurl/%s' %(file_m))
-    DS2 = gdal.Open('/vsicurl/%s' %(file_s))
+    DS1 = gdal.Open(file_m)
+    DS2 = gdal.Open(file_s)
     
     I1 = DS1.ReadAsArray(xoff=x1a, yoff=y1a, xsize=xsize1, ysize=ysize1)
     I2 = DS2.ReadAsArray(xoff=x2a, yoff=y2a, xsize=xsize2, ysize=ysize2)
@@ -381,7 +362,7 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
 
 
 
-if __name__ == '__main__':
+def main():
     '''
     Main driver.
     '''
@@ -391,15 +372,9 @@ if __name__ == '__main__':
     inps = cmdLineParse()
     
     mpflag = inps.mpflag
-    
-    urlflag = inps.urlflag
-    
+
     if inps.optical_flag == 1:
-        if urlflag == 1:
-            data_m, data_s = loadProductOpticalURL(inps.indir_m, inps.indir_s)
-        else:
-            data_m = loadProductOptical(inps.indir_m)
-            data_s = loadProductOptical(inps.indir_s)
+        data_m, data_s = loadProductOptical(inps.indir_m, inps.indir_s)
         # test with lena/Venus image
 #        import scipy.io as sio
 #        conts = sio.loadmat(inps.indir_m)
@@ -604,46 +579,31 @@ if __name__ == '__main__':
                 xcount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[3])
                 ycount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[5])
 
-                if urlflag == 1:
-                    ds = gdal.Open('/vsicurl/%s' %(vxrefname))
-                else:
-                    ds = gdal.Open(vxrefname)
+                ds = gdal.Open(vxrefname)
                 band = ds.GetRasterBand(1)
                 VXref = band.ReadAsArray(xoff, yoff, xcount, ycount)
                 ds = None
                 band = None
-                
-                if urlflag == 1:
-                    ds = gdal.Open('/vsicurl/%s' %(vyrefname))
-                else:
-                    ds = gdal.Open(vyrefname)
+
+                ds = gdal.Open(vyrefname)
                 band = ds.GetRasterBand(1)
                 VYref = band.ReadAsArray(xoff, yoff, xcount, ycount)
                 ds = None
                 band = None
-                
-                if urlflag == 1:
-                    ds = gdal.Open('/vsicurl/%s' %(sxname))
-                else:
-                    ds = gdal.Open(sxname)
+
+                ds = gdal.Open(sxname)
                 band = ds.GetRasterBand(1)
                 SX = band.ReadAsArray(xoff, yoff, xcount, ycount)
                 ds = None
                 band = None
-                
-                if urlflag == 1:
-                    ds = gdal.Open('/vsicurl/%s' %(syname))
-                else:
-                    ds = gdal.Open(syname)
+
+                ds = gdal.Open(syname)
                 band = ds.GetRasterBand(1)
                 SY = band.ReadAsArray(xoff, yoff, xcount, ycount)
                 ds = None
                 band = None
-                
-                if urlflag == 1:
-                    ds = gdal.Open('/vsicurl/%s' %(maskname))
-                else:
-                    ds = gdal.Open(maskname)
+
+                ds = gdal.Open(maskname)
                 band = ds.GetRasterBand(1)
                 MM = band.ReadAsArray(xoff, yoff, xcount, ycount)
                 ds = None
@@ -709,9 +669,9 @@ if __name__ == '__main__':
                     out_nc_filename = master_filename[0:-4]+'_X_'+slave_filename[0:-4]+'_G0240V02_P{0}{1}{2}.nc'.format(int(PPP/10),int((PPP-int(PPP/10)*10)),int((PPP-int(PPP/10)*10-int((PPP-int(PPP/10)*10)))*10))
                     out_nc_filename = './' + out_nc_filename
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
-                    
 
-                    
+
+
                     from datetime import date
                     d0 = date(np.int(master_split[5][0:4]),np.int(master_split[5][4:6]),np.int(master_split[5][6:8]))
                     d1 = date(np.int(slave_split[5][0:4]),np.int(slave_split[5][4:6]),np.int(slave_split[5][6:8]))
@@ -856,3 +816,7 @@ if __name__ == '__main__':
 
         print("Write Outputs Done!!!")
         print(time.time()-t1)
+
+
+if __name__ == '__main__':
+    main()

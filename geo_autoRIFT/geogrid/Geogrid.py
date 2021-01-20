@@ -77,10 +77,7 @@ class Geogrid(Component):
             raise Exception('At least the DEM parameter must be set for geogrid')
 
         from osgeo import gdal, osr
-        if self.urlflag == 1:
-            ds = gdal.Open('/vsicurl/%s' %(self.demname))
-        else:
-            ds = gdal.Open(self.demname, gdal.GA_ReadOnly)
+        ds = gdal.Open(self.demname, gdal.GA_ReadOnly)
         srs = osr.SpatialReference()
         srs.ImportFromWkt(ds.GetProjection())
         srs.AutoIdentifyEPSG()
@@ -96,10 +93,7 @@ class Geogrid(Component):
         else:
             raise Exception('Non-standard coordinate system encountered')
         if not epsgstr:  #Empty string->use shell command gdalsrsinfo for last trial
-            if self.urlflag == 1:
-                cmd = 'gdalsrsinfo -o epsg /vsicurl/{0}'.format(self.demname)
-            else:
-                cmd = 'gdalsrsinfo -o epsg {0}'.format(self.demname)
+            cmd = 'gdalsrsinfo -o epsg {0}'.format(self.demname)
             epsgstr = subprocess.check_output(cmd, shell=True)
 #            pdb.set_trace()
             epsgstr = re.findall("EPSG:(\d+)", str(epsgstr))[0]
@@ -280,9 +274,6 @@ class Geogrid(Component):
         geogrid.setRO2VYFilename_Py( self._geogrid, self.winro2vyname)
         geogrid.setLookSide_Py(self._geogrid, self.lookSide)
         geogrid.setNodataOut_Py(self._geogrid, self.nodata_out)
-        if self.urlflag is None:
-            self.urlflag = 0
-        geogrid.setUrlFlag_Py(self._geogrid, self.urlflag)
 
         self._orbit  = self.orbit.exportToC()
         geogrid.setOrbit_Py(self._geogrid, self._orbit)
@@ -330,8 +321,7 @@ class Geogrid(Component):
         self.csmaxxname = None
         self.csmaxyname = None
         self.ssmname = None
-        self.urlflag = None
-        
+
         ##Output related parameters
         self.winlocname = None
         self.winoffname = None
