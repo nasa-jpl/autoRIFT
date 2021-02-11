@@ -373,23 +373,35 @@ def main():
     '''
     Main driver.
     '''
+    inps = cmdLineParse()
+
+    generateAutoriftProduct(indir_m=inps.indir_m, indir_s=inps.indir_s, grid_location=inps.grid_location,
+                            init_offset=inps.init_offset, search_range=inps.search_range,
+                            chip_size_min=inps.chip_size_min,chip_size_max=inps.chip_size_max,
+                            offset2vx=inps.offset2vx, offset2vy=inps.offset2vy,
+                            stable_surface_mask=inps.stable_surface_mask, optical_flag=inps.optical_flag,
+                            nc_sensor=inps.nc_sensor, mpflag=inps.mpflag)
+
+
+def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search_range, chip_size_min, chip_size_max,
+                            offset2vx, offset2vy, stable_surface_mask, optical_flag, nc_sensor, mpflag):
+
     import numpy as np
     import time
-    
-    inps = cmdLineParse()
-    
-    mpflag = inps.mpflag
 
-    if inps.optical_flag == 1:
-        data_m, data_s = loadProductOptical(inps.indir_m, inps.indir_s)
+    # from components.contrib.geo_autoRIFT.autoRIFT import __version__ as version
+    from autoRIFT import __version__ as version
+
+    if optical_flag == 1:
+        data_m, data_s = loadProductOptical(indir_m, indir_s)
         # test with lena/Venus image
 #        import scipy.io as sio
-#        conts = sio.loadmat(inps.indir_m)
+#        conts = sio.loadmat(indir_m)
 #        data_m = conts['I']
 #        data_s = conts['I1']
     else:
-        data_m = loadProduct(inps.indir_m)
-        data_s = loadProduct(inps.indir_s)
+        data_m = loadProduct(indir_m)
+        data_s = loadProduct(indir_s)
 
 
 
@@ -403,11 +415,12 @@ def main():
     CSMINy0 = None
     CSMAXx0 = None
     CSMAXy0 = None
+    SSM = None
     noDataMask = None
     nodata = None
-    
-    if inps.grid_location is not None:
-        ds = gdal.Open(inps.grid_location)
+
+    if grid_location is not None:
+        ds = gdal.Open(grid_location)
         tran = ds.GetGeoTransform()
         proj = ds.GetProjection()
         srs = ds.GetSpatialRef()
@@ -419,9 +432,9 @@ def main():
         yGrid = band.ReadAsArray()
         band=None
         ds=None
-    
-    if inps.init_offset is not None:
-        ds = gdal.Open(inps.init_offset)
+
+    if init_offset is not None:
+        ds = gdal.Open(init_offset)
         band = ds.GetRasterBand(1)
         Dx0 = band.ReadAsArray()
         band = ds.GetRasterBand(2)
@@ -429,26 +442,26 @@ def main():
         band=None
         ds=None
 
-    if inps.search_range is not None:
-        ds = gdal.Open(inps.search_range)
+    if search_range is not None:
+        ds = gdal.Open(search_range)
         band = ds.GetRasterBand(1)
         SRx0 = band.ReadAsArray()
         band = ds.GetRasterBand(2)
         SRy0 = band.ReadAsArray()
         band=None
         ds=None
-    
-    if inps.chip_size_min is not None:
-        ds = gdal.Open(inps.chip_size_min)
+
+    if chip_size_min is not None:
+        ds = gdal.Open(chip_size_min)
         band = ds.GetRasterBand(1)
         CSMINx0 = band.ReadAsArray()
         band = ds.GetRasterBand(2)
         CSMINy0 = band.ReadAsArray()
         band=None
         ds=None
-    
-    if inps.chip_size_max is not None:
-        ds = gdal.Open(inps.chip_size_max)
+
+    if chip_size_max is not None:
+        ds = gdal.Open(chip_size_max)
         band = ds.GetRasterBand(1)
         CSMAXx0 = band.ReadAsArray()
         band = ds.GetRasterBand(2)
@@ -456,8 +469,8 @@ def main():
         band=None
         ds=None
 
-    if inps.stable_surface_mask is not None:
-        ds = gdal.Open(inps.stable_surface_mask)
+    if stable_surface_mask is not None:
+        ds = gdal.Open(stable_surface_mask)
         band = ds.GetRasterBand(1)
         SSM = band.ReadAsArray()
         SSM = SSM.astype('bool')
@@ -465,9 +478,12 @@ def main():
         ds=None
 
 
-    Dx, Dy, InterpMask, ChipSizeX, ScaleChipSizeY, SearchLimitX, SearchLimitY, origSize, noDataMask = runAutorift(data_m, data_s, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0, noDataMask, inps.optical_flag, nodata, mpflag)
 
-    if inps.optical_flag == 0:
+    Dx, Dy, InterpMask, ChipSizeX, ScaleChipSizeY, SearchLimitX, SearchLimitY, origSize, noDataMask = runAutorift(
+        data_m, data_s, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0, noDataMask, optical_flag, nodata, mpflag
+    )
+
+    if optical_flag == 0:
         Dy = -Dy
 
     DX = np.zeros(origSize,dtype=np.float32) * np.nan
@@ -508,8 +524,8 @@ def main():
 #    SEARCHLIMITY = conts['SearchLimitY']
 #    #####################
 
-    if inps.grid_location is not None:
-        
+    if grid_location is not None:
+
 
         t1 = time.time()
         print("Write Outputs Start!!!")
@@ -535,9 +551,9 @@ def main():
         outband.FlushCache()
 
 
-        if inps.offset2vx is not None:
-            
-            ds = gdal.Open(inps.offset2vx)
+        if offset2vx is not None:
+
+            ds = gdal.Open(offset2vx)
             band = ds.GetRasterBand(1)
             offset2vx_1 = band.ReadAsArray()
             band = ds.GetRasterBand(2)
@@ -545,7 +561,7 @@ def main():
             band=None
             ds=None
 
-            ds = gdal.Open(inps.offset2vy)
+            ds = gdal.Open(offset2vy)
             band = ds.GetRasterBand(1)
             offset2vy_1 = band.ReadAsArray()
             band = ds.GetRasterBand(2)
@@ -571,9 +587,9 @@ def main():
             outband.FlushCache()
             
             ############ prepare for netCDF packaging
-            
-            if inps.nc_sensor is not None:
-                
+
+            if nc_sensor is not None:
+
                 vxrefname = str.split(runCmd('fgrep "Velocities:" testGeogrid.txt'))[1]
                 vyrefname = str.split(runCmd('fgrep "Velocities:" testGeogrid.txt'))[2]
                 sxname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[1][:-4]+"s.tif"
@@ -644,8 +660,8 @@ def main():
                 VY = VY.astype(np.float32)
             ########################################################################################
                 ############   netCDF packaging for Sentinel and Landsat dataset; can add other sensor format as well
-                if inps.nc_sensor == "S":
-                    
+                if nc_sensor == "S":
+
                     rangePixelSize = float(str.split(runCmd('fgrep "Ground range pixel size:" testGeogrid.txt'))[4])
                     azimuthPixelSize = float(str.split(runCmd('fgrep "Azimuth pixel size:" testGeogrid.txt'))[3])
                     dt = float(str.split(runCmd('fgrep "Repeat Time:" testGeogrid.txt'))[2])
@@ -664,7 +680,6 @@ def main():
                     slave_split = str.split(slave_filename,'_')
 
                     import netcdf_output as no
-                    version = '1.0.7'
                     pair_type = 'radar'
                     detection_method = 'feature'
                     coordinates = 'radar'
@@ -696,15 +711,15 @@ def main():
 
                     no.netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SX, SY, offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, MM, VXref, VYref, rangePixelSize, azimuthPixelSize, dt, epsg, srs, tran, out_nc_filename, pair_type, detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_shift_applied, dx_mean_shift, dy_mean_shift, error_vector)
 
-                elif inps.nc_sensor == "L":
-                    
+                elif nc_sensor == "L":
+
                     XPixelSize = float(str.split(runCmd('fgrep "X-direction pixel size:" testGeogrid.txt'))[3])
                     YPixelSize = float(str.split(runCmd('fgrep "Y-direction pixel size:" testGeogrid.txt'))[3])
                     epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
-                    
-                    master_path = inps.indir_m
-                    slave_path = inps.indir_s
-                    
+
+                    master_path = indir_m
+                    slave_path = indir_s
+
                     import os
                     master_filename = os.path.basename(master_path)
                     slave_filename = os.path.basename(slave_path)
@@ -725,7 +740,6 @@ def main():
                     slave_time = time1(int(slave_time[0]),int(slave_time[1]),int(float(slave_time[2])))
                     
                     import netcdf_output as no
-                    version = '1.0.7'
                     pair_type = 'optical'
                     detection_method = 'feature'
                     coordinates = 'map'
@@ -756,16 +770,16 @@ def main():
                     error_vector = np.array([57.,57.])
                     
                     no.netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SX, SY, offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, MM, VXref, VYref, XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type, detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_shift_applied, dx_mean_shift, dy_mean_shift, error_vector)
-        
-                elif inps.nc_sensor == "S2":
-                    
+
+                elif nc_sensor == "S2":
+
                     XPixelSize = float(str.split(runCmd('fgrep "X-direction pixel size:" testGeogrid.txt'))[3])
                     YPixelSize = float(str.split(runCmd('fgrep "Y-direction pixel size:" testGeogrid.txt'))[3])
                     epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
-                    
-                    master_path = inps.indir_m
-                    slave_path = inps.indir_s
-                    
+
+                    master_path = indir_m
+                    slave_path = indir_s
+
                     master_split = master_path.split('_')
                     slave_split = slave_path.split('_')
                     
@@ -782,7 +796,6 @@ def main():
                     slave_time = time1(int(slave_time[0]),int(slave_time[1]),int(float(slave_time[2])))
                     
                     import netcdf_output as no
-                    version = '1.0.7'
                     pair_type = 'optical'
                     detection_method = 'feature'
                     coordinates = 'map'
@@ -803,21 +816,21 @@ def main():
                     else:
                         date_ct = d0 + (d1 - d0)/2
                         date_center = date_ct.strftime("%Y%m%d")
-                
+
                     master_dt = master_split[2] + master_time.strftime("T%H:%M:%S")
                     slave_dt = slave_split[2] + slave_time.strftime("T%H:%M:%S")
-                    
+
                     IMG_INFO_DICT = {'mission_img1':master_split[0][-3],'satellite_img1':master_split[0][-2:],'correction_level_img1':master_split[4][:3],'acquisition_date_img1':master_dt,'mission_img2':slave_split[0][-3],'satellite_img2':slave_split[0][-2:],'correction_level_img2':slave_split[4][:3],'acquisition_date_img2':slave_dt,'date_dt':date_dt,'date_center':date_center,'roi_valid_percentage':roi_valid_percentage,'autoRIFT_software_version':version}
-                    
+
                     error_vector = np.array([57.,57.])
-                    
+
                     no.netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SX, SY, offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, MM, VXref, VYref, XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type, detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_shift_applied, dx_mean_shift, dy_mean_shift, error_vector)
 
-                elif inps.nc_sensor is None:
+                elif nc_sensor is None:
                     print('netCDF packaging not performed')
 
                 else:
-                    raise Exception('netCDF packaging not supported for the type "{0}"'.format(inps.nc_sensor))
+                    raise Exception('netCDF packaging not supported for the type "{0}"'.format(nc_sensor))
 
         print("Write Outputs Done!!!")
         print(time.time()-t1)
