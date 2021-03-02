@@ -1095,7 +1095,8 @@ def arImgDisp_s(I1, I2, xGrid, yGrid, ChipSizeX, ChipSizeY, SearchLimitX, Search
     
     import numpy as np
     from . import autoriftcore
-    
+    import multiprocessing as mp
+
     core = AUTO_RIFT_CORE()
     if core._autoriftcore is not None:
         autoriftcore.destroyAutoRiftCore_Py(core._autoriftcore)
