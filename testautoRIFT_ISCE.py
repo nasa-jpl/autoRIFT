@@ -703,8 +703,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
     #                out_nc_filename = 'Jakobshavn.nc'
                     PPP = roi_valid_percentage * 100
-                    out_nc_filename = master_filename[0:-4]+'_X_'+slave_filename[0:-4]+'_G0240V02_P{0}{1}{2}.nc'.format(int(PPP/10),int((PPP-int(PPP/10)*10)),int((PPP-int(PPP/10)*10-int((PPP-int(PPP/10)*10)))*10))
-                    out_nc_filename = './' + out_nc_filename
+                    out_nc_filename = f"./{master_filename[0:-4]}_X_{slave_filename[0:-4]}" \
+                                      f"_G{geogrid_run_info['chipsizex0']:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
 
@@ -772,8 +772,9 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
     #                out_nc_filename = 'Jakobshavn_opt.nc'
                     PPP = roi_valid_percentage * 100
-                    out_nc_filename = master_filename[0:-8]+'_X_'+slave_filename[0:-8]+'_G0240V02_P{0}{1}{2}.nc'.format(int(PPP/10),int((PPP-int(PPP/10)*10)),int((PPP-int(PPP/10)*10-int((PPP-int(PPP/10)*10)))*10))
-                    out_nc_filename = './' + out_nc_filename
+                    out_nc_filename = f"./{master_filename[0:-8]}_X_{slave_filename[0:-8]}" \
+                                      f"_G{geogrid_run_info['chipsizex0']:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
+
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
                     from datetime import date
@@ -837,8 +838,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     coordinates = 'map'
                     roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
                     PPP = roi_valid_percentage * 100
-                    out_nc_filename = master_filename[0:-8]+'_X_'+slave_filename[0:-8]+'_G0240V02_P{0}{1}{2}.nc'.format(int(PPP/10),int((PPP-int(PPP/10)*10)),int((PPP-int(PPP/10)*10-int((PPP-int(PPP/10)*10)))*10))
-                    out_nc_filename = './' + out_nc_filename
+                    out_nc_filename = f"./{master_filename[0:-8]}_X_{slave_filename[0:-8]}" \
+                                      f"_G{geogrid_run_info['chipsizex0']:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
                     from datetime import date
