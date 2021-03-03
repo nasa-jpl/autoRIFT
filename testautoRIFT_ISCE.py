@@ -126,7 +126,8 @@ def loadProductOptical(file_m, file_s):
     return I1, I2
 
 
-def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0, noDataMask, optflag, nodata, mpflag):
+def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0, noDataMask, optflag,
+                nodata, mpflag, geogrid_run_info=None):
     '''
     Wire and run geogrid.
     '''
@@ -219,11 +220,15 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     if CSMINx0 is not None:
         obj.ChipSizeMaxX = CSMAXx0
         obj.ChipSizeMinX = CSMINx0
-        chipsizex0 = float(str.split(subprocess.getoutput('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
-        try:
-            pixsizex = float(str.split(subprocess.getoutput('fgrep "Ground range pixel size:" testGeogrid.txt'))[-1])
-        except:
-            pixsizex = float(str.split(subprocess.getoutput('fgrep "X-direction pixel size:" testGeogrid.txt'))[-1])
+        if geogrid_run_info is None:
+            chipsizex0 = float(str.split(subprocess.getoutput('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
+            try:
+                pixsizex = float(str.split(subprocess.getoutput('fgrep "Ground range pixel size:" testGeogrid.txt'))[-1])
+            except:
+                pixsizex = float(str.split(subprocess.getoutput('fgrep "X-direction pixel size:" testGeogrid.txt'))[-1])
+        else:
+            chipsizex0 = geogrid_run_info['chipsizex0']
+            pixsizex = geogrid_run_info.get('pixsizex', geogrid_run_info['XPixelSize'])
         obj.ChipSize0X = int(np.ceil(chipsizex0/pixsizex/4)*4)
 #        obj.ChipSize0X = np.min(CSMINx0[CSMINx0!=nodata])
         RATIO_Y2X = CSMINy0/CSMINx0
@@ -378,7 +383,8 @@ def main():
 
 
 def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search_range, chip_size_min, chip_size_max,
-                            offset2vx, offset2vy, stable_surface_mask, optical_flag, nc_sensor, mpflag):
+                            offset2vx, offset2vy, stable_surface_mask, optical_flag, nc_sensor, mpflag,
+                            geogrid_run_info=None):
 
     import numpy as np
     import time
@@ -474,7 +480,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
 
     Dx, Dy, InterpMask, ChipSizeX, ScaleChipSizeY, SearchLimitX, SearchLimitY, origSize, noDataMask = runAutorift(
-        data_m, data_s, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0, noDataMask, optical_flag, nodata, mpflag
+        data_m, data_s, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0,
+        noDataMask, optical_flag, nodata, mpflag, geogrid_run_info=geogrid_run_info,
     )
 
     if optical_flag == 0:
@@ -584,16 +591,26 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
             ############ prepare for netCDF packaging
 
             if nc_sensor is not None:
-
-                vxrefname = str.split(runCmd('fgrep "Velocities:" testGeogrid.txt'))[1]
-                vyrefname = str.split(runCmd('fgrep "Velocities:" testGeogrid.txt'))[2]
-                sxname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[1][:-4]+"s.tif"
-                syname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[2][:-4]+"s.tif"
-                maskname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[2][:-8]+"sp.tif"
-                xoff = int(str.split(runCmd('fgrep "Origin index (in DEM) of geogrid:" testGeogrid.txt'))[6])
-                yoff = int(str.split(runCmd('fgrep "Origin index (in DEM) of geogrid:" testGeogrid.txt'))[7])
-                xcount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[3])
-                ycount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[5])
+                if geogrid_run_info is None:
+                    vxrefname = str.split(runCmd('fgrep "Velocities:" testGeogrid.txt'))[1]
+                    vyrefname = str.split(runCmd('fgrep "Velocities:" testGeogrid.txt'))[2]
+                    sxname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[1][:-4]+"s.tif"
+                    syname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[2][:-4]+"s.tif"
+                    maskname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[2][:-8]+"sp.tif"
+                    xoff = int(str.split(runCmd('fgrep "Origin index (in DEM) of geogrid:" testGeogrid.txt'))[6])
+                    yoff = int(str.split(runCmd('fgrep "Origin index (in DEM) of geogrid:" testGeogrid.txt'))[7])
+                    xcount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[3])
+                    ycount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[5])
+                else:
+                    vxrefname = geogrid_run_info['vxname']
+                    vyrefname = geogrid_run_info['vyname']
+                    sxname = geogrid_run_info['sxname']
+                    syname = geogrid_run_info['syname']
+                    maskname = geogrid_run_info['maskname']
+                    xoff = geogrid_run_info['xoff']
+                    yoff = geogrid_run_info['yoff']
+                    xcount = geogrid_run_info['xcount']
+                    ycount = geogrid_run_info['ycount']
 
                 ds = gdal.Open(vxrefname)
                 band = ds.GetRasterBand(1)
@@ -657,12 +674,17 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
             ########################################################################################
                 ############   netCDF packaging for Sentinel and Landsat dataset; can add other sensor format as well
                 if nc_sensor == "S":
-
-                    rangePixelSize = float(str.split(runCmd('fgrep "Ground range pixel size:" testGeogrid.txt'))[4])
-                    azimuthPixelSize = float(str.split(runCmd('fgrep "Azimuth pixel size:" testGeogrid.txt'))[3])
-                    dt = float(str.split(runCmd('fgrep "Repeat Time:" testGeogrid.txt'))[2])
-                    epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
-    #                print (str(rangePixelSize)+"      "+str(azimuthPixelSize))
+                    if geogrid_run_info is None:
+                        rangePixelSize = float(str.split(runCmd('fgrep "Ground range pixel size:" testGeogrid.txt'))[4])
+                        azimuthPixelSize = float(str.split(runCmd('fgrep "Azimuth pixel size:" testGeogrid.txt'))[3])
+                        dt = float(str.split(runCmd('fgrep "Repeat Time:" testGeogrid.txt'))[2])
+                        epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
+                        #  print (str(rangePixelSize)+"      "+str(azimuthPixelSize))
+                    else:
+                        rangePixelSize = geogrid_run_info['rangePixelSize']
+                        azimuthPixelSize = geogrid_run_info['azimuthPixelSize']
+                        dt = geogrid_run_info['dt']
+                        epsg = geogrid_run_info['epsg']
 
                     runCmd('topsinsar_filename.py')
     #                import scipy.io as sio
@@ -712,10 +734,14 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     )
 
                 elif nc_sensor == "L":
-
-                    XPixelSize = float(str.split(runCmd('fgrep "X-direction pixel size:" testGeogrid.txt'))[3])
-                    YPixelSize = float(str.split(runCmd('fgrep "Y-direction pixel size:" testGeogrid.txt'))[3])
-                    epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
+                    if geogrid_run_info is None:
+                        XPixelSize = float(str.split(runCmd('fgrep "X-direction pixel size:" testGeogrid.txt'))[3])
+                        YPixelSize = float(str.split(runCmd('fgrep "Y-direction pixel size:" testGeogrid.txt'))[3])
+                        epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
+                    else:
+                        XPixelSize = geogrid_run_info['XPixelSize']
+                        YPixelSize = geogrid_run_info['YPixelSize']
+                        epsg = geogrid_run_info['epsg']
 
                     master_path = indir_m
                     slave_path = indir_s
@@ -778,10 +804,14 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     )
 
                 elif nc_sensor == "S2":
-
-                    XPixelSize = float(str.split(runCmd('fgrep "X-direction pixel size:" testGeogrid.txt'))[3])
-                    YPixelSize = float(str.split(runCmd('fgrep "Y-direction pixel size:" testGeogrid.txt'))[3])
-                    epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
+                    if geogrid_run_info is None:
+                        XPixelSize = float(str.split(runCmd('fgrep "X-direction pixel size:" testGeogrid.txt'))[3])
+                        YPixelSize = float(str.split(runCmd('fgrep "Y-direction pixel size:" testGeogrid.txt'))[3])
+                        epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
+                    else:
+                        XPixelSize = geogrid_run_info['XPixelSize']
+                        YPixelSize = geogrid_run_info['YPixelSize']
+                        epsg = geogrid_run_info['epsg']
 
                     master_path = indir_m
                     slave_path = indir_s
