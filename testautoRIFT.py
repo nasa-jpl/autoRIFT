@@ -590,7 +590,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 vyrefname = str.split(runCmd('fgrep "Velocities:" testGeogrid.txt'))[2]
                 sxname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[1][:-4]+"s.tif"
                 syname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[2][:-4]+"s.tif"
-                maskname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[2][:-8]+"masks.tif"
+                maskname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[2][:-8]+"sp.tif"
                 xoff = int(str.split(runCmd('fgrep "Origin index (in DEM) of geogrid:" testGeogrid.txt'))[6])
                 yoff = int(str.split(runCmd('fgrep "Origin index (in DEM) of geogrid:" testGeogrid.txt'))[7])
                 xcount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[3])
