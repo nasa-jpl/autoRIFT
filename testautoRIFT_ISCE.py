@@ -104,6 +104,7 @@ def loadProductOptical(file_m, file_s):
     '''
     Load the product using Product Manager.
     '''
+    import isce
     from components.contrib.geo_autoRIFT.geogrid import GeogridOptical
 #    from geogrid import GeogridOptical
 
@@ -676,12 +677,14 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 ############   netCDF packaging for Sentinel and Landsat dataset; can add other sensor format as well
                 if nc_sensor == "S":
                     if geogrid_run_info is None:
+                        chipsizex0 = float(str.split(runCmd('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
                         rangePixelSize = float(str.split(runCmd('fgrep "Ground range pixel size:" testGeogrid.txt'))[4])
                         azimuthPixelSize = float(str.split(runCmd('fgrep "Azimuth pixel size:" testGeogrid.txt'))[3])
                         dt = float(str.split(runCmd('fgrep "Repeat Time:" testGeogrid.txt'))[2])
                         epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
                         #  print (str(rangePixelSize)+"      "+str(azimuthPixelSize))
                     else:
+                        chipsizex0 = geogrid_run_info['chipsizex0']
                         rangePixelSize = geogrid_run_info['rangePixelSize']
                         azimuthPixelSize = geogrid_run_info['azimuthPixelSize']
                         dt = geogrid_run_info['dt']
@@ -705,7 +708,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
     #                out_nc_filename = 'Jakobshavn.nc'
                     PPP = roi_valid_percentage * 100
                     out_nc_filename = f"./{master_filename[0:-4]}_X_{slave_filename[0:-4]}" \
-                                      f"_G{geogrid_run_info['chipsizex0']:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
+                                      f"_G{chipsizex0:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
 
@@ -736,10 +739,12 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
                 elif nc_sensor == "L":
                     if geogrid_run_info is None:
+                        chipsizex0 = float(str.split(runCmd('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
                         XPixelSize = float(str.split(runCmd('fgrep "X-direction pixel size:" testGeogrid.txt'))[3])
                         YPixelSize = float(str.split(runCmd('fgrep "Y-direction pixel size:" testGeogrid.txt'))[3])
                         epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
                     else:
+                        chipsizex0 = geogrid_run_info['chipsizex0']
                         XPixelSize = geogrid_run_info['XPixelSize']
                         YPixelSize = geogrid_run_info['YPixelSize']
                         epsg = geogrid_run_info['epsg']
@@ -774,7 +779,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
     #                out_nc_filename = 'Jakobshavn_opt.nc'
                     PPP = roi_valid_percentage * 100
                     out_nc_filename = f"./{master_filename[0:-7]}_X_{slave_filename[0:-7]}" \
-                                      f"_G{geogrid_run_info['chipsizex0']:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
+                                      f"_G{chipsizex0:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
 
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
@@ -807,10 +812,12 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
                 elif nc_sensor == "S2":
                     if geogrid_run_info is None:
+                        chipsizex0 = float(str.split(runCmd('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
                         XPixelSize = float(str.split(runCmd('fgrep "X-direction pixel size:" testGeogrid.txt'))[3])
                         YPixelSize = float(str.split(runCmd('fgrep "Y-direction pixel size:" testGeogrid.txt'))[3])
                         epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
                     else:
+                        chipsizex0 = geogrid_run_info['chipsizex0']
                         XPixelSize = geogrid_run_info['XPixelSize']
                         YPixelSize = geogrid_run_info['YPixelSize']
                         epsg = geogrid_run_info['epsg']
@@ -840,7 +847,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
                     PPP = roi_valid_percentage * 100
                     out_nc_filename = f"./{master_filename[0:-8]}_X_{slave_filename[0:-8]}" \
-                                      f"_G{geogrid_run_info['chipsizex0']:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
+                                      f"_G{chipsizex0:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
                     from datetime import date
