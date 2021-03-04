@@ -389,6 +389,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
     import numpy as np
     import time
 
+    import isce
     from components.contrib.geo_autoRIFT.autoRIFT import __version__ as version
     #  from autoRIFT import __version__ as version
 
