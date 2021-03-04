@@ -773,7 +773,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
     #                out_nc_filename = 'Jakobshavn_opt.nc'
                     PPP = roi_valid_percentage * 100
-                    out_nc_filename = f"./{master_filename[0:-8]}_X_{slave_filename[0:-8]}" \
+                    out_nc_filename = f"./{master_filename[0:-7]}_X_{slave_filename[0:-7]}" \
                                       f"_G{geogrid_run_info['chipsizex0']:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
 
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
