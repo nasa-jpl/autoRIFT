@@ -684,8 +684,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         #  print (str(rangePixelSize)+"      "+str(azimuthPixelSize))
                     else:
                         chipsizex0 = geogrid_run_info['chipsizex0']
-                        rangePixelSize = geogrid_run_info['rangePixelSize']
-                        azimuthPixelSize = geogrid_run_info['azimuthPixelSize']
+                        rangePixelSize = geogrid_run_info['XPixelSize']
+                        azimuthPixelSize = geogrid_run_info['YPixelSize']
                         dt = geogrid_run_info['dt']
                         epsg = geogrid_run_info['epsg']
 
