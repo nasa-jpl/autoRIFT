@@ -229,7 +229,7 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
                 pixsizex = float(str.split(subprocess.getoutput('fgrep "X-direction pixel size:" testGeogrid.txt'))[-1])
         else:
             chipsizex0 = geogrid_run_info['chipsizex0']
-            pixsizex = geogrid_run_info.get('pixsizex', geogrid_run_info['XPixelSize'])
+            pixsizex = geogrid_run_info['XPixelSize']
         obj.ChipSize0X = int(np.ceil(chipsizex0/pixsizex/4)*4)
 #        obj.ChipSize0X = np.min(CSMINx0[CSMINx0!=nodata])
         RATIO_Y2X = CSMINy0/CSMINx0
