@@ -77,6 +77,7 @@ def cmdLineParse():
             help='flag for packaging output formatted for Sentinel ("S") and Landsat ("L") dataset; default is None')
     parser.add_argument('-mpflag', '--mpflag', dest='mpflag', type=int, required=False, default=0,
             help='number of threads for multiple threading (default is specified by 0, which uses the original single-core version and surpasses the multithreading routine)')
+
     return parser.parse_args()
 
 class Dummy(object):
@@ -91,7 +92,7 @@ def loadProduct(filename):
     import isce
     import logging
     from imageMath import IML
-    
+
     IMG = IML.mmapFromISCE(filename, logging)
     img = IMG.bands[0]
 #    pdb.set_trace()
@@ -103,29 +104,31 @@ def loadProductOptical(file_m, file_s):
     '''
     Load the product using Product Manager.
     '''
+    import isce
     from components.contrib.geo_autoRIFT.geogrid import GeogridOptical
 #    from geogrid import GeogridOptical
 
     obj = GeogridOptical()
-    
+
     x1a, y1a, xsize1, ysize1, x2a, y2a, xsize2, ysize2, trans = obj.coregister(file_m, file_s)
-    
+
     DS1 = gdal.Open(file_m)
     DS2 = gdal.Open(file_s)
-    
+
     I1 = DS1.ReadAsArray(xoff=x1a, yoff=y1a, xsize=xsize1, ysize=ysize1)
     I2 = DS2.ReadAsArray(xoff=x2a, yoff=y2a, xsize=xsize2, ysize=ysize2)
-    
+
     I1 = I1.astype(np.float32)
     I2 = I2.astype(np.float32)
-    
+
     DS1=None
     DS2=None
-    
+
     return I1, I2
 
 
-def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0, noDataMask, optflag, nodata, mpflag):
+def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0, noDataMask, optflag,
+                nodata, mpflag, geogrid_run_info=None):
     '''
     Wire and run geogrid.
     '''
@@ -136,12 +139,12 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     import isceobj
     import time
     import subprocess
-    
-    
+
+
     obj = autoRIFT_ISCE()
     obj.configure()
 
-    ##########     uncomment if starting from preprocessed images
+##########     uncomment if starting from preprocessed images
 #    I1 = I1.astype(np.uint8)
 #    I2 = I2.astype(np.uint8)
 
@@ -172,7 +175,7 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     # test with small tiff images
 #    obj.SkipSampleX=16
 #    obj.SkipSampleY=16
-    
+
     # create the grid if it does not exist
     if xGrid is None:
         m,n = obj.I1.shape
@@ -188,7 +191,7 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
         obj.yGrid = yGrid
 
 
-    
+
     # generate the nodata mask where offset searching will be skipped based on 1) imported nodata mask and/or 2) zero values in the image
     for ii in range(obj.xGrid.shape[0]):
         for jj in range(obj.xGrid.shape[1]):
@@ -218,11 +221,15 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     if CSMINx0 is not None:
         obj.ChipSizeMaxX = CSMAXx0
         obj.ChipSizeMinX = CSMINx0
-        chipsizex0 = float(str.split(subprocess.getoutput('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
-        try:
-            pixsizex = float(str.split(subprocess.getoutput('fgrep "Ground range pixel size:" testGeogrid.txt'))[-1])
-        except:
-            pixsizex = float(str.split(subprocess.getoutput('fgrep "X-direction pixel size:" testGeogrid.txt'))[-1])
+        if geogrid_run_info is None:
+            chipsizex0 = float(str.split(subprocess.getoutput('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
+            try:
+                pixsizex = float(str.split(subprocess.getoutput('fgrep "Ground range pixel size:" testGeogrid.txt'))[-1])
+            except:
+                pixsizex = float(str.split(subprocess.getoutput('fgrep "X-direction pixel size:" testGeogrid.txt'))[-1])
+        else:
+            chipsizex0 = geogrid_run_info['chipsizex0']
+            pixsizex = geogrid_run_info['XPixelSize']
         obj.ChipSize0X = int(np.ceil(chipsizex0/pixsizex/4)*4)
 #        obj.ChipSize0X = np.min(CSMINx0[CSMINx0!=nodata])
         RATIO_Y2X = CSMINy0/CSMINx0
@@ -265,7 +272,10 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     ######## preprocessing
     t1 = time.time()
     print("Pre-process Start!!!")
+#    obj.zeroMask = 1
     obj.preprocess_filt_hps()
+#    obj.I1 = np.abs(I1)
+#    obj.I2 = np.abs(I2)
     print("Pre-process Done!!!")
     print(time.time()-t1)
 
@@ -374,11 +384,13 @@ def main():
 
 
 def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search_range, chip_size_min, chip_size_max,
-                            offset2vx, offset2vy, stable_surface_mask, optical_flag, nc_sensor, mpflag):
+                            offset2vx, offset2vy, stable_surface_mask, optical_flag, nc_sensor, mpflag,
+                            geogrid_run_info=None):
 
     import numpy as np
     import time
 
+    import isce
     from components.contrib.geo_autoRIFT.autoRIFT import __version__ as version
     #  from autoRIFT import __version__ as version
 
@@ -470,7 +482,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
 
     Dx, Dy, InterpMask, ChipSizeX, ScaleChipSizeY, SearchLimitX, SearchLimitY, origSize, noDataMask = runAutorift(
-        data_m, data_s, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0, noDataMask, optical_flag, nodata, mpflag
+        data_m, data_s, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0,
+        noDataMask, optical_flag, nodata, mpflag, geogrid_run_info=geogrid_run_info,
     )
 
     if optical_flag == 0:
@@ -482,7 +495,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
     CHIPSIZEX = np.zeros(origSize,dtype=np.float32)
     SEARCHLIMITX = np.zeros(origSize,dtype=np.float32)
     SEARCHLIMITY = np.zeros(origSize,dtype=np.float32)
-    
+
     DX[0:Dx.shape[0],0:Dx.shape[1]] = Dx
     DY[0:Dy.shape[0],0:Dy.shape[1]] = Dy
     INTERPMASK[0:InterpMask.shape[0],0:InterpMask.shape[1]] = InterpMask
@@ -514,6 +527,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 #    SEARCHLIMITY = conts['SearchLimitY']
 #    #####################
 
+    netcdf_file = None
     if grid_location is not None:
 
 
@@ -558,14 +572,14 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
             offset2vy_2 = band.ReadAsArray()
             band=None
             ds=None
-            
+
             VX = offset2vx_1 * DX + offset2vx_2 * DY
             VY = offset2vy_1 * DX + offset2vy_2 * DY
             VX = VX.astype(np.float32)
             VY = VY.astype(np.float32)
-            
+
             ############ write velocity output in Geotiff format
-            
+
             outRaster = driver.Create("velocity.tif", int(xGrid.shape[1]), int(xGrid.shape[0]), 2, gdal.GDT_Float32)
             outRaster.SetGeoTransform(tran)
             outRaster.SetProjection(proj)
@@ -575,20 +589,30 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
             outband = outRaster.GetRasterBand(2)
             outband.WriteArray(VY)
             outband.FlushCache()
-            
+
             ############ prepare for netCDF packaging
 
             if nc_sensor is not None:
-
-                vxrefname = str.split(runCmd('fgrep "Velocities:" testGeogrid.txt'))[1]
-                vyrefname = str.split(runCmd('fgrep "Velocities:" testGeogrid.txt'))[2]
-                sxname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[1][:-4]+"s.tif"
-                syname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[2][:-4]+"s.tif"
-                maskname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[2][:-8]+"masks.tif"
-                xoff = int(str.split(runCmd('fgrep "Origin index (in DEM) of geogrid:" testGeogrid.txt'))[6])
-                yoff = int(str.split(runCmd('fgrep "Origin index (in DEM) of geogrid:" testGeogrid.txt'))[7])
-                xcount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[3])
-                ycount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[5])
+                if geogrid_run_info is None:
+                    vxrefname = str.split(runCmd('fgrep "Velocities:" testGeogrid.txt'))[1]
+                    vyrefname = str.split(runCmd('fgrep "Velocities:" testGeogrid.txt'))[2]
+                    sxname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[1][:-4]+"s.tif"
+                    syname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[2][:-4]+"s.tif"
+                    maskname = str.split(runCmd('fgrep "Slopes:" testGeogrid.txt'))[2][:-8]+"sp.tif"
+                    xoff = int(str.split(runCmd('fgrep "Origin index (in DEM) of geogrid:" testGeogrid.txt'))[6])
+                    yoff = int(str.split(runCmd('fgrep "Origin index (in DEM) of geogrid:" testGeogrid.txt'))[7])
+                    xcount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[3])
+                    ycount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[5])
+                else:
+                    vxrefname = geogrid_run_info['vxname']
+                    vyrefname = geogrid_run_info['vyname']
+                    sxname = geogrid_run_info['sxname']
+                    syname = geogrid_run_info['syname']
+                    maskname = geogrid_run_info['maskname']
+                    xoff = geogrid_run_info['xoff']
+                    yoff = geogrid_run_info['yoff']
+                    xcount = geogrid_run_info['xcount']
+                    ycount = geogrid_run_info['ycount']
 
                 ds = gdal.Open(vxrefname)
                 band = ds.GetRasterBand(1)
@@ -619,23 +643,23 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 MM = band.ReadAsArray(xoff, yoff, xcount, ycount)
                 ds = None
                 band = None
-                
+
                 DXref = offset2vy_2 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VXref - offset2vx_2 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VYref
                 DYref = offset2vx_1 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VYref - offset2vy_1 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VXref
-                
+
                 stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
-                
+
                 if stable_count == 0:
                     stable_shift_applied = 0
                 else:
                     stable_shift_applied = 1
-                
+
                 if stable_shift_applied == 1:
                     temp = DX.copy() - DXref.copy()
                     temp[np.logical_not(SSM)] = np.nan
                     dx_mean_shift = np.median(temp[(temp > -5)&(temp < 5)])
                     DX = DX - dx_mean_shift
-                    
+
                     temp = DY.copy() - DYref.copy()
                     temp[np.logical_not(SSM)] = np.nan
                     dy_mean_shift = np.median(temp[(temp > -5)&(temp < 5)])
@@ -643,7 +667,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 else:
                     dx_mean_shift = 0.0
                     dy_mean_shift = 0.0
-                
+
                 VX = offset2vx_1 * DX + offset2vx_2 * DY
                 VY = offset2vy_1 * DX + offset2vy_2 * DY
                 VX = VX.astype(np.float32)
@@ -652,12 +676,19 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
             ########################################################################################
                 ############   netCDF packaging for Sentinel and Landsat dataset; can add other sensor format as well
                 if nc_sensor == "S":
-
-                    rangePixelSize = float(str.split(runCmd('fgrep "Ground range pixel size:" testGeogrid.txt'))[4])
-                    azimuthPixelSize = float(str.split(runCmd('fgrep "Azimuth pixel size:" testGeogrid.txt'))[3])
-                    dt = float(str.split(runCmd('fgrep "Repeat Time:" testGeogrid.txt'))[2])
-                    epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
-    #                print (str(rangePixelSize)+"      "+str(azimuthPixelSize))
+                    if geogrid_run_info is None:
+                        chipsizex0 = float(str.split(runCmd('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
+                        rangePixelSize = float(str.split(runCmd('fgrep "Ground range pixel size:" testGeogrid.txt'))[4])
+                        azimuthPixelSize = float(str.split(runCmd('fgrep "Azimuth pixel size:" testGeogrid.txt'))[3])
+                        dt = float(str.split(runCmd('fgrep "Repeat Time:" testGeogrid.txt'))[2])
+                        epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
+                        #  print (str(rangePixelSize)+"      "+str(azimuthPixelSize))
+                    else:
+                        chipsizex0 = geogrid_run_info['chipsizex0']
+                        rangePixelSize = geogrid_run_info['XPixelSize']
+                        azimuthPixelSize = geogrid_run_info['YPixelSize']
+                        dt = geogrid_run_info['dt']
+                        epsg = geogrid_run_info['epsg']
 
                     runCmd('topsinsar_filename.py')
     #                import scipy.io as sio
@@ -676,8 +707,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
     #                out_nc_filename = 'Jakobshavn.nc'
                     PPP = roi_valid_percentage * 100
-                    out_nc_filename = master_filename[0:-4]+'_X_'+slave_filename[0:-4]+'_G0240V02_P{0}{1}{2}.nc'.format(int(PPP/10),int((PPP-int(PPP/10)*10)),int((PPP-int(PPP/10)*10-int((PPP-int(PPP/10)*10)))*10))
-                    out_nc_filename = './' + out_nc_filename
+                    out_nc_filename = f"./{master_filename[0:-4]}_X_{slave_filename[0:-4]}" \
+                                      f"_G{chipsizex0:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
 
@@ -693,19 +724,30 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     else:
                         date_ct = d0 + (d1 - d0)/2
                         date_center = date_ct.strftime("%Y%m%d")
-                
+
                     IMG_INFO_DICT = {'mission_img1':master_split[0][0],'sensor_img1':'C','satellite_img1':master_split[0][1:3],'acquisition_img1':master_dt,'absolute_orbit_number_img1':master_split[7],'mission_data_take_ID_img1':master_split[8],'product_unique_ID_img1':master_split[9][0:4],'mission_img2':slave_split[0][0],'sensor_img2':'C','satellite_img2':slave_split[0][1:3],'acquisition_img2':slave_dt,'absolute_orbit_number_img2':slave_split[7],'mission_data_take_ID_img2':slave_split[8],'product_unique_ID_img2':slave_split[9][0:4],'date_dt':date_dt,'date_center':date_center,'roi_valid_percentage':roi_valid_percentage,'autoRIFT_software_version':version}
-                    
                     error_vector = np.array([[0.0356, 0.0501, 0.0266, 0.0622, 0.0357, 0.0501],
                                              [0.5194, 1.1638, 0.3319, 1.3701, 0.5191, 1.1628]])
 
-                    no.netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SX, SY, offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, MM, VXref, VYref, rangePixelSize, azimuthPixelSize, dt, epsg, srs, tran, out_nc_filename, pair_type, detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_shift_applied, dx_mean_shift, dy_mean_shift, error_vector)
+                    netcdf_file = no.netCDF_packaging(
+                        VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SX, SY,
+                        offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, MM, VXref, VYref,
+                        rangePixelSize, azimuthPixelSize, dt, epsg, srs, tran, out_nc_filename, pair_type,
+                        detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_shift_applied,
+                        dx_mean_shift, dy_mean_shift, error_vector
+                    )
 
                 elif nc_sensor == "L":
-
-                    XPixelSize = float(str.split(runCmd('fgrep "X-direction pixel size:" testGeogrid.txt'))[3])
-                    YPixelSize = float(str.split(runCmd('fgrep "Y-direction pixel size:" testGeogrid.txt'))[3])
-                    epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
+                    if geogrid_run_info is None:
+                        chipsizex0 = float(str.split(runCmd('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
+                        XPixelSize = float(str.split(runCmd('fgrep "X-direction pixel size:" testGeogrid.txt'))[3])
+                        YPixelSize = float(str.split(runCmd('fgrep "Y-direction pixel size:" testGeogrid.txt'))[3])
+                        epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
+                    else:
+                        chipsizex0 = geogrid_run_info['chipsizex0']
+                        XPixelSize = geogrid_run_info['XPixelSize']
+                        YPixelSize = geogrid_run_info['YPixelSize']
+                        epsg = geogrid_run_info['epsg']
 
                     master_path = indir_m
                     slave_path = indir_s
@@ -713,10 +755,10 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     import os
                     master_filename = os.path.basename(master_path)
                     slave_filename = os.path.basename(slave_path)
-                    
+
                     master_split = str.split(master_filename,'_')
                     slave_split = str.split(slave_filename,'_')
-                    
+
 #                    master_MTL_path = master_path[:-6]+'MTL.txt'
 #                    slave_MTL_path = slave_path[:-6]+'MTL.txt'
 #
@@ -724,11 +766,11 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 #                    slave_time = str.split(str.split(runCmd('fgrep "SCENE_CENTER_TIME" '+slave_MTL_path))[2][1:-2],':')
                     master_time = ['00','00','00']
                     slave_time = ['00','00','00']
-                    
+
                     from datetime import time as time1
                     master_time = time1(int(master_time[0]),int(master_time[1]),int(float(master_time[2])))
                     slave_time = time1(int(slave_time[0]),int(slave_time[1]),int(float(slave_time[2])))
-                    
+
                     import netcdf_output as no
                     pair_type = 'optical'
                     detection_method = 'feature'
@@ -736,8 +778,9 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
     #                out_nc_filename = 'Jakobshavn_opt.nc'
                     PPP = roi_valid_percentage * 100
-                    out_nc_filename = master_filename[0:-8]+'_X_'+slave_filename[0:-8]+'_G0240V02_P{0}{1}{2}.nc'.format(int(PPP/10),int((PPP-int(PPP/10)*10)),int((PPP-int(PPP/10)*10-int((PPP-int(PPP/10)*10)))*10))
-                    out_nc_filename = './' + out_nc_filename
+                    out_nc_filename = f"./{master_filename[0:-7]}_X_{slave_filename[0:-7]}" \
+                                      f"_G{chipsizex0:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
+
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
                     from datetime import date
@@ -751,21 +794,33 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     else:
                         date_ct = d0 + (d1 - d0)/2
                         date_center = date_ct.strftime("%Y%m%d")
-                    
+
                     master_dt = master_split[3][0:8] + master_time.strftime("T%H:%M:%S")
                     slave_dt = slave_split[3][0:8] + slave_time.strftime("T%H:%M:%S")
 
                     IMG_INFO_DICT = {'mission_img1':master_split[0][0],'sensor_img1':master_split[0][1],'satellite_img1':np.float64(master_split[0][2:4]),'correction_level_img1':master_split[1],'path_img1':np.float64(master_split[2][0:3]),'row_img1':np.float64(master_split[2][3:6]),'acquisition_date_img1':master_dt,'processing_date_img1':master_split[4][0:8],'collection_number_img1':np.float64(master_split[5]),'collection_category_img1':master_split[6],'mission_img2':slave_split[0][0],'sensor_img2':slave_split[0][1],'satellite_img2':np.float64(slave_split[0][2:4]),'correction_level_img2':slave_split[1],'path_img2':np.float64(slave_split[2][0:3]),'row_img2':np.float64(slave_split[2][3:6]),'acquisition_date_img2':slave_dt,'processing_date_img2':slave_split[4][0:8],'collection_number_img2':np.float64(slave_split[5]),'collection_category_img2':slave_split[6],'date_dt':date_dt,'date_center':date_center,'roi_valid_percentage':roi_valid_percentage,'autoRIFT_software_version':version}
-                    
+
                     error_vector = np.array([57.,57.])
-                    
-                    no.netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SX, SY, offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, MM, VXref, VYref, XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type, detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_shift_applied, dx_mean_shift, dy_mean_shift, error_vector)
+
+                    netcdf_file = no.netCDF_packaging(
+                        VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SX, SY,
+                        offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, MM, VXref, VYref,
+                        XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type,
+                        detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_shift_applied,
+                        dx_mean_shift, dy_mean_shift, error_vector
+                    )
 
                 elif nc_sensor == "S2":
-
-                    XPixelSize = float(str.split(runCmd('fgrep "X-direction pixel size:" testGeogrid.txt'))[3])
-                    YPixelSize = float(str.split(runCmd('fgrep "Y-direction pixel size:" testGeogrid.txt'))[3])
-                    epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
+                    if geogrid_run_info is None:
+                        chipsizex0 = float(str.split(runCmd('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
+                        XPixelSize = float(str.split(runCmd('fgrep "X-direction pixel size:" testGeogrid.txt'))[3])
+                        YPixelSize = float(str.split(runCmd('fgrep "Y-direction pixel size:" testGeogrid.txt'))[3])
+                        epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
+                    else:
+                        chipsizex0 = geogrid_run_info['chipsizex0']
+                        XPixelSize = geogrid_run_info['XPixelSize']
+                        YPixelSize = geogrid_run_info['YPixelSize']
+                        epsg = geogrid_run_info['epsg']
 
                     master_path = indir_m
                     slave_path = indir_s
@@ -774,27 +829,27 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     slave_split = slave_path.split('_')
 
                     import os
-                    
+
                     master_filename = master_split[0][-3:]+'_'+master_split[2]+'_'+master_split[4][:3]+'_'+os.path.basename(master_path)
                     slave_filename = slave_split[0][-3:]+'_'+slave_split[2]+'_'+slave_split[4][:3]+'_'+os.path.basename(slave_path)
-                    
+
                     master_time = ['00','00','00']
                     slave_time = ['00','00','00']
-                    
+
                     from datetime import time as time1
                     master_time = time1(int(master_time[0]),int(master_time[1]),int(float(master_time[2])))
                     slave_time = time1(int(slave_time[0]),int(slave_time[1]),int(float(slave_time[2])))
-                    
+
                     import netcdf_output as no
                     pair_type = 'optical'
                     detection_method = 'feature'
                     coordinates = 'map'
                     roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
                     PPP = roi_valid_percentage * 100
-                    out_nc_filename = master_filename[0:-8]+'_X_'+slave_filename[0:-8]+'_G0240V02_P{0}{1}{2}.nc'.format(int(PPP/10),int((PPP-int(PPP/10)*10)),int((PPP-int(PPP/10)*10-int((PPP-int(PPP/10)*10)))*10))
-                    out_nc_filename = './' + out_nc_filename
+                    out_nc_filename = f"./{master_filename[0:-8]}_X_{slave_filename[0:-8]}" \
+                                      f"_G{chipsizex0:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
-                    
+
                     from datetime import date
                     d0 = date(np.int(master_split[2][0:4]),np.int(master_split[2][4:6]),np.int(master_split[2][6:8]))
                     d1 = date(np.int(slave_split[2][0:4]),np.int(slave_split[2][4:6]),np.int(slave_split[2][6:8]))
@@ -806,15 +861,21 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     else:
                         date_ct = d0 + (d1 - d0)/2
                         date_center = date_ct.strftime("%Y%m%d")
-            
+
                     master_dt = master_split[2] + master_time.strftime("T%H:%M:%S")
                     slave_dt = slave_split[2] + slave_time.strftime("T%H:%M:%S")
-                    
+
                     IMG_INFO_DICT = {'mission_img1':master_split[0][-3],'satellite_img1':master_split[0][-2:],'correction_level_img1':master_split[4][:3],'acquisition_date_img1':master_dt,'mission_img2':slave_split[0][-3],'satellite_img2':slave_split[0][-2:],'correction_level_img2':slave_split[4][:3],'acquisition_date_img2':slave_dt,'date_dt':date_dt,'date_center':date_center,'roi_valid_percentage':roi_valid_percentage,'autoRIFT_software_version':version}
-                    
+
                     error_vector = np.array([57.,57.])
-                    
-                    no.netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SX, SY, offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, MM, VXref, VYref, XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type, detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_shift_applied, dx_mean_shift, dy_mean_shift, error_vector)
+
+                    netcdf_file = no.netCDF_packaging(
+                        VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SX, SY,
+                        offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, MM, VXref, VYref,
+                        XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type,
+                        detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_shift_applied,
+                        dx_mean_shift, dy_mean_shift, error_vector
+                    )
 
                 elif nc_sensor is None:
                     print('netCDF packaging not performed')
@@ -824,6 +885,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
         print("Write Outputs Done!!!")
         print(time.time()-t1)
+
+    return netcdf_file
 
 
 if __name__ == '__main__':

@@ -50,11 +50,11 @@ class GeogridOptical():
         ##Determine appropriate EPSG system
         self.epsgDem = self.getProjectionSystem(self.demname)
         self.epsgDat = self.getProjectionSystem(self.dat1name)
-        
+
         ###Determine extent of data needed
         bbox = self.determineBbox()
 
-        
+
         ##Run
         self.geogrid()
 
@@ -102,7 +102,7 @@ class GeogridOptical():
         import numpy as np
         import datetime
         from osgeo import osr
-        
+
 #        import pdb
 #        pdb.set_trace()
 
@@ -115,18 +115,18 @@ class GeogridOptical():
             coordDat.ImportFromEPSG(self.epsgDat)
         else:
             raise Exception('EPSG code does not exist for image data')
-    
+
 
         coordDem = osr.SpatialReference()
         if self.epsgDem:
             coordDem.ImportFromEPSG(self.epsgDem)
         else:
             raise Exception('EPSG code does not exist for DEM')
-        
-        
+
+
         trans = osr.CoordinateTransformation(coordDat, coordDem)
-        
-        
+
+
 
         utms = []
         xyzs = []
@@ -145,21 +145,21 @@ class GeogridOptical():
 
         self._xlim = [np.min(xyzs[:,0]), np.max(xyzs[:,0])]
         self._ylim = [np.min(xyzs[:,1]), np.max(xyzs[:,1])]
-                
-                
-                
-    
-    
+
+
+
+
+
 
     def geogrid(self):
-        
+
         #   For now print inputs that were obtained
 
         print("\nOptical Image parameters: ")
         print("X-direction coordinate: " + str(self.startingX) + "  " + str(self.XSize))
         print("Y-direction coordinate: " + str(self.startingY) + "  " + str(self.YSize))
         print("Dimensions: " + str(self.numberOfSamples) + "  " + str(self.numberOfLines) + "\n")
-        
+
         print("Map inputs: ")
         print("EPSG: " + str(self.epsgDem))
         print("Smallest Allowable Chip Size in m: " + str(self.chipSizeX0))
@@ -190,10 +190,10 @@ class GeogridOptical():
         if (self.dhdxname != ""):
             if (self.vxname != ""):
                 print("Window offsets: " + str(self.winoffname))
-            
+
             print("Window rdr_off2vel_x vector: " + str(self.winro2vxname))
             print("Window rdr_off2vel_y vector: " + str(self.winro2vyname))
-            
+
             if (self.srxname != ""):
                 print("Window search range: " + str(self.winsrname))
 
@@ -206,53 +206,53 @@ class GeogridOptical():
 
         print("Output Nodata Value: " + str(self.nodata_out) + "\n")
 
-        
-        
+
+
         print("Starting processing .... ")
-        
-        
-        
-        
+
+
+
+
         from osgeo import gdal, osr
         import numpy as np
         import struct
-        
+
 #        pdb.set_trace()
 
         demDS = gdal.Open(self.demname, gdal.GA_ReadOnly)
-        
+
         if (self.dhdxname != ""):
             sxDS = gdal.Open(self.dhdxname, gdal.GA_ReadOnly)
             syDS = gdal.Open(self.dhdyname, gdal.GA_ReadOnly)
-        
+
         if (self.vxname != ""):
             vxDS = gdal.Open(self.vxname, gdal.GA_ReadOnly)
             vyDS = gdal.Open(self.vyname, gdal.GA_ReadOnly)
-        
+
         if (self.srxname != ""):
             srxDS = gdal.Open(self.srxname, gdal.GA_ReadOnly)
             sryDS = gdal.Open(self.sryname, gdal.GA_ReadOnly)
-        
+
         if (self.csminxname != ""):
             csminxDS = gdal.Open(self.csminxname, gdal.GA_ReadOnly)
             csminyDS = gdal.Open(self.csminyname, gdal.GA_ReadOnly)
-        
+
         if (self.csmaxxname != ""):
             csmaxxDS = gdal.Open(self.csmaxxname, gdal.GA_ReadOnly)
             csmaxyDS = gdal.Open(self.csmaxyname, gdal.GA_ReadOnly)
-        
+
         if (self.ssmname != ""):
             ssmDS = gdal.Open(self.ssmname, gdal.GA_ReadOnly)
-        
+
         if demDS is None:
             raise Exception('Error opening DEM file {0}'.format(self.demname))
-    
+
         if (self.dhdxname != ""):
             if (sxDS is None):
                 raise Exception('Error opening x-direction slope file {0}'.format(self.dhdxname))
             if (syDS is None):
                 raise Exception('Error opening y-direction slope file {0}'.format(self.dhdyname))
-        
+
         if (self.vxname != ""):
             if (vxDS is None):
                 raise Exception('Error opening x-direction velocity file {0}'.format(self.vxname))
@@ -276,7 +276,7 @@ class GeogridOptical():
                 raise Exception('Error opening x-direction chip size max file {0}'.format(self.csmaxxname))
             if (csmaxyDS is None):
                 raise Exception('Error opening y-direction chip size max file {0}'.format(self.csmaxyname))
-        
+
         if (self.ssmname != ""):
             if (ssmDS is None):
                 raise Exception('Error opening stable surface mask file {0}'.format(self.ssmname))
@@ -284,8 +284,8 @@ class GeogridOptical():
         geoTrans = demDS.GetGeoTransform()
         demXSize = demDS.RasterXSize
         demYSize = demDS.RasterYSize
-    
-    
+
+
         #        Get offsets and size to read from DEM
         lOff = int(np.max( [np.floor((self._ylim[1] - geoTrans[3])/geoTrans[5]), 0.]))
 #        pdb.set_trace()
@@ -297,26 +297,30 @@ class GeogridOptical():
         print("Xlimits : " + str(geoTrans[0] + pOff * geoTrans[1]) +  "  " + str(geoTrans[0] + (pOff + pCount) * geoTrans[1]))
 
         print("Ylimits : " + str(geoTrans[3] + (lOff + lCount) * geoTrans[5]) +  "  " + str(geoTrans[3] + lOff * geoTrans[5]))
-    
+
         print("Origin index (in DEM) of geogrid: " + str(pOff) + "   " + str(lOff))
-        
+        self.pOff = pOff
+        self.lOff = lOff
+
         print("Dimensions of geogrid: " + str(pCount) + " x " + str(lCount))
-                
+        self.pCount = pCount
+        self.lCount = lCount
+
         projDem = osr.SpatialReference()
         if self.epsgDem:
             projDem.ImportFromEPSG(self.epsgDem)
         else:
             raise Exception('EPSG code does not exist for DEM')
-    
+
         projDat = osr.SpatialReference()
         if self.epsgDat:
             projDat.ImportFromEPSG(self.epsgDat)
         else:
             raise Exception('EPSG code does not exist for image data')
-    
+
         fwdTrans = osr.CoordinateTransformation(projDem, projDat)
         invTrans = osr.CoordinateTransformation(projDat, projDem)
-            
+
         if (self.vxname != ""):
             nodata = vxDS.GetRasterBand(1).GetNoDataValue()
         else:
@@ -352,12 +356,12 @@ class GeogridOptical():
             poDriverOff = gdal.GetDriverByName(pszFormat)
             if( poDriverOff is None ):
                 raise Exception('Cannot create gdal driver for output')
-            
+
             pszDstFilenameOff = self.winoffname
             poDstDSOff = poDriverOff.Create(pszDstFilenameOff, xsize=pCount, ysize=lCount, bands=2, eType=gdal.GDT_Int32)
             poDstDSOff.SetGeoTransform( adfGeoTransform )
             poDstDSOff.SetProjection( pszSRS_WKT )
-            
+
             poBand1Off = poDstDSOff.GetRasterBand(1)
             poBand2Off = poDstDSOff.GetRasterBand(2)
             poBand1Off.SetNoDataValue(nodata_out)
@@ -368,12 +372,12 @@ class GeogridOptical():
             poDriverSch = gdal.GetDriverByName(pszFormat)
             if( poDriverSch is None ):
                 raise Exception('Cannot create gdal driver for output')
-            
+
             pszDstFilenameSch = self.winsrname
             poDstDSSch = poDriverSch.Create(pszDstFilenameSch, xsize=pCount, ysize=lCount, bands=2, eType=gdal.GDT_Int32)
             poDstDSSch.SetGeoTransform( adfGeoTransform )
             poDstDSSch.SetProjection( pszSRS_WKT )
-            
+
             poBand1Sch = poDstDSSch.GetRasterBand(1)
             poBand2Sch = poDstDSSch.GetRasterBand(2)
             poBand1Sch.SetNoDataValue(nodata_out)
@@ -383,27 +387,27 @@ class GeogridOptical():
             poDriverMin = gdal.GetDriverByName(pszFormat)
             if( poDriverMin is None ):
                 raise Exception('Cannot create gdal driver for output')
-            
+
             pszDstFilenameMin = self.wincsminname
             poDstDSMin = poDriverMin.Create(pszDstFilenameMin, xsize=pCount, ysize=lCount, bands=2, eType=gdal.GDT_Int32)
             poDstDSMin.SetGeoTransform( adfGeoTransform )
             poDstDSMin.SetProjection( pszSRS_WKT )
-            
+
             poBand1Min = poDstDSMin.GetRasterBand(1)
             poBand2Min = poDstDSMin.GetRasterBand(2)
             poBand1Min.SetNoDataValue(nodata_out)
             poBand2Min.SetNoDataValue(nodata_out)
-        
+
         if (self.csmaxxname != ""):
             poDriverMax = gdal.GetDriverByName(pszFormat)
             if( poDriverMax is None ):
                 raise Exception('Cannot create gdal driver for output')
-            
+
             pszDstFilenameMax = self.wincsmaxname
             poDstDSMax = poDriverMax.Create(pszDstFilenameMax, xsize=pCount, ysize=lCount, bands=2, eType=gdal.GDT_Int32)
             poDstDSMax.SetGeoTransform( adfGeoTransform )
             poDstDSMax.SetProjection( pszSRS_WKT )
-            
+
             poBand1Max = poDstDSMax.GetRasterBand(1)
             poBand2Max = poDstDSMax.GetRasterBand(2)
             poBand1Max.SetNoDataValue(nodata_out)
@@ -414,12 +418,12 @@ class GeogridOptical():
             poDriverMsk = gdal.GetDriverByName(pszFormat)
             if( poDriverMsk is None ):
                 raise Exception('Cannot create gdal driver for output')
-            
+
             pszDstFilenameMsk = self.winssmname
             poDstDSMsk = poDriverMsk.Create(pszDstFilenameMsk, xsize=pCount, ysize=lCount, bands=1, eType=gdal.GDT_Int32)
             poDstDSMsk.SetGeoTransform( adfGeoTransform )
             poDstDSMsk.SetProjection( pszSRS_WKT )
-            
+
             poBand1Msk = poDstDSMsk.GetRasterBand(1)
             poBand1Msk.SetNoDataValue(nodata_out)
 
@@ -430,12 +434,12 @@ class GeogridOptical():
             poDriverRO2VX = gdal.GetDriverByName(pszFormat)
             if( poDriverRO2VX is None ):
                 raise Exception('Cannot create gdal driver for output')
-            
+
             pszDstFilenameRO2VX = self.winro2vxname
             poDstDSRO2VX = poDriverRO2VX.Create(pszDstFilenameRO2VX, xsize=pCount, ysize=lCount, bands=2, eType=gdal.GDT_Float64)
             poDstDSRO2VX.SetGeoTransform( adfGeoTransform )
             poDstDSRO2VX.SetProjection( pszSRS_WKT )
-            
+
             poBand1RO2VX = poDstDSRO2VX.GetRasterBand(1)
             poBand2RO2VX = poDstDSRO2VX.GetRasterBand(2)
             poBand1RO2VX.SetNoDataValue(nodata_out)
@@ -445,12 +449,12 @@ class GeogridOptical():
             poDriverRO2VY = gdal.GetDriverByName(pszFormat)
             if( poDriverRO2VY is None ):
                 raise Exception('Cannot create gdal driver for output')
-            
+
             pszDstFilenameRO2VY = self.winro2vyname
             poDstDSRO2VY = poDriverRO2VY.Create(pszDstFilenameRO2VY, xsize=pCount, ysize=lCount, bands=2, eType=gdal.GDT_Float64)
             poDstDSRO2VY.SetGeoTransform( adfGeoTransform )
             poDstDSRO2VY.SetProjection( pszSRS_WKT )
-            
+
             poBand1RO2VY = poDstDSRO2VY.GetRasterBand(1)
             poBand2RO2VY = poDstDSRO2VY.GetRasterBand(2)
             poBand1RO2VY.SetNoDataValue(nodata_out)
@@ -474,18 +478,20 @@ class GeogridOptical():
         raster2a = np.zeros(pCount,dtype=np.float64)
         raster2b = np.zeros(pCount,dtype=np.float64)
 
-        
-        
+
+
         #   X- and Y-direction pixel size
         X_res = np.abs(self.XSize)
         Y_res = np.abs(self.YSize)
         print("X-direction pixel size: " + str(X_res))
         print("Y-direction pixel size: " + str(Y_res))
-        
+        self.X_res = X_res
+        self.Y_res = Y_res
+
         ChipSizeX0_PIX_X = np.ceil(self.chipSizeX0 / X_res / 4) * 4
         ChipSizeX0_PIX_Y = np.ceil(self.chipSizeX0 / Y_res / 4) * 4
-        
-        
+
+
 
 
 
@@ -493,31 +499,31 @@ class GeogridOptical():
             y = geoTrans[3] + (lOff+ii+0.5) * geoTrans[5]
             demLine = demDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
             demLine = struct.unpack('d' * pCount, demLine)
-            
+
             if (self.dhdxname != ""):
                 sxLine = sxDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
                 sxLine = struct.unpack('d' * pCount, sxLine)
                 syLine = syDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
                 syLine = struct.unpack('d' * pCount, syLine)
-            
+
             if (self.vxname != ""):
                 vxLine = vxDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
                 vxLine = struct.unpack('d' * pCount, vxLine)
                 vyLine = vyDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
                 vyLine = struct.unpack('d' * pCount, vyLine)
-            
+
             if (self.srxname != ""):
                 srxLine = srxDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
                 srxLine = struct.unpack('d' * pCount, srxLine)
                 sryLine = sryDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
                 sryLine = struct.unpack('d' * pCount, sryLine)
-            
+
             if (self.csminxname != ""):
                 csminxLine = csminxDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
                 csminxLine = struct.unpack('d' * pCount, csminxLine)
                 csminyLine = csminyDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
                 csminyLine = struct.unpack('d' * pCount, csminyLine)
-            
+
             if (self.csmaxxname != ""):
                 csmaxxLine = csmaxxDS.GetRasterBand(1).ReadRaster(xoff=pOff, yoff=lOff+ii, xsize=pCount, ysize=1, buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
                 csmaxxLine = struct.unpack('d' * pCount, csmaxxLine)
@@ -543,13 +549,13 @@ class GeogridOptical():
                 targutm0 = np.array(fwdTrans.TransformPoint(targxyz0[0],targxyz0[1],targxyz0[2]))
                 xind = np.round((targutm0[0] - self.startingX) / self.XSize) + 1.
                 yind = np.round((targutm0[1] - self.startingY) / self.YSize) + 1.
-                
+
                 #   x-direction vector
                 targutm = targutm0.copy()
                 targutm[0] = targutm0[0] + self.XSize
                 targxyz = np.array(invTrans.TransformPoint(targutm[0],targutm[1],targutm[2]))
                 xunit = (targxyz-targxyz0) / np.linalg.norm(targxyz-targxyz0)
-                    
+
                 #   y-direction vector
                 targutm = targutm0.copy()
                 targutm[1] = targutm0[1] + self.YSize
@@ -568,7 +574,7 @@ class GeogridOptical():
                 if (self.srxname != ""):
                     schrng1[2] = -(schrng1[0]*normal[0]+schrng1[1]*normal[1])/normal[2]
                     schrng2[2] = -(schrng2[0]*normal[0]+schrng2[1]*normal[1])/normal[2]
-                    
+
 
 
                 if ((xind > self.numberOfSamples)|(xind < 1)|(yind > self.numberOfLines)|(yind < 1)):
@@ -577,7 +583,7 @@ class GeogridOptical():
                     raster2[jj] = nodata_out
                     raster11[jj] = nodata_out
                     raster22[jj] = nodata_out
-                    
+
                     sr_raster11[jj] = nodata_out
                     sr_raster22[jj] = nodata_out
                     csmin_raster11[jj] = nodata_out
@@ -585,7 +591,7 @@ class GeogridOptical():
                     csmax_raster11[jj] = nodata_out
                     csmax_raster22[jj] = nodata_out
                     ssm_raster[jj] = nodata_out
-                    
+
                     raster1a[jj] = nodata_out
                     raster1b[jj] = nodata_out
                     raster2a[jj] = nodata_out
@@ -614,7 +620,7 @@ class GeogridOptical():
                         cross = np.cross(xunit,yunit)
                         cross = cross / np.linalg.norm(cross)
                         cross_check = np.abs(np.arccos(np.dot(normal,cross))/np.pi*180.0-90.0)
-                        
+
                         if (cross_check > 1.0):
                             raster1a[jj] = normal[2]/(self.repeatTime/self.XSize/365.0/24.0/3600.0)*(normal[2]*yunit[1]-normal[1]*yunit[2])/((normal[2]*xunit[0]-normal[0]*xunit[2])*(normal[2]*yunit[1]-normal[1]*yunit[2])-(normal[2]*yunit[0]-normal[0]*yunit[2])*(normal[2]*xunit[1]-normal[1]*xunit[2]));
                             raster1b[jj] = -normal[2]/(self.repeatTime/self.YSize/365.0/24.0/3600.0)*(normal[2]*xunit[1]-normal[1]*xunit[2])/((normal[2]*xunit[0]-normal[0]*xunit[2])*(normal[2]*yunit[1]-normal[1]*yunit[2])-(normal[2]*yunit[0]-normal[0]*yunit[2])*(normal[2]*xunit[1]-normal[1]*xunit[2]));
@@ -662,7 +668,7 @@ class GeogridOptical():
 
 
 #            pdb.set_trace()
-            
+
             poBand1.WriteRaster(xoff=0, yoff=ii, xsize=pCount, ysize=1, buf_len=raster1.tostring(), buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Int32)
             poBand2.WriteRaster(xoff=0, yoff=ii, xsize=pCount, ysize=1, buf_len=raster2.tostring(), buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Int32)
             if ((self.dhdxname != "")&(self.vxname != "")):
@@ -685,7 +691,7 @@ class GeogridOptical():
                 poBand1RO2VY.WriteRaster(xoff=0, yoff=ii, xsize=pCount, ysize=1, buf_len=raster2a.tostring(), buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
                 poBand2RO2VY.WriteRaster(xoff=0, yoff=ii, xsize=pCount, ysize=1, buf_len=raster2b.tostring(), buf_xsize=pCount, buf_ysize=1, buf_type=gdal.GDT_Float64)
 
-        
+
         poDstDS = None
         if ((self.dhdxname != "")&(self.vxname != "")):
             poDstDSOff = None
@@ -699,23 +705,23 @@ class GeogridOptical():
             poDstDSMsk = None
         if (self.dhdxname != ""):
             poDstDSRO2VX = None
-        
+
             poDstDSRO2VY = None
-    
+
         demDS = None
-        
+
         if (self.dhdxname != ""):
             sxDS = None
             syDS = None
-        
+
         if (self.vxname != ""):
             vxDS = None
             vyDS = None
-                
+
         if (self.srxname != ""):
             srxDS = None
             sryDS = None
-    
+
         if (self.csminxname != ""):
             csminxDS = None
             csminyDS = None
@@ -723,7 +729,7 @@ class GeogridOptical():
         if (self.csmaxxname != ""):
             csmaxxDS = None
             csmaxyDS = None
-                
+
         if (self.ssmname != ""):
             ssmDS = None
 
@@ -735,7 +741,7 @@ class GeogridOptical():
     def coregister(self,in1,in2):
         import os
         import numpy as np
-        
+
         from osgeo import gdal, osr
         import struct
 
@@ -748,22 +754,22 @@ class GeogridOptical():
         trans2 = DS2.GetGeoTransform()
         xsize2 = DS2.RasterXSize
         ysize2 = DS2.RasterYSize
-        
+
         W = np.max([trans1[0],trans2[0]])
         N = np.min([trans1[3],trans2[3]])
         E = np.min([trans1[0]+xsize1*trans1[1],trans2[0]+xsize2*trans2[1]])
         S = np.max([trans1[3]+ysize1*trans1[5],trans2[3]+ysize2*trans2[5]])
-        
+
         x1a = int(np.round((W-trans1[0])/trans1[1]))
         x1b = int(np.round((E-trans1[0])/trans1[1]))
         y1a = int(np.round((N-trans1[3])/trans1[5]))
         y1b = int(np.round((S-trans1[3])/trans1[5]))
-        
+
         x2a = int(np.round((W-trans2[0])/trans2[1]))
         x2b = int(np.round((E-trans2[0])/trans2[1]))
         y2a = int(np.round((N-trans2[3])/trans2[5]))
         y2b = int(np.round((S-trans2[3])/trans2[5]))
-        
+
         x1a = np.min([x1a, xsize1-1])
         x1b = np.min([x1b, xsize1-1])
         y1a = np.min([y1a, ysize1-1])
@@ -772,7 +778,7 @@ class GeogridOptical():
         x2b = np.min([x2b, xsize2-1])
         y2a = np.min([y2a, ysize2-1])
         y2b = np.min([y2b, ysize2-1])
-        
+
         x1a = np.max([x1a, 0])
         x1b = np.max([x1b, 0])
         y1a = np.max([y1a, 0])
@@ -781,7 +787,7 @@ class GeogridOptical():
         x2b = np.max([x2b, 0])
         y2a = np.max([y2a, 0])
         y2b = np.max([y2b, 0])
-        
+
         x1a = int(x1a)
         x1b = int(x1b)
         y1a = int(y1a)
@@ -798,9 +804,9 @@ class GeogridOptical():
 
 
 
-    
-        
-            
+
+
+
 
     def __init__(self):
         super(GeogridOptical, self).__init__()
@@ -829,7 +835,7 @@ class GeogridOptical():
         self.csmaxxname = None
         self.csmaxyname = None
         self.ssmname = None
-        
+
         ##Output related parameters
         self.winlocname = None
         self.winoffname = None
@@ -847,4 +853,10 @@ class GeogridOptical():
         self._ylim = None
         self.nodata_out = None
 
-
+        ##parameters for autoRIFT
+        self.pOff = None
+        self.lOff = None
+        self.pCount = None
+        self.lCount = None
+        self.X_res = None
+        self.Y_res = None
