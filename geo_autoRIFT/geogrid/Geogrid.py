@@ -65,6 +65,9 @@ class Geogrid(Component):
         
         ##Run
         geogrid.geogrid_Py(self._geogrid)
+        
+        ##Get parameters
+        self.getState()
 
         ##Clean up
         self.finalize()
@@ -213,7 +216,6 @@ class Geogrid(Component):
         
         self.incidenceAngle = np.mean(thetas)
         
-
     def getDEM(self, bbox):
         '''
         Look up database and return values.
@@ -221,6 +223,16 @@ class Geogrid(Component):
         
         return "", "", "", "", ""
 
+    def getState(self):
+        from components.contrib.geo_autoRIFT.geogrid import geogrid
+        
+        self.pOff = geogrid.getXOff_Py(self._geogrid)
+        self.lOff = geogrid.getYOff_Py(self._geogrid)
+        self.pCount = geogrid.getXCount_Py(self._geogrid)
+        self.lCount = geogrid.getYCount_Py(self._geogrid)
+        self.X_res = geogrid.getXPixelSize_Py(self._geogrid)
+        self.Y_res = geogrid.getYPixelSize_Py(self._geogrid)
+    
     def setState(self):
         '''
         Create C object and populate.
@@ -343,3 +355,11 @@ class Geogrid(Component):
         ##Pointer to C 
         self._geogrid = None
         self._orbit = None
+
+        ##parameters for autoRIFT
+        self.pOff = None
+        self.lOff = None
+        self.pCount = None
+        self.lCount = None
+        self.X_res = None
+        self.Y_res = None

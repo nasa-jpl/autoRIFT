@@ -67,6 +67,12 @@ extern "C"
         PyObject * setChipSizeX0(PyObject *, PyObject *);
         PyObject * setXLimits(PyObject *, PyObject *);
         PyObject * setYLimits(PyObject *, PyObject *);
+        PyObject * getXPixelSize(PyObject *, PyObject *);
+        PyObject * getYPixelSize(PyObject *, PyObject *);
+        PyObject * getXOff(PyObject *, PyObject *);
+        PyObject * getYOff(PyObject *, PyObject *);
+        PyObject * getXCount(PyObject *, PyObject *);
+        PyObject * getYCount(PyObject *, PyObject *);
 }
 
 static PyMethodDef geogrid_methods[] =
@@ -93,6 +99,12 @@ static PyMethodDef geogrid_methods[] =
         {"setNodataOut_Py", setNodataOut, METH_VARARGS, " "},
         {"setXLimits_Py", setXLimits, METH_VARARGS, " "},
         {"setYLimits_Py", setYLimits, METH_VARARGS, " "},
+        {"getXPixelSize_Py", getXPixelSize, METH_VARARGS, " "},
+        {"getYPixelSize_Py", getYPixelSize, METH_VARARGS, " "},
+        {"getXOff_Py", getXOff, METH_VARARGS, " "},
+        {"getYOff_Py", getYOff, METH_VARARGS, " "},
+        {"getXCount_Py", getXCount, METH_VARARGS, " "},
+        {"getYCount_Py", getYCount, METH_VARARGS, " "},
         {"setWindowLocationsFilename_Py", setWindowLocationsFilename, METH_VARARGS, " "},
         {"setWindowOffsetsFilename_Py", setWindowOffsetsFilename, METH_VARARGS, " "},
         {"setWindowSearchRangeFilename_Py", setWindowSearchRangeFilename, METH_VARARGS, " "},

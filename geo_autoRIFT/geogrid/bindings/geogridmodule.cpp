@@ -443,6 +443,90 @@ PyObject* setOrbit(PyObject *self, PyObject *args)
     return Py_BuildValue("i", 0);
 }
 
+PyObject* getXOff(PyObject *self, PyObject *args)
+{
+    int var;
+    uint64_t ptr;
+    
+    if (!PyArg_ParseTuple(args, "K", &ptr))
+    {
+        return NULL;
+    }
+    
+    var = ((geoGrid*)(ptr))->pOff;
+    return Py_BuildValue("i",var);
+}
+
+PyObject* getYOff(PyObject *self, PyObject *args)
+{
+    int var;
+    uint64_t ptr;
+    
+    if (!PyArg_ParseTuple(args, "K", &ptr))
+    {
+        return NULL;
+    }
+    
+    var = ((geoGrid*)(ptr))->lOff;
+    return Py_BuildValue("i",var);
+}
+
+PyObject* getXCount(PyObject *self, PyObject *args)
+{
+    int var;
+    uint64_t ptr;
+    
+    if (!PyArg_ParseTuple(args, "K", &ptr))
+    {
+        return NULL;
+    }
+    
+    var = ((geoGrid*)(ptr))->pCount;
+    return Py_BuildValue("i",var);
+}
+
+PyObject* getYCount(PyObject *self, PyObject *args)
+{
+    int var;
+    uint64_t ptr;
+    
+    if (!PyArg_ParseTuple(args, "K", &ptr))
+    {
+        return NULL;
+    }
+    
+    var = ((geoGrid*)(ptr))->lCount;
+    return Py_BuildValue("i",var);
+}
+
+PyObject* getXPixelSize(PyObject *self, PyObject *args)
+{
+    double var;
+    uint64_t ptr;
+    
+    if (!PyArg_ParseTuple(args, "K", &ptr))
+    {
+        return NULL;
+    }
+    
+    var = ((geoGrid*)(ptr))->grd_res;
+    return Py_BuildValue("d",var);
+}
+
+PyObject* getYPixelSize(PyObject *self, PyObject *args)
+{
+    double var;
+    uint64_t ptr;
+    
+    if (!PyArg_ParseTuple(args, "K", &ptr))
+    {
+        return NULL;
+    }
+    
+    var = ((geoGrid*)(ptr))->azm_res;
+    return Py_BuildValue("d",var);
+}
+
 
 PyObject* geogrid(PyObject* self, PyObject* args)
 {

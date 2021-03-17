@@ -284,11 +284,16 @@ void geoGrid::geogrid()
 
 
     //Get offsets and size to read from DEM
-    int lOff = std::max( std::floor((ymax - geoTrans[3])/geoTrans[5]), 0.);
-    int lCount = std::min( std::ceil((ymin - geoTrans[3])/geoTrans[5]), demYSize-1.) - lOff;
-
-    int pOff = std::max( std::floor((xmin - geoTrans[0])/geoTrans[1]), 0.);
-    int pCount = std::min( std::ceil((xmax - geoTrans[0])/geoTrans[1]), demXSize-1.) - pOff;
+//    int lOff = std::max( std::floor((ymax - geoTrans[3])/geoTrans[5]), 0.);
+//    int lCount = std::min( std::ceil((ymin - geoTrans[3])/geoTrans[5]), demYSize-1.) - lOff;
+//
+//    int pOff = std::max( std::floor((xmin - geoTrans[0])/geoTrans[1]), 0.);
+//    int pCount = std::min( std::ceil((xmax - geoTrans[0])/geoTrans[1]), demXSize-1.) - pOff;
+    lOff = std::max( std::floor((ymax - geoTrans[3])/geoTrans[5]), 0.);
+    lCount = std::min( std::ceil((ymin - geoTrans[3])/geoTrans[5]), demYSize-1.) - lOff;
+    
+    pOff = std::max( std::floor((xmin - geoTrans[0])/geoTrans[1]), 0.);
+    pCount = std::min( std::ceil((xmax - geoTrans[0])/geoTrans[1]), demXSize-1.) - pOff;
 
 
     std::cout << "Xlimits : " << geoTrans[0] + pOff * geoTrans[1] <<  "  " 
@@ -648,7 +653,7 @@ void geoGrid::geogrid()
     
     
     // ground range and azimuth pixel size
-    double grd_res, azm_res;
+//    double grd_res, azm_res;
     
 //    double incang = 38.0*deg2rad;
     double incang = incidenceAngle;
