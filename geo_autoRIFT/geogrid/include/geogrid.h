@@ -70,6 +70,8 @@ struct geoGrid
     int lookSide;
     int nodata_out;
     double incidenceAngle;
+    int pOff, lOff, pCount, lCount;
+    double grd_res, azm_res;
 
     //Output file names
     std::string pixlinename;
