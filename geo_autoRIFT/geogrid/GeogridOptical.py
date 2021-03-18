@@ -757,8 +757,8 @@ class GeogridOptical():
 
         W = np.max([trans1[0],trans2[0]])
         N = np.min([trans1[3],trans2[3]])
-        E = np.min([trans1[0]+xsize1*trans1[1],trans2[0]+xsize2*trans2[1]])
-        S = np.max([trans1[3]+ysize1*trans1[5],trans2[3]+ysize2*trans2[5]])
+        E = np.min([trans1[0]+(xsize1-1)*trans1[1],trans2[0]+(xsize2-1)*trans2[1]])
+        S = np.max([trans1[3]+(ysize1-1)*trans1[5],trans2[3]+(ysize2-1)*trans2[5]])
 
         x1a = int(np.round((W-trans1[0])/trans1[1]))
         x1b = int(np.round((E-trans1[0])/trans1[1]))
@@ -769,24 +769,15 @@ class GeogridOptical():
         x2b = int(np.round((E-trans2[0])/trans2[1]))
         y2a = int(np.round((N-trans2[3])/trans2[5]))
         y2b = int(np.round((S-trans2[3])/trans2[5]))
+        
+        if (x1a > (xsize1-1))|(x1b > (xsize1-1))|(x2a > (xsize2-1))|(x2b > (xsize2-1))|(y1a > (ysize1-1))|(y1b > (ysize1-1))|(y2a > (ysize2-1))|(y2b > (ysize2-1)):
+            raise Exception('Uppper bound of coregistered image index should be <= size of image1 (and image2) minus 1')
 
-        x1a = np.min([x1a, xsize1-1])
-        x1b = np.min([x1b, xsize1-1])
-        y1a = np.min([y1a, ysize1-1])
-        y1b = np.min([y1b, ysize1-1])
-        x2a = np.min([x2a, xsize2-1])
-        x2b = np.min([x2b, xsize2-1])
-        y2a = np.min([y2a, ysize2-1])
-        y2b = np.min([y2b, ysize2-1])
+        if (x1a < 0)|(x1b < 0)|(x2a < 0)|(x2b < 0)|(y1a < 0)|(y1b < 0)|(y2a < 0)|(y2b < 0):
+            raise Exception('Lower bound of coregistered image index should be >= 0')
 
-        x1a = np.max([x1a, 0])
-        x1b = np.max([x1b, 0])
-        y1a = np.max([y1a, 0])
-        y1b = np.max([y1b, 0])
-        x2a = np.max([x2a, 0])
-        x2b = np.max([x2b, 0])
-        y2a = np.max([y2a, 0])
-        y2b = np.max([y2b, 0])
+        if ((x1b-x1a) != (x2b-x2a))|((y1b-y1a) != (y2b-y2a)):
+            raise Exception('Coregistered image size mismatch between image1 and image2')
 
         x1a = int(x1a)
         x1b = int(x1b)
