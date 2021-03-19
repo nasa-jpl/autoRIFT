@@ -125,28 +125,28 @@ SPARSE_SEARCH_SAMPLE_RATE = Component.Parameter('sparseSearchSampleRate',
 
 FRAC_VALID = Component.Parameter('FracValid',
         public_name = 'FRAC_VALID',
-        default = 8/25,
+        default = 10/25, #ASG
         type = float,
         mandatory=False,
         doc = 'Fraction of valid displacements')
 
 FRAC_SEARCH = Component.Parameter('FracSearch',
         public_name = 'FRAC_SEARCH',
-        default = 0.25,
+        default = 0.20, #ASG
         type = float,
         mandatory=False,
         doc = 'Fraction of search')
 
 FILT_WIDTH = Component.Parameter('FiltWidth',
         public_name = 'FILT_WIDTH',
-        default = 5,
+        default = 11, #ASG
         type = int,
         mandatory=False,
         doc = 'Disparity Filter width')
 
 ITER = Component.Parameter('Iter',
         public_name = 'ITER',
-        default = 3,
+        default = 3,  #ASG
         type = int,
         mandatory=False,
         doc = 'Number of iterations')
@@ -186,13 +186,6 @@ DATA_TYPE = Component.Parameter('DataType',
          mandatory=False,
          doc = 'Input data type: 0 -> uint8, 1 -> float32')
 
-MULTI_THREAD = Component.Parameter('MultiThread',
-         public_name = 'MULTI_THREAD',
-         default = 0,
-         type = int,
-         mandatory=False,
-         doc = 'Number of Threads; default specified by 0 uses single core and surpasses the multithreading routine')
-
 
 try:
     # Try Autorift within ISCE first
@@ -209,7 +202,7 @@ class autoRIFT_ISCE(autoRIFT, Component):
     '''
     Class for mapping regular geographic grid on radar imagery.
     '''
-    
+
     parameter_list = (WALLIS_FILTER_WIDTH,
                       CHIP_SIZE_MIN_X,
                       CHIP_SIZE_MAX_X,
@@ -230,15 +223,11 @@ class autoRIFT_ISCE(autoRIFT, Component):
                       BUFF_DISTANCE_C,
                       COARSE_COR_CUTOFF,
                       OVER_SAMPLE_RATIO,
-                      DATA_TYPE,
-                      MULTI_THREAD)
-    
-    
-    
+                      DATA_TYPE)
+
+
+
 
     def __init__(self):
-        
+
         super(autoRIFT_ISCE, self).__init__()
-
-        
-
