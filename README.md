@@ -5,7 +5,7 @@
 [![Language](https://img.shields.io/badge/python-3.6%2B-blue.svg)](https://www.python.org/)
 [![Latest version](https://img.shields.io/badge/latest%20version-v1.1.0-yellowgreen.svg)](https://github.com/leiyangleon/autoRIFT/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/leiyangleon/autoRIFT/blob/master/LICENSE)
-[![Citation](https://img.shields.io/badge/DOI-10.5281/zenodo.4426975-blue)](https://doi.org/10.5281/zenodo.4426975)
+[![Citation](https://img.shields.io/badge/DOI-10.3390/rs13040749-blue)](https://doi.org/10.3390/rs13040749)
 
 ### Update Notes:
 
@@ -29,7 +29,7 @@ Copyright (C) 2019 California Institute of Technology.  Government Sponsorship A
 
 Link: https://github.com/leiyangleon/autoRIFT
 
-Citation: https://doi.org/10.5281/zenodo.4426975
+Citation: https://doi.org/10.3390/rs13040749
 
 
 ## 1. Authors
@@ -40,7 +40,11 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 Piyush Agram (JPL/Caltech; piyush.agram@jpl.nasa.gov) set up the installation as a standalone module and further cleaned the code.
 
-Reference: Gardner, A. S., Moholdt, G., Scambos, T., Fahnstock, M., Ligtenberg, S., van den Broeke, M., & Nilsson, J. (2018). Increased West Antarctic and unchanged East Antarctic ice discharge over the last 7 years. The Cryosphere, 12(2), 521–547. https://doi.org/10.5194/tc-12-521-2018
+Reference: 
+
+Gardner, A. S., Moholdt, G., Scambos, T., Fahnstock, M., Ligtenberg, S., van den Broeke, M., & Nilsson, J. (2018). Increased West Antarctic and unchanged East Antarctic ice discharge over the last 7 years. The Cryosphere, 12(2), 521–547. https://doi.org/10.5194/tc-12-521-2018
+
+**[NEW]** Lei, Y., Gardner, A. and Agram, P., 2021. Autonomous Repeat Image Feature Tracking (autoRIFT) and Its Application for Tracking Ice Displacement. Remote Sensing, 13(4), p.749. https://doi.org/10.3390/rs13040749
 
 
 ## 2. Acknowledgement
