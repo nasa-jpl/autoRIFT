@@ -40,11 +40,11 @@ Yang Lei (GPS/Caltech; ylei@caltech.edu) translated it to Python, further optimi
 
 Piyush Agram (JPL/Caltech; piyush.agram@jpl.nasa.gov) set up the installation as a standalone module and further cleaned the code.
 
-Reference: 
+**Reference:** 
 
-Gardner, A. S., Moholdt, G., Scambos, T., Fahnstock, M., Ligtenberg, S., van den Broeke, M., & Nilsson, J. (2018). Increased West Antarctic and unchanged East Antarctic ice discharge over the last 7 years. The Cryosphere, 12(2), 521–547. https://doi.org/10.5194/tc-12-521-2018
+Gardner, A.S., Moholdt, G., Scambos, T., Fahnstock, M., Ligtenberg, S., Broeke, M.V.D. and Nilsson, J., 2018. [**Increased West Antarctic and unchanged East Antarctic ice discharge over the last 7 years.**](https://doi.org/10.5194/tc-12-521-2018) *The Cryosphere*, 12(2), pp.521-547. 
 
-**[NEW]** Lei, Y., Gardner, A. and Agram, P., 2021. Autonomous Repeat Image Feature Tracking (autoRIFT) and Its Application for Tracking Ice Displacement. Remote Sensing, 13(4), p.749. https://doi.org/10.3390/rs13040749
+**[NEW]** Lei, Y., Gardner, A. and Agram, P., 2021. [**Autonomous Repeat Image Feature Tracking (autoRIFT) and Its Application for Tracking Ice Displacement.**](https://doi.org/10.3390/rs13040749) *Remote Sensing*, 13(4), p.749. 
 
 
 ## 2. Acknowledgement
