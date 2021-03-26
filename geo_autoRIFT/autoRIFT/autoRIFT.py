@@ -435,7 +435,7 @@ class autoRIFT:
             ChipSizeYC = np.float32(np.round(ChipSizeXC*self.ScaleChipSizeY/2)*2)
             
             if type(self.OverSampleRatio) is dict:
-                overSampleRatio = self.OverSampleRatio[(ChipSizeUniX[i] / ChipSize0_GridSpacing_oversample_ratio)]
+                overSampleRatio = self.OverSampleRatio[ChipSizeUniX[i]]
             else:
                 overSampleRatio = self.OverSampleRatio
             
