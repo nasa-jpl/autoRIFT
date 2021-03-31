@@ -336,7 +336,7 @@ class autoRIFT:
         
         
         DispFiltC = DISP_FILT()
-        overlap_c = np.max((1 - 4 / ChipSize0_GridSpacing_oversample_ratio,0))
+        overlap_c = np.max((1 - self.sparseSearchSampleRate / ChipSize0_GridSpacing_oversample_ratio,0))
         DispFiltC.FracValid = self.FracValid * (1 - overlap_c) + overlap_c**2
         DispFiltC.FracSearch = self.FracSearch
         DispFiltC.FiltWidth = (self.FiltWidth - 1) * ChipSize0_GridSpacing_oversample_ratio + 1
