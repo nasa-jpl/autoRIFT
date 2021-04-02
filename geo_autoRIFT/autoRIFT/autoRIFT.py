@@ -1402,6 +1402,9 @@ class DISP_FILT:
         
         import numpy as np
         
+        if np.mod(self.FiltWidth,2) == 0:
+            sys.exit('NDC filter width must be an odd number')
+        
         dToleranceX = self.FracValid * self.FiltWidth**2
         dToleranceY = self.FracValid * self.FiltWidth**2
 #        pdb.set_trace()

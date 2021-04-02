@@ -221,19 +221,25 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     if CSMINx0 is not None:
         obj.ChipSizeMaxX = CSMAXx0
         obj.ChipSizeMinX = CSMINx0
+        
         if geogrid_run_info is None:
+            gridspacingx = float(str.split(subprocess.getoutput('fgrep "Grid spacing in m:" testGeogrid.txt'))[-1])
             chipsizex0 = float(str.split(subprocess.getoutput('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
             try:
                 pixsizex = float(str.split(subprocess.getoutput('fgrep "Ground range pixel size:" testGeogrid.txt'))[-1])
             except:
                 pixsizex = float(str.split(subprocess.getoutput('fgrep "X-direction pixel size:" testGeogrid.txt'))[-1])
         else:
+            gridspacingx = geogrid_run_info['gridspacingx']
             chipsizex0 = geogrid_run_info['chipsizex0']
             pixsizex = geogrid_run_info['XPixelSize']
+        
         obj.ChipSize0X = int(np.ceil(chipsizex0/pixsizex/4)*4)
+        obj.GridSpacingX = int(obj.ChipSize0X*gridspacingx/chipsizex0)
+
 #        obj.ChipSize0X = np.min(CSMINx0[CSMINx0!=nodata])
         RATIO_Y2X = CSMINy0/CSMINx0
-        obj.ScaleChipSizeY = np.mean(RATIO_Y2X[(CSMINx0!=nodata)&(CSMINy0!=nodata)])
+        obj.ScaleChipSizeY = np.median(RATIO_Y2X[(CSMINx0!=nodata)&(CSMINy0!=nodata)])
 #        obj.ChipSizeMaxX = obj.ChipSizeMaxX / obj.ChipSizeMaxX * 544
 #        obj.ChipSizeMinX = obj.ChipSizeMinX / obj.ChipSizeMinX * 68
     else:

@@ -56,6 +56,7 @@ void geoGrid::geogrid()
     std::cout << "\nMap inputs: \n";
     std::cout << "EPSG: " << epsgcode << "\n";
     std::cout << "Smallest Allowable Chip Size in m: " << chipSizeX0 << "\n";
+    std::cout << "Grid spacing in m: " << gridSpacingX << "\n";
     std::cout << "Repeat Time: " << dt << "\n";
     std::cout << "XLimits: " << xmin << "  " << xmax << "\n";
     std::cout << "YLimits: " << ymin << "  " << ymax << "\n";

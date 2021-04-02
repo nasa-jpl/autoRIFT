@@ -53,6 +53,7 @@ struct geoGrid
     std::string ssmname;     //Stable surface mask
     int epsgcode;
     double chipSizeX0;
+    double gridSpacingX;
 
     //Bounding box related
     double xmin, xmax;

@@ -252,6 +252,7 @@ class Geogrid(Component):
         geogrid.setEPSG_Py(self._geogrid, self.epsg)
         geogrid.setIncidenceAngle_Py(self._geogrid, self.incidenceAngle)
         geogrid.setChipSizeX0_Py(self._geogrid, self.chipSizeX0)
+        geogrid.setGridSpacingX_Py(self._geogrid, self.gridSpacingX)
         
         geogrid.setXLimits_Py(self._geogrid, self._xlim[0], self._xlim[1])
         geogrid.setYLimits_Py(self._geogrid, self._ylim[0], self._ylim[1])
@@ -319,6 +320,7 @@ class Geogrid(Component):
         self.repeatTime = None
         self.incidenceAngle = None
         self.chipSizeX0 = None
+        self.gridSpacingX = None
 
         ##Input related parameters
         self.demname = None
