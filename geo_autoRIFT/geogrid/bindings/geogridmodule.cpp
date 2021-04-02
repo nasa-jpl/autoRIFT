@@ -116,6 +116,18 @@ PyObject* setChipSizeX0(PyObject *self, PyObject *args)
     return Py_BuildValue("i", 0);
 }
 
+PyObject* setGridSpacingX(PyObject *self, PyObject *args)
+{
+    uint64_t ptr;
+    double gridSpacingX;
+    if (!PyArg_ParseTuple(args, "Kd", &ptr, &gridSpacingX))
+    {
+        return NULL;
+    }
+    ((geoGrid*)(ptr))->gridSpacingX = gridSpacingX;
+    return Py_BuildValue("i", 0);
+}
+
 PyObject* setRepeatTime(PyObject *self, PyObject *args)
 {
     uint64_t ptr;

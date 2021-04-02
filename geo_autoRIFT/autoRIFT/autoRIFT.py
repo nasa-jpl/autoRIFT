@@ -24,9 +24,9 @@
 # authority as may be required before exporting this software to any 'EAR99'
 # embargoed foreign country or citizen of those countries.
 #
-# Author: Yang Lei
+# Author: Yang Lei, Alex S. Gardner
 #
-# Note: this is based on the MATLAB code, "auto-RIFT", written by Alex Gardner,
+# Note: this is based on the MATLAB code, "auto-RIFT", written by Alex S. Gardner,
 #       and has been translated to Python and further optimized.
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -324,6 +324,33 @@ class autoRIFT:
         Dy.fill(np.nan)
 
         Flag = 3
+        
+        
+        if self.ChipSize0X > self.GridSpacingX:
+            if np.mod(self.ChipSize0X,self.GridSpacingX) != 0:
+                sys.exit('when GridSpacing < smallest allowable chip size (ChipSize0), ChipSize0 must be integer multiples of GridSpacing')
+            else:
+                ChipSize0_GridSpacing_oversample_ratio = int(self.ChipSize0X / self.GridSpacingX)
+        else:
+            ChipSize0_GridSpacing_oversample_ratio = 1
+        
+        
+        DispFiltC = DISP_FILT()
+        overlap_c = np.max((1 - self.sparseSearchSampleRate / ChipSize0_GridSpacing_oversample_ratio,0))
+        DispFiltC.FracValid = self.FracValid * (1 - overlap_c) + overlap_c**2
+        DispFiltC.FracSearch = self.FracSearch
+        DispFiltC.FiltWidth = (self.FiltWidth - 1) * ChipSize0_GridSpacing_oversample_ratio + 1
+        DispFiltC.Iter = self.Iter - 1
+        DispFiltC.MadScalar = self.MadScalar
+
+        DispFiltF = DISP_FILT()
+        overlap_f = 1 - 1 / ChipSize0_GridSpacing_oversample_ratio
+        DispFiltF.FracValid = self.FracValid * (1 - overlap_f) + overlap_f**2
+        DispFiltF.FracSearch = self.FracSearch
+        DispFiltF.FiltWidth = (self.FiltWidth - 1) * ChipSize0_GridSpacing_oversample_ratio + 1
+        DispFiltF.Iter = self.Iter
+        DispFiltF.MadScalar = self.MadScalar
+
 
         for i in range(ChipSizeUniX.__len__()):
             
@@ -377,22 +404,22 @@ class autoRIFT:
             SearchLimitX0[(np.logical_not(idxZero)) & (SearchLimitX0 < self.minSearch)] = self.minSearch
             SearchLimitY0[(np.logical_not(idxZero)) & (SearchLimitY0 < self.minSearch)] = self.minSearch
 
-            if ((xGrid0.shape[0] - 2)/self.sparseSearchSampleRate < 5) | ((xGrid0.shape[1] - 2)/self.sparseSearchSampleRate < 5):
+            if ((xGrid0.shape[0] - 2)/(self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio) < 5) | ((xGrid0.shape[1] - 2)/(self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio) < 5):
                 Flag = 2
                 return Flag
         
             # Setup for coarse search: sparse sampling / resize
-            rIdxC = slice(self.sparseSearchSampleRate-1,xGrid0.shape[0],self.sparseSearchSampleRate)
-            cIdxC = slice(self.sparseSearchSampleRate-1,xGrid0.shape[1],self.sparseSearchSampleRate)
+            rIdxC = slice((self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio)-1,xGrid0.shape[0],(self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio))
+            cIdxC = slice((self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio)-1,xGrid0.shape[1],(self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio))
             xGrid0C = xGrid0[rIdxC,cIdxC]
             yGrid0C = yGrid0[rIdxC,cIdxC]
             
 #            pdb.set_trace()
 
-            if np.remainder(self.sparseSearchSampleRate,2) == 0:
-                filtWidth = self.sparseSearchSampleRate + 1
+            if np.remainder((self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio),2) == 0:
+                filtWidth = (self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio) + 1
             else:
-                filtWidth = self.sparseSearchSampleRate
+                filtWidth = (self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio)
 
             SearchLimitX0C = colfilt(SearchLimitX0.copy(), (int(filtWidth), int(filtWidth)), 0)
             SearchLimitY0C = colfilt(SearchLimitY0.copy(), (int(filtWidth), int(filtWidth)), 0)
@@ -426,14 +453,6 @@ class autoRIFT:
             # M0C is the mask for reliable estimates after coarse search, MC is the mask after disparity filtering, MC2 is the mask after area closing for fine search
             M0C = np.logical_not(np.isnan(DxC))
 
-            DispFiltC = DISP_FILT()
-            if ChipSizeUniX[i] == ChipSizeUniX[0]:
-                DispFiltC.FracValid = self.FracValid
-                DispFiltC.FracSearch = self.FracSearch
-                DispFiltC.FiltWidth = self.FiltWidth
-                DispFiltC.Iter = self.Iter
-                DispFiltC.MadScalar = self.MadScalar
-            DispFiltC.Iter = DispFiltC.Iter - 1
             MC = DispFiltC.filtDisp(DxC.copy(), DyC.copy(), SearchLimitX0C.copy(), SearchLimitY0C.copy(), M0C.copy(), overSampleRatio)
 
             MC[np.logical_not(M0C)] = False
@@ -444,7 +463,7 @@ class autoRIFT:
                 continue
             
             MC2 = ndimage.distance_transform_edt(np.logical_not(MC)) < self.BuffDistanceC
-            dstShape = (int(MC2.shape[0]*self.sparseSearchSampleRate),int(MC2.shape[1]*self.sparseSearchSampleRate))
+            dstShape = (int(MC2.shape[0]*(self.sparseSearchSampleRate*ChipSize0_GridSpacing_oversample_ratio)),int(MC2.shape[1]*(self.sparseSearchSampleRate*ChipSize0_GridSpacing_oversample_ratio)))
 
             MC2 = cv2.resize(MC2.astype(np.uint8),dstShape[::-1],interpolation=cv2.INTER_NEAREST).astype(np.bool)
 #            pdb.set_trace()
@@ -472,14 +491,6 @@ class autoRIFT:
                 sys.exit('invalid data type for the image pair which must be unsigned integer 8 or 32-bit float')
 
 #            pdb.set_trace()
-
-            DispFiltF = DISP_FILT()
-            if ChipSizeUniX[i] == ChipSizeUniX[0]:
-                DispFiltF.FracValid = self.FracValid
-                DispFiltF.FracSearch = self.FracSearch
-                DispFiltF.FiltWidth = self.FiltWidth
-                DispFiltF.Iter = self.Iter
-                DispFiltF.MadScalar = self.MadScalar
 
             
             M0 = DispFiltF.filtDisp(DxF.copy(), DyF.copy(), SearchLimitX0.copy(), SearchLimitY0.copy(), np.logical_not(np.isnan(DxF)), overSampleRatio)
@@ -636,6 +647,7 @@ class autoRIFT:
         self.ChipSizeMinX = 32
         self.ChipSizeMaxX = 64
         self.ChipSize0X = 32
+        self.GridSpacingX = 32
         self.ScaleChipSizeY = 1
         self.SearchLimitX = 25
         self.SearchLimitY = 25
@@ -645,7 +657,7 @@ class autoRIFT:
         self.minSearch = 6
         self.sparseSearchSampleRate = 4
         self.FracValid = 8/25
-        self.FracSearch = 0.25
+        self.FracSearch = 0.20
         self.FiltWidth = 5
         self.Iter = 3
         self.MadScalar = 4
@@ -1381,7 +1393,7 @@ class DISP_FILT:
         ##filter parameters; try different parameters to decide how much fine-resolution estimates we keep, which can make the final images smoother
         
         self.FracValid = 8/25
-        self.FracSearch = 0.25
+        self.FracSearch = 0.20
         self.FiltWidth = 5
         self.Iter = 3
         self.MadScalar = 4
@@ -1389,6 +1401,9 @@ class DISP_FILT:
     def filtDisp(self, Dx, Dy, SearchLimitX, SearchLimitY, M, OverSampleRatio):
         
         import numpy as np
+        
+        if np.mod(self.FiltWidth,2) == 0:
+            sys.exit('NDC filter width must be an odd number')
         
         dToleranceX = self.FracValid * self.FiltWidth**2
         dToleranceY = self.FracValid * self.FiltWidth**2

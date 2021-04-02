@@ -65,6 +65,7 @@ extern "C"
         PyObject * setEPSG(PyObject *, PyObject *);
         PyObject * setIncidenceAngle(PyObject *, PyObject *);
         PyObject * setChipSizeX0(PyObject *, PyObject *);
+        PyObject * setGridSpacingX(PyObject *, PyObject *);
         PyObject * setXLimits(PyObject *, PyObject *);
         PyObject * setYLimits(PyObject *, PyObject *);
         PyObject * getXPixelSize(PyObject *, PyObject *);
@@ -88,6 +89,7 @@ static PyMethodDef geogrid_methods[] =
         {"setEPSG_Py", setEPSG, METH_VARARGS, " "},
         {"setIncidenceAngle_Py", setIncidenceAngle, METH_VARARGS, " "},
         {"setChipSizeX0_Py", setChipSizeX0, METH_VARARGS, " "},
+        {"setGridSpacingX_Py", setGridSpacingX, METH_VARARGS, " "},
         {"setVelocities_Py", setVelocities, METH_VARARGS, " "},
         {"setSearchRange_Py", setSearchRange, METH_VARARGS, " "},
         {"setChipSizeMin_Py", setChipSizeMin, METH_VARARGS, " "},

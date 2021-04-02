@@ -163,6 +163,7 @@ class GeogridOptical():
         print("Map inputs: ")
         print("EPSG: " + str(self.epsgDem))
         print("Smallest Allowable Chip Size in m: " + str(self.chipSizeX0))
+        print("Grid spacing in m: " + str(self.gridSpacingX))
         print("Repeat Time: " + str(self.repeatTime))
         print("XLimits: " + str(self._xlim[0]) + "  " + str(self._xlim[1]))
         print("YLimits: " + str(self._ylim[0]) + "  " + str(self._ylim[1]))
@@ -811,6 +812,7 @@ class GeogridOptical():
         self.numberOfLines = None
         self.repeatTime = None
         self.chipSizeX0 = None
+        self.gridSpacingX = None
 
         ##Input related parameters
         self.dat1name = None
