@@ -153,7 +153,8 @@ def runGeogrid(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, csminy, c
     obj.numberOfLines = info.numberOfLines
     obj.numberOfSamples = info.numberOfSamples
     obj.nodata_out = -32767
-    obj.chipSizeX0 = dem_info['geoTransform'][1]
+    obj.chipSizeX0 = 240
+    obj.gridSpacingX = dem_info['geoTransform'][1]
 
     obj.dat1name = info.filename
     obj.demname = dem
@@ -181,6 +182,7 @@ def runGeogrid(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, csminy, c
 
     run_info = {
         'chipsizex0': obj.chipSizeX0,
+        'gridspacingx': obj.gridSpacingX,
         'vxname': vx,
         'vyname': vy,
         'sxname': kwargs.get('dhdxs'),
