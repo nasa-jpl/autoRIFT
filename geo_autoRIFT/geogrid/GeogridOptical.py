@@ -53,11 +53,30 @@ class GeogridOptical():
 
         ###Determine extent of data needed
         bbox = self.determineBbox()
-
+        
+        ##check parameters
+        self.checkState()
 
         ##Run
         self.geogrid()
-
+        self.get_center_latlon()
+    
+    def get_center_latlon(self):
+        '''
+        Get center lat/lon of the image.
+        '''
+        from osgeo import gdal
+        self.epsgDem = 4326
+        self.epsgDat = self.getProjectionSystem(self.dat1name)
+        self.determineBbox()
+        if gdal.__version__[0] == '2':
+            self.cen_lat = (self._ylim[0] + self._ylim[1]) / 2
+            self.cen_lon = (self._xlim[0] + self._xlim[1]) / 2
+        else:
+            self.cen_lon = (self._ylim[0] + self._ylim[1]) / 2
+            self.cen_lat = (self._xlim[0] + self._xlim[1]) / 2
+        print("Scene-center lat/lon: " + str(self.cen_lat) + "  " + str(self.cen_lon))
+    
 
     def getProjectionSystem(self, filename):
         '''
@@ -147,7 +166,12 @@ class GeogridOptical():
         self._ylim = [np.min(xyzs[:,1]), np.max(xyzs[:,1])]
 
 
-
+    def checkState(self):
+        '''
+        Create C object and populate.
+        '''
+        if self.repeatTime < 0:
+            raise Exception('Input image 1 must be older than input image 2')
 
 
 
