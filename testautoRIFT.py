@@ -608,6 +608,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     yoff = int(str.split(runCmd('fgrep "Origin index (in DEM) of geogrid:" testGeogrid.txt'))[7])
                     xcount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[3])
                     ycount = int(str.split(runCmd('fgrep "Dimensions of geogrid:" testGeogrid.txt'))[5])
+                    cen_lat = int(100*float(str.split(runCmd('fgrep "Scene-center lat/lon:" testGeogrid.txt'))[2]))/100
+                    cen_lon = int(100*float(str.split(runCmd('fgrep "Scene-center lat/lon:" testGeogrid.txt'))[3]))/100
                 else:
                     vxrefname = geogrid_run_info['vxname']
                     vyrefname = geogrid_run_info['vyname']
@@ -618,6 +620,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     yoff = geogrid_run_info['yoff']
                     xcount = geogrid_run_info['xcount']
                     ycount = geogrid_run_info['ycount']
+                    cen_lat = int(100*geogrid_run_info['cen_lat'])/100
+                    cen_lon = int(100*geogrid_run_info['cen_lon'])/100
 
                 ds = gdal.Open(vxrefname)
                 band = ds.GetRasterBand(1)
@@ -654,24 +658,47 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
                 stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
 
-                if stable_count == 0:
-                    stable_shift_applied = 0
-                else:
-                    stable_shift_applied = 1
-
-                if stable_shift_applied == 1:
+                V_temp = np.sqrt(VX**2 + VY**2)
+                V_temp_threshold = np.percentile(V_temp[np.logical_not(np.isnan(V_temp))],25)
+                SSM1 = (V_temp <= V_temp_threshold)
+                
+                stable_count1 = np.sum(SSM1 & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
+                
+                dx_mean_shift = 0.0
+                dy_mean_shift = 0.0
+                dx_mean_shift1 = 0.0
+                dy_mean_shift1 = 0.0
+                
+                if stable_count != 0:
                     temp = DX.copy() - DXref.copy()
                     temp[np.logical_not(SSM)] = np.nan
                     dx_mean_shift = np.median(temp[(temp > -5)&(temp < 5)])
-                    DX = DX - dx_mean_shift
-
+                    
                     temp = DY.copy() - DYref.copy()
                     temp[np.logical_not(SSM)] = np.nan
                     dy_mean_shift = np.median(temp[(temp > -5)&(temp < 5)])
-                    DY = DY - dy_mean_shift
+                
+                if stable_count1 != 0:
+                    temp = DX.copy() - DXref.copy()
+                    temp[np.logical_not(SSM1)] = np.nan
+                    dx_mean_shift1 = np.median(temp[(temp > -5)&(temp < 5)])
+                    
+                    temp = DY.copy() - DYref.copy()
+                    temp[np.logical_not(SSM1)] = np.nan
+                    dy_mean_shift1 = np.median(temp[(temp > -5)&(temp < 5)])
+                
+                if stable_count == 0:
+                    if stable_count1 == 0:
+                        stable_shift_applied = 0
+                    else:
+                        stable_shift_applied = 2
+                        DX = DX - dx_mean_shift1
+                        DY = DY - dy_mean_shift1
                 else:
-                    dx_mean_shift = 0.0
-                    dy_mean_shift = 0.0
+                    stable_shift_applied = 1
+                    DX = DX - dx_mean_shift
+                    DY = DY - dy_mean_shift
+                
 
                 VX = offset2vx_1 * DX + offset2vx_2 * DY
                 VY = offset2vy_1 * DX + offset2vy_2 * DY
@@ -722,7 +749,9 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     d0 = date(np.int(master_split[5][0:4]),np.int(master_split[5][4:6]),np.int(master_split[5][6:8]))
                     d1 = date(np.int(slave_split[5][0:4]),np.int(slave_split[5][4:6]),np.int(slave_split[5][6:8]))
                     date_dt_base = d1 - d0
-                    date_dt = np.float64(np.abs(date_dt_base.days))
+                    date_dt = np.float64(date_dt_base.days)
+                    if date_dt < 0:
+                        raise Exception('Input image 1 must be older than input image 2')
                     if date_dt_base.days < 0:
                         date_ct = d1 + (d0 - d1)/2
                         date_center = date_ct.strftime("%Y%m%d")
@@ -730,16 +759,16 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         date_ct = d0 + (d1 - d0)/2
                         date_center = date_ct.strftime("%Y%m%d")
 
-                    IMG_INFO_DICT = {'mission_img1':master_split[0][0],'sensor_img1':'C','satellite_img1':master_split[0][1:3],'acquisition_img1':master_dt,'absolute_orbit_number_img1':master_split[7],'mission_data_take_ID_img1':master_split[8],'product_unique_ID_img1':master_split[9][0:4],'mission_img2':slave_split[0][0],'sensor_img2':'C','satellite_img2':slave_split[0][1:3],'acquisition_img2':slave_dt,'absolute_orbit_number_img2':slave_split[7],'mission_data_take_ID_img2':slave_split[8],'product_unique_ID_img2':slave_split[9][0:4],'date_dt':date_dt,'date_center':date_center,'roi_valid_percentage':roi_valid_percentage,'autoRIFT_software_version':version}
+                    IMG_INFO_DICT = {'mission_img1':master_split[0][0],'sensor_img1':'C','satellite_img1':master_split[0][1:3],'acquisition_img1':master_dt,'absolute_orbit_number_img1':master_split[7],'mission_data_take_ID_img1':master_split[8],'product_unique_ID_img1':master_split[9][0:4],'mission_img2':slave_split[0][0],'sensor_img2':'C','satellite_img2':slave_split[0][1:3],'acquisition_img2':slave_dt,'absolute_orbit_number_img2':slave_split[7],'mission_data_take_ID_img2':slave_split[8],'product_unique_ID_img2':slave_split[9][0:4],'date_dt':date_dt,'date_center':date_center,'latitude':cen_lat,'longitude':cen_lon,'roi_valid_percentage':roi_valid_percentage,'autoRIFT_software_version':version}
                     error_vector = np.array([[0.0356, 0.0501, 0.0266, 0.0622, 0.0357, 0.0501],
                                              [0.5194, 1.1638, 0.3319, 1.3701, 0.5191, 1.1628]])
 
                     netcdf_file = no.netCDF_packaging(
-                        VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SX, SY,
+                        VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1, SX, SY,
                         offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, MM, VXref, VYref,
                         rangePixelSize, azimuthPixelSize, dt, epsg, srs, tran, out_nc_filename, pair_type,
-                        detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_shift_applied,
-                        dx_mean_shift, dy_mean_shift, error_vector
+                        detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_count1, stable_shift_applied,
+                        dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector
                     )
 
                 elif nc_sensor == "L":
@@ -792,7 +821,9 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     d0 = date(np.int(master_split[3][0:4]),np.int(master_split[3][4:6]),np.int(master_split[3][6:8]))
                     d1 = date(np.int(slave_split[3][0:4]),np.int(slave_split[3][4:6]),np.int(slave_split[3][6:8]))
                     date_dt_base = d1 - d0
-                    date_dt = np.float64(np.abs(date_dt_base.days))
+                    date_dt = np.float64(date_dt_base.days)
+                    if date_dt < 0:
+                        raise Exception('Input image 1 must be older than input image 2')
                     if date_dt_base.days < 0:
                         date_ct = d1 + (d0 - d1)/2
                         date_center = date_ct.strftime("%Y%m%d")
@@ -803,16 +834,16 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     master_dt = master_split[3][0:8] + master_time.strftime("T%H:%M:%S")
                     slave_dt = slave_split[3][0:8] + slave_time.strftime("T%H:%M:%S")
 
-                    IMG_INFO_DICT = {'mission_img1':master_split[0][0],'sensor_img1':master_split[0][1],'satellite_img1':np.float64(master_split[0][2:4]),'correction_level_img1':master_split[1],'path_img1':np.float64(master_split[2][0:3]),'row_img1':np.float64(master_split[2][3:6]),'acquisition_date_img1':master_dt,'processing_date_img1':master_split[4][0:8],'collection_number_img1':np.float64(master_split[5]),'collection_category_img1':master_split[6],'mission_img2':slave_split[0][0],'sensor_img2':slave_split[0][1],'satellite_img2':np.float64(slave_split[0][2:4]),'correction_level_img2':slave_split[1],'path_img2':np.float64(slave_split[2][0:3]),'row_img2':np.float64(slave_split[2][3:6]),'acquisition_date_img2':slave_dt,'processing_date_img2':slave_split[4][0:8],'collection_number_img2':np.float64(slave_split[5]),'collection_category_img2':slave_split[6],'date_dt':date_dt,'date_center':date_center,'roi_valid_percentage':roi_valid_percentage,'autoRIFT_software_version':version}
+                    IMG_INFO_DICT = {'mission_img1':master_split[0][0],'sensor_img1':master_split[0][1],'satellite_img1':np.float64(master_split[0][2:4]),'correction_level_img1':master_split[1],'path_img1':np.float64(master_split[2][0:3]),'row_img1':np.float64(master_split[2][3:6]),'acquisition_date_img1':master_dt,'processing_date_img1':master_split[4][0:8],'collection_number_img1':np.float64(master_split[5]),'collection_category_img1':master_split[6],'mission_img2':slave_split[0][0],'sensor_img2':slave_split[0][1],'satellite_img2':np.float64(slave_split[0][2:4]),'correction_level_img2':slave_split[1],'path_img2':np.float64(slave_split[2][0:3]),'row_img2':np.float64(slave_split[2][3:6]),'acquisition_date_img2':slave_dt,'processing_date_img2':slave_split[4][0:8],'collection_number_img2':np.float64(slave_split[5]),'collection_category_img2':slave_split[6],'date_dt':date_dt,'date_center':date_center,'latitude':cen_lat,'longitude':cen_lon,'roi_valid_percentage':roi_valid_percentage,'autoRIFT_software_version':version}
 
-                    error_vector = np.array([57.,57.])
+                    error_vector = np.array([25.5,25.5])
 
                     netcdf_file = no.netCDF_packaging(
-                        VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SX, SY,
+                        VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1, SX, SY,
                         offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, MM, VXref, VYref,
                         XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type,
-                        detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_shift_applied,
-                        dx_mean_shift, dy_mean_shift, error_vector
+                        detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_count1, stable_shift_applied,
+                        dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector
                     )
 
                 elif nc_sensor == "S2":
@@ -859,7 +890,9 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     d0 = date(np.int(master_split[2][0:4]),np.int(master_split[2][4:6]),np.int(master_split[2][6:8]))
                     d1 = date(np.int(slave_split[2][0:4]),np.int(slave_split[2][4:6]),np.int(slave_split[2][6:8]))
                     date_dt_base = d1 - d0
-                    date_dt = np.float64(np.abs(date_dt_base.days))
+                    date_dt = np.float64(date_dt_base.days)
+                    if date_dt < 0:
+                        raise Exception('Input image 1 must be older than input image 2')
                     if date_dt_base.days < 0:
                         date_ct = d1 + (d0 - d1)/2
                         date_center = date_ct.strftime("%Y%m%d")
@@ -870,16 +903,16 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     master_dt = master_split[2] + master_time.strftime("T%H:%M:%S")
                     slave_dt = slave_split[2] + slave_time.strftime("T%H:%M:%S")
 
-                    IMG_INFO_DICT = {'mission_img1':master_split[0][-3],'satellite_img1':master_split[0][-2:],'correction_level_img1':master_split[4][:3],'acquisition_date_img1':master_dt,'mission_img2':slave_split[0][-3],'satellite_img2':slave_split[0][-2:],'correction_level_img2':slave_split[4][:3],'acquisition_date_img2':slave_dt,'date_dt':date_dt,'date_center':date_center,'roi_valid_percentage':roi_valid_percentage,'autoRIFT_software_version':version}
+                    IMG_INFO_DICT = {'mission_img1':master_split[0][-3],'satellite_img1':master_split[0][-2:],'correction_level_img1':master_split[4][:3],'acquisition_date_img1':master_dt,'mission_img2':slave_split[0][-3],'satellite_img2':slave_split[0][-2:],'correction_level_img2':slave_split[4][:3],'acquisition_date_img2':slave_dt,'date_dt':date_dt,'date_center':date_center,'latitude':cen_lat,'longitude':cen_lon,'roi_valid_percentage':roi_valid_percentage,'autoRIFT_software_version':version}
 
-                    error_vector = np.array([57.,57.])
+                    error_vector = np.array([25.5,25.5])
 
                     netcdf_file = no.netCDF_packaging(
-                        VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SX, SY,
+                        VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1, SX, SY,
                         offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, MM, VXref, VYref,
                         XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type,
-                        detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_shift_applied,
-                        dx_mean_shift, dy_mean_shift, error_vector
+                        detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_count1, stable_shift_applied,
+                        dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector
                     )
 
                 elif nc_sensor is None:

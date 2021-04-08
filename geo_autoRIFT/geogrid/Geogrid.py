@@ -63,14 +63,34 @@ class Geogrid(Component):
         ##Create and set parameters
         self.setState()
         
+        ##check parameters
+        self.checkState()
+        
         ##Run
         geogrid.geogrid_Py(self._geogrid)
+        self.get_center_latlon()
         
         ##Get parameters
         self.getState()
 
         ##Clean up
         self.finalize()
+
+    def get_center_latlon(self):
+        '''
+        Get center lat/lon of the image.
+        '''
+        from osgeo import gdal
+        self.epsg = 4326
+        self.determineBbox()
+        if gdal.__version__[0] == '2':
+            self.cen_lat = (self._ylim[0] + self._ylim[1]) / 2
+            self.cen_lon = (self._xlim[0] + self._xlim[1]) / 2
+        else:
+            self.cen_lon = (self._ylim[0] + self._ylim[1]) / 2
+            self.cen_lat = (self._xlim[0] + self._xlim[1]) / 2
+        print("Scene-center lat/lon: " + str(self.cen_lat) + "  " + str(self.cen_lon))
+    
 
     def getProjectionSystem(self):
         '''
@@ -290,6 +310,13 @@ class Geogrid(Component):
 
         self._orbit  = self.orbit.exportToC()
         geogrid.setOrbit_Py(self._geogrid, self._orbit)
+
+    def checkState(self):
+        '''
+        Create C object and populate.
+        '''
+        if self.repeatTime < 0:
+            raise Exception('Input image 1 must be older than input image 2')
 
     def finalize(self):
         '''

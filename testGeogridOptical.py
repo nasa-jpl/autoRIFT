@@ -148,7 +148,7 @@ def runGeogrid(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, csminy, c
     d0 = date(np.int(info.time[0:4]),np.int(info.time[4:6]),np.int(info.time[6:8]))
     d1 = date(np.int(info1.time[0:4]),np.int(info1.time[4:6]),np.int(info1.time[6:8]))
     date_dt_base = d1 - d0
-    obj.repeatTime = np.abs(date_dt_base.total_seconds())
+    obj.repeatTime = date_dt_base.total_seconds()
 #    obj.repeatTime = (info1.time - info.time) * 24.0 * 3600.0
     obj.numberOfLines = info.numberOfLines
     obj.numberOfSamples = info.numberOfSamples
@@ -196,6 +196,8 @@ def runGeogrid(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, csminy, c
         'epsg': kwargs.get('epsg'),
         'XPixelSize': obj.X_res,
         'YPixelSize': obj.Y_res,
+        'cen_lat': obj.cen_lat,
+        'cen_lon': obj.cen_lon,
     }
 
     return run_info
