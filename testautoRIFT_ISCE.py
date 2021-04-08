@@ -573,6 +573,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
             offset2vx_2 = band.ReadAsArray()
             band=None
             ds=None
+            offset2vx_1[offset2vx_1 == nodata] = np.nan
+            offset2vx_2[offset2vx_2 == nodata] = np.nan
 
             ds = gdal.Open(offset2vy)
             band = ds.GetRasterBand(1)
@@ -581,6 +583,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
             offset2vy_2 = band.ReadAsArray()
             band=None
             ds=None
+            offset2vy_1[offset2vy_1 == nodata] = np.nan
+            offset2vy_2[offset2vy_2 == nodata] = np.nan
 
             VX = offset2vx_1 * DX + offset2vx_2 * DY
             VY = offset2vy_1 * DX + offset2vy_2 * DY
