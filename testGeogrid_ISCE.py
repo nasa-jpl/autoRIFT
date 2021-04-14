@@ -238,6 +238,10 @@ def runGeogrid(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, csminy, c
     obj.ssmname = ssm
     obj.winlocname = "window_location.tif"
     obj.winoffname = "window_offset.tif"
+#    obj.max_factor = 10
+#    obj.dt_unity = 5
+#    obj.upper_thld = 20000
+#    obj.lower_thld = 0
     obj.winsrname = "window_search_range.tif"
     obj.wincsminname = "window_chip_size_min.tif"
     obj.wincsmaxname = "window_chip_size_max.tif"
@@ -317,6 +321,10 @@ def runGeogridOptical(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, cs
     obj.ssmname = ssm
     obj.winlocname = "window_location.tif"
     obj.winoffname = "window_offset.tif"
+#    obj.max_factor = 10
+#    obj.dt_unity = 32
+#    obj.upper_thld = 20000
+#    obj.lower_thld = 0
     obj.winsrname = "window_search_range.tif"
     obj.wincsminname = "window_chip_size_min.tif"
     obj.wincsmaxname = "window_chip_size_max.tif"

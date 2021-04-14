@@ -539,6 +539,54 @@ PyObject* getYPixelSize(PyObject *self, PyObject *args)
     return Py_BuildValue("d",var);
 }
 
+PyObject* setDtUnity(PyObject *self, PyObject *args)
+{
+    uint64_t ptr;
+    double dt_unity;
+    if (!PyArg_ParseTuple(args, "Kd", &ptr, &dt_unity))
+    {
+        return NULL;
+    }
+    ((geoGrid*)(ptr))->dt_unity = dt_unity;
+    return Py_BuildValue("i", 0);
+}
+
+PyObject* setMaxFactor(PyObject *self, PyObject *args)
+{
+    uint64_t ptr;
+    double max_factor;
+    if (!PyArg_ParseTuple(args, "Kd", &ptr, &max_factor))
+    {
+        return NULL;
+    }
+    ((geoGrid*)(ptr))->max_factor = max_factor;
+    return Py_BuildValue("i", 0);
+}
+
+PyObject* setUpperThreshold(PyObject *self, PyObject *args)
+{
+    uint64_t ptr;
+    double upper_thld;
+    if (!PyArg_ParseTuple(args, "Kd", &ptr, &upper_thld))
+    {
+        return NULL;
+    }
+    ((geoGrid*)(ptr))->upper_thld = upper_thld;
+    return Py_BuildValue("i", 0);
+}
+
+PyObject* setLowerThreshold(PyObject *self, PyObject *args)
+{
+    uint64_t ptr;
+    double lower_thld;
+    if (!PyArg_ParseTuple(args, "Kd", &ptr, &lower_thld))
+    {
+        return NULL;
+    }
+    ((geoGrid*)(ptr))->lower_thld = lower_thld;
+    return Py_BuildValue("i", 0);
+}
+
 
 PyObject* geogrid(PyObject* self, PyObject* args)
 {

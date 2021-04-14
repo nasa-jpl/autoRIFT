@@ -53,6 +53,11 @@ extern "C"
         PyObject * setOrbit(PyObject *, PyObject *);
         PyObject * setLookSide(PyObject *, PyObject *);
         PyObject * setNodataOut(PyObject *, PyObject *);
+    
+        PyObject * setDtUnity(PyObject *, PyObject *);
+        PyObject * setMaxFactor(PyObject *, PyObject *);
+        PyObject * setUpperThreshold(PyObject*, PyObject *);
+        PyObject * setLowerThreshold(PyObject *, PyObject *);
 
         PyObject * setWindowLocationsFilename(PyObject *, PyObject *);
         PyObject * setWindowOffsetsFilename(PyObject *, PyObject *);
@@ -99,6 +104,10 @@ static PyMethodDef geogrid_methods[] =
         {"setOrbit_Py", setOrbit, METH_VARARGS, " "},
         {"setLookSide_Py", setLookSide, METH_VARARGS, " "},
         {"setNodataOut_Py", setNodataOut, METH_VARARGS, " "},
+        {"setDtUnity_Py", setDtUnity, METH_VARARGS, " "},
+        {"setMaxFactor_Py", setMaxFactor, METH_VARARGS, " "},
+        {"setUpperThreshold_Py", setUpperThreshold, METH_VARARGS, " "},
+        {"setLowerThreshold_Py", setLowerThreshold, METH_VARARGS, " "},
         {"setXLimits_Py", setXLimits, METH_VARARGS, " "},
         {"setYLimits_Py", setYLimits, METH_VARARGS, " "},
         {"getXPixelSize_Py", getXPixelSize, METH_VARARGS, " "},
