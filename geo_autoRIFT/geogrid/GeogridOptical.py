@@ -235,7 +235,10 @@ class GeogridOptical():
 
         print("Starting processing .... ")
 
-
+        dt_unity = self.srs_dt_unity
+        max_factor = self.srs_max_scale
+        upper_thld = self.srs_max_search
+        lower_thld = self.srs_min_search
 
 
         from osgeo import gdal, osr
@@ -570,10 +573,10 @@ class GeogridOptical():
                     vel = np.array([0., 0., 0.])
                 if (self.srxname != ""):
                     schrng1 = np.array([srxLine[jj], sryLine[jj], 0.0])
-                    schrng1[0] *= np.max((self.max_factor*((self.dt_unity-1)*self.max_factor+(self.max_factor-1)-(self.max_factor-1)*self.repeatTime/24.0/3600.0)/((self.dt_unity-1)*self.max_factor),1))
-                    schrng1[0] = np.min((np.max((schrng1[0],self.lower_thld)),self.upper_thld))
-                    schrng1[1] *= np.max((self.max_factor*((self.dt_unity-1)*self.max_factor+(self.max_factor-1)-(self.max_factor-1)*self.repeatTime/24.0/3600.0)/((self.dt_unity-1)*self.max_factor),1))
-                    schrng1[1] = np.min((np.max((schrng1[1],self.lower_thld)),self.upper_thld))
+                    schrng1[0] *= np.max((max_factor*((dt_unity-1)*max_factor+(max_factor-1)-(max_factor-1)*self.repeatTime/24.0/3600.0)/((dt_unity-1)*max_factor),1))
+                    schrng1[0] = np.min((np.max((schrng1[0],lower_thld)),upper_thld))
+                    schrng1[1] *= np.max((max_factor*((dt_unity-1)*max_factor+(max_factor-1)-(max_factor-1)*self.repeatTime/24.0/3600.0)/((dt_unity-1)*max_factor),1))
+                    schrng1[1] = np.min((np.max((schrng1[1],lower_thld)),upper_thld))
                     schrng2 = np.array([-schrng1[0], schrng1[1], 0.0])
                 targutm0 = np.array(fwdTrans.TransformPoint(targxyz0[0],targxyz0[1],targxyz0[2]))
                 xind = np.round((targutm0[0] - self.startingX) / self.XSize) + 1.
@@ -867,11 +870,11 @@ class GeogridOptical():
         self.winro2vxname = None
         self.winro2vyname = None
         
-        ##dt-varying search range rountine parameters
-        self.dt_unity = 182
-        self.max_factor = 5
-        self.upper_thld = 20000
-        self.lower_thld = 0
+        ##dt-varying search range scale (srs) rountine parameters
+        self.srs_dt_unity = 182
+        self.srs_max_scale = 5
+        self.srs_max_search = 20000
+        self.srs_min_search = 0
 
         ##Coordinate system
         self.epsgDem = None
