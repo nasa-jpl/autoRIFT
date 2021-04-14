@@ -927,11 +927,15 @@ void geoGrid::geogrid()
             {
                 schrng1[0] = srxLine[jj];
                 schrng1[1] = sryLine[jj];
-                schrng2[0] = -srxLine[jj];
-                schrng2[1] = sryLine[jj];
+            
+                schrng1[0] *= std::max(max_factor*((dt_unity-1)*max_factor+(max_factor-1)-(max_factor-1)*dt/24.0/3600.0)/((dt_unity-1)*max_factor),1.0);
+                schrng1[0] = std::min(std::max(schrng1[0],lower_thld),upper_thld);
+                schrng1[1] *= std::max(max_factor*((dt_unity-1)*max_factor+(max_factor-1)-(max_factor-1)*dt/24.0/3600.0)/((dt_unity-1)*max_factor),1.0);
+                schrng1[1] = std::min(std::max(schrng1[1],lower_thld),upper_thld);
+            
+                schrng2[0] = -schrng1[0];
+                schrng2[1] = schrng1[1];
             }
-            
-            
             
 
             //Convert from DEM coordinates to LLH inplace

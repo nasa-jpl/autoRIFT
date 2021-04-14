@@ -73,6 +73,11 @@ struct geoGrid
     double incidenceAngle;
     int pOff, lOff, pCount, lCount;
     double grd_res, azm_res;
+    
+    //dt-varying search range rountine parameters
+    double dt_unity;
+    double max_factor;
+    double upper_thld, lower_thld;
 
     //Output file names
     std::string pixlinename;

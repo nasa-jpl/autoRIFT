@@ -570,7 +570,11 @@ class GeogridOptical():
                     vel = np.array([0., 0., 0.])
                 if (self.srxname != ""):
                     schrng1 = np.array([srxLine[jj], sryLine[jj], 0.0])
-                    schrng2 = np.array([-srxLine[jj], sryLine[jj], 0.0])
+                    schrng1[0] *= np.max((self.max_factor*((self.dt_unity-1)*self.max_factor+(self.max_factor-1)-(self.max_factor-1)*self.repeatTime/24.0/3600.0)/((self.dt_unity-1)*self.max_factor),1))
+                    schrng1[0] = np.min((np.max((schrng1[0],self.lower_thld)),self.upper_thld))
+                    schrng1[1] *= np.max((self.max_factor*((self.dt_unity-1)*self.max_factor+(self.max_factor-1)-(self.max_factor-1)*self.repeatTime/24.0/3600.0)/((self.dt_unity-1)*self.max_factor),1))
+                    schrng1[1] = np.min((np.max((schrng1[1],self.lower_thld)),self.upper_thld))
+                    schrng2 = np.array([-schrng1[0], schrng1[1], 0.0])
                 targutm0 = np.array(fwdTrans.TransformPoint(targxyz0[0],targxyz0[1],targxyz0[2]))
                 xind = np.round((targutm0[0] - self.startingX) / self.XSize) + 1.
                 yind = np.round((targutm0[1] - self.startingY) / self.YSize) + 1.
@@ -862,6 +866,12 @@ class GeogridOptical():
         self.winssmname = None
         self.winro2vxname = None
         self.winro2vyname = None
+        
+        ##dt-varying search range rountine parameters
+        self.dt_unity = 182
+        self.max_factor = 5
+        self.upper_thld = 20000
+        self.lower_thld = 0
 
         ##Coordinate system
         self.epsgDem = None
