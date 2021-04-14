@@ -269,10 +269,10 @@ class Geogrid(Component):
         geogrid.setAzimuthParameters_Py( self._geogrid, DTU.seconds_since_midnight(self.sensingStart), self.prf)
         geogrid.setRepeatTime_Py(self._geogrid, self.repeatTime)
         
-        geogrid.setDtUnity_Py( self._geogrid, self.dt_unity)
-        geogrid.setMaxFactor_Py( self._geogrid, self.max_factor)
-        geogrid.setUpperThreshold_Py( self._geogrid, self.upper_thld)
-        geogrid.setLowerThreshold_Py(self._geogrid, self.lower_thld)
+        geogrid.setDtUnity_Py( self._geogrid, self.srs_dt_unity)
+        geogrid.setMaxFactor_Py( self._geogrid, self.srs_max_scale)
+        geogrid.setUpperThreshold_Py( self._geogrid, self.srs_max_search)
+        geogrid.setLowerThreshold_Py(self._geogrid, self.srs_min_search)
 
         geogrid.setEPSG_Py(self._geogrid, self.epsg)
         geogrid.setIncidenceAngle_Py(self._geogrid, self.incidenceAngle)
@@ -377,12 +377,12 @@ class Geogrid(Component):
         self.winssmname = None
         self.winro2vxname = None
         self.winro2vyname = None
-
-        ##dt-varying search range rountine parameters
-        self.dt_unity = 182
-        self.max_factor = 5
-        self.upper_thld = 20000
-        self.lower_thld = 0
+        
+        ##dt-varying search range scale (srs) rountine parameters
+        self.srs_dt_unity = 182
+        self.srs_max_scale = 5
+        self.srs_max_search = 20000
+        self.srs_min_search = 0
 
         ##Coordinate system
         self.epsg = None
