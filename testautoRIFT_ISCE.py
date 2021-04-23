@@ -667,8 +667,11 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
                 
                 V_temp = np.sqrt(VX**2 + VY**2)
-                V_temp_threshold = np.percentile(V_temp[np.logical_not(np.isnan(V_temp))],25)
-                SSM1 = (V_temp <= V_temp_threshold)
+                try:
+                    V_temp_threshold = np.percentile(V_temp[np.logical_not(np.isnan(V_temp))],25)
+                    SSM1 = (V_temp <= V_temp_threshold)
+                except IndexError:
+                    SSM1 = np.zeros(V_temp.shape).astype('bool')
                 
                 stable_count1 = np.sum(SSM1 & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
 
