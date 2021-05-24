@@ -84,6 +84,7 @@ def coregisterLoadMetadata(indir_m, indir_s):
     import re
 
     from geogrid import GeogridOptical
+#    import isce
 #    from components.contrib.geo_autoRIFT.geogrid import GeogridOptical
 
     obj = GeogridOptical()
@@ -132,6 +133,7 @@ def runGeogrid(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, csminy, c
     '''
 
     from geogrid import GeogridOptical
+#    import isce
 #    from components.contrib.geo_autoRIFT.geogrid import GeogridOptical
 
     from osgeo import gdal

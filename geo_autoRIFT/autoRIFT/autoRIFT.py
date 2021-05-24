@@ -105,7 +105,7 @@ class autoRIFT:
 #
 #        self.I2 = (self.I2 - lp)
 
-    
+
     def preprocess_filt_hps(self):
         '''
         Do the pre processing using (orig - low-pass filter) = high-pass filter filter (3.9/5.3 min).
@@ -205,7 +205,7 @@ class autoRIFT:
 
         
         
-        
+    
     def uniform_data_type(self):
         
         import numpy as np
@@ -342,6 +342,7 @@ class autoRIFT:
         DispFiltC.FiltWidth = (self.FiltWidth - 1) * ChipSize0_GridSpacing_oversample_ratio + 1
         DispFiltC.Iter = self.Iter - 1
         DispFiltC.MadScalar = self.MadScalar
+        DispFiltC.colfiltChunkSize = self.colfiltChunkSize
 
         DispFiltF = DISP_FILT()
         overlap_f = 1 - 1 / ChipSize0_GridSpacing_oversample_ratio
@@ -350,6 +351,7 @@ class autoRIFT:
         DispFiltF.FiltWidth = (self.FiltWidth - 1) * ChipSize0_GridSpacing_oversample_ratio + 1
         DispFiltF.Iter = self.Iter
         DispFiltF.MadScalar = self.MadScalar
+        DispFiltF.colfiltChunkSize = self.colfiltChunkSize
 
 
         for i in range(ChipSizeUniX.__len__()):
@@ -369,13 +371,13 @@ class autoRIFT:
                     yGrid0 = np.round(yGrid0)
 
                 M0 = (ChipSizeX == 0) & (self.ChipSizeMinX <= ChipSizeUniX[i]) & (self.ChipSizeMaxX >= ChipSizeUniX[i])
-                M0 = colfilt(M0.copy(), (int(1/Scale*6), int(1/Scale*6)), 0)
+                M0 = colfilt(M0.copy(), (int(1/Scale*6), int(1/Scale*6)), 0, self.colfiltChunkSize)
                 M0 = cv2.resize(np.logical_not(M0).astype(np.uint8),dstShape[::-1],interpolation=cv2.INTER_NEAREST).astype(np.bool)
 
-                SearchLimitX0 = colfilt(self.SearchLimitX.copy(), (int(1/Scale), int(1/Scale)), 0) + colfilt(self.Dx0.copy(), (int(1/Scale), int(1/Scale)), 4)
-                SearchLimitY0 = colfilt(self.SearchLimitY.copy(), (int(1/Scale), int(1/Scale)), 0) + colfilt(self.Dy0.copy(), (int(1/Scale), int(1/Scale)), 4)
-                Dx00 = colfilt(self.Dx0.copy(), (int(1/Scale), int(1/Scale)), 2)
-                Dy00 = colfilt(self.Dy0.copy(), (int(1/Scale), int(1/Scale)), 2)
+                SearchLimitX0 = colfilt(self.SearchLimitX.copy(), (int(1/Scale), int(1/Scale)), 0, self.colfiltChunkSize) + colfilt(self.Dx0.copy(), (int(1/Scale), int(1/Scale)), 4, self.colfiltChunkSize)
+                SearchLimitY0 = colfilt(self.SearchLimitY.copy(), (int(1/Scale), int(1/Scale)), 0, self.colfiltChunkSize) + colfilt(self.Dy0.copy(), (int(1/Scale), int(1/Scale)), 4, self.colfiltChunkSize)
+                Dx00 = colfilt(self.Dx0.copy(), (int(1/Scale), int(1/Scale)), 2, self.colfiltChunkSize)
+                Dy00 = colfilt(self.Dy0.copy(), (int(1/Scale), int(1/Scale)), 2, self.colfiltChunkSize)
 
                 SearchLimitX0 = np.ceil(cv2.resize(SearchLimitX0,dstShape[::-1]))
                 SearchLimitY0 = np.ceil(cv2.resize(SearchLimitY0,dstShape[::-1]))
@@ -421,8 +423,8 @@ class autoRIFT:
             else:
                 filtWidth = (self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio)
 
-            SearchLimitX0C = colfilt(SearchLimitX0.copy(), (int(filtWidth), int(filtWidth)), 0)
-            SearchLimitY0C = colfilt(SearchLimitY0.copy(), (int(filtWidth), int(filtWidth)), 0)
+            SearchLimitX0C = colfilt(SearchLimitX0.copy(), (int(filtWidth), int(filtWidth)), 0, self.colfiltChunkSize)
+            SearchLimitY0C = colfilt(SearchLimitY0.copy(), (int(filtWidth), int(filtWidth)), 0, self.colfiltChunkSize)
             SearchLimitX0C = SearchLimitX0C[rIdxC,cIdxC]
             SearchLimitY0C = SearchLimitY0C[rIdxC,cIdxC]
 
@@ -499,8 +501,8 @@ class autoRIFT:
             DyF[np.logical_not(M0)] = np.nan
             
             # Light interpolation with median filtered values: DxFM (filtered) and DxF (unfiltered)
-            DxFM = colfilt(DxF.copy(), (self.fillFiltWidth, self.fillFiltWidth), 3)
-            DyFM = colfilt(DyF.copy(), (self.fillFiltWidth, self.fillFiltWidth), 3)
+            DxFM = colfilt(DxF.copy(), (self.fillFiltWidth, self.fillFiltWidth), 3, self.colfiltChunkSize)
+            DyFM = colfilt(DyF.copy(), (self.fillFiltWidth, self.fillFiltWidth), 3, self.colfiltChunkSize)
             
             # M0 is mask for original valid estimates, MF is mask for filled ones, MM is mask where filtered ones exist for filling
             MF = np.zeros(M0.shape, dtype=np.bool)
@@ -529,16 +531,16 @@ class autoRIFT:
                 
                 # DxF0 (filtered) / Dx (unfiltered) is the result from earlier iterations, DxFM (filtered) / DxF (unfiltered) is that of the current iteration
                 # first colfilt nans within 2-by-2 area (otherwise 1 nan will contaminate all 4 points)
-                DxF0 = colfilt(Dx.copy(),(int(Scale+1),int(Scale+1)),2)
+                DxF0 = colfilt(Dx.copy(),(int(Scale+1),int(Scale+1)),2, self.colfiltChunkSize)
                 # then resize to half size using area (similar to averaging) to match the current iteration
                 DxF0 = cv2.resize(DxF0,dstShape[::-1],interpolation=cv2.INTER_AREA)
-                DyF0 = colfilt(Dy.copy(),(int(Scale+1),int(Scale+1)),2)
+                DyF0 = colfilt(Dy.copy(),(int(Scale+1),int(Scale+1)),2, self.colfiltChunkSize)
                 DyF0 = cv2.resize(DyF0,dstShape[::-1],interpolation=cv2.INTER_AREA)
                 
                 # Note this DxFM is almost the same as DxFM (same variable) in the light interpolation (only slightly better); however, only small portion of it will be used later at locations specified by M0 and MF that are determined in the light interpolation. So even without the following two lines, the final Dx and Dy result is still the same.
                 # to fill out all of the missing values in DxF
-                DxFM = colfilt(DxF.copy(), (5,5), 3)
-                DyFM = colfilt(DyF.copy(), (5,5), 3)
+                DxFM = colfilt(DxF.copy(), (5,5), 3, self.colfiltChunkSize)
+                DyFM = colfilt(DyF.copy(), (5,5), 3, self.colfiltChunkSize)
                 
                 # fill the current-iteration result with previously determined reliable estimates that are not searched in the current iteration
                 idx = np.isnan(DxF) & np.logical_not(np.isnan(DxF0))
@@ -578,7 +580,7 @@ class autoRIFT:
     
 
 
-
+    
     def runAutorift(self):
         '''
         quick processing routine which calls autorift main function (user can define their own way by mimicing the workflow here).
@@ -661,6 +663,7 @@ class autoRIFT:
         self.FiltWidth = 5
         self.Iter = 3
         self.MadScalar = 4
+        self.colfiltChunkSize = 4
         self.BuffDistanceC = 8
         self.CoarseCorCutoff = 0.01
         self.OverSampleRatio = 16
@@ -1346,44 +1349,93 @@ def arImgDisp_s(I1, I2, xGrid, yGrid, ChipSizeX, ChipSizeY, SearchLimitX, Search
 
 
 
-def colfilt(A, kernelSize, option):
+
+################## Chunked version of column filter
+def colfilt(A, kernelSize, option, chunkSize=4):
     
     from skimage.util import view_as_windows as viewW
     import numpy as np
     
-    A = np.lib.pad(A,((int((kernelSize[0]-1)/2),int((kernelSize[0]-1)/2)),(int((kernelSize[1]-1)/2),int((kernelSize[1]-1)/2))),mode='constant',constant_values=np.nan)
+    chunkInds = int(A.shape[1]/chunkSize)
+    chunkRem = A.shape[1] - chunkSize * chunkInds
     
-    B = viewW(A, kernelSize).reshape(-1,kernelSize[0]*kernelSize[1]).T[:,::1]
+    O = 0
     
-    output_size = (A.shape[0]-kernelSize[0]+1,A.shape[1]-kernelSize[1]+1)
-    C = np.zeros(output_size,dtype=A.dtype)
-    if option == 0:#    max
-        C = np.nanmax(B,axis=0).reshape(output_size)
-    elif option == 1:#  min
-        C = np.nanmin(B,axis=0).reshape(output_size)
-    elif option == 2:#  mean
-        C = np.nanmean(B,axis=0).reshape(output_size)
-    elif option == 3:#  median
-        C = np.nanmedian(B,axis=0).reshape(output_size)
-    elif option == 4:#  range
-        C = np.nanmax(B,axis=0).reshape(output_size) - np.nanmin(B,axis=0).reshape(output_size)
-    elif option == 6:#  MAD (Median Absolute Deviation)
-        m = B.shape[0]
-        D = np.abs(B - np.dot(np.ones((m,1),dtype=A.dtype), np.array([np.nanmedian(B,axis=0)])))
-        C = np.nanmedian(D,axis=0).reshape(output_size)
-    elif option[0] == 5:#  displacement distance count with option[1] being the threshold
-        m = B.shape[0]
-        c = int(np.round((m + 1) / 2)-1)
-#        c = 0
-        D = np.abs(B - np.dot(np.ones((m,1),dtype=A.dtype), np.array([B[c,:]])))
-        C = np.sum(D<option[1],axis=0).reshape(output_size)
-    else:
-        sys.exit('invalid option for columnwise neighborhood filtering')
+    for ii in range(chunkSize):
+        startInds = ii*chunkInds
+        if ii == chunkSize-1:
+            endInds = (ii+1)*chunkInds + chunkRem
+        else:
+            endInds = (ii+1)*chunkInds
+        
+        if (ii == 0)&(ii == chunkSize-1):
+            A1 = np.lib.pad(A[:,startInds:endInds],((int((kernelSize[0]-1)/2),int((kernelSize[0]-1)/2)),(int((kernelSize[1]-1)/2),int((kernelSize[1]-1)/2))),mode='constant',constant_values=np.nan)
+        else:
+            if ii == 0:
+                A1 = np.lib.pad(A[:,startInds:endInds+int((kernelSize[1]-1)/2)],((int((kernelSize[0]-1)/2),int((kernelSize[0]-1)/2)),(int((kernelSize[1]-1)/2),0)),mode='constant',constant_values=np.nan)
+            elif ii == chunkSize-1:
+                A1 = np.lib.pad(A[:,startInds-int((kernelSize[1]-1)/2):endInds],((int((kernelSize[0]-1)/2),int((kernelSize[0]-1)/2)),(0,int((kernelSize[1]-1)/2))),mode='constant',constant_values=np.nan)
+            else:
+                A1 = np.lib.pad(A[:,startInds-int((kernelSize[1]-1)/2):endInds+int((kernelSize[1]-1)/2)],((int((kernelSize[0]-1)/2),int((kernelSize[0]-1)/2)),(0,0)),mode='constant',constant_values=np.nan)
 
-    C = C.astype(A.dtype)
+        B = viewW(A1, kernelSize).reshape(-1,kernelSize[0]*kernelSize[1]).T[:,::1]
     
-    return C
+        Adtype = A1.dtype
+        Ashape = A1.shape
+        del A1
 
+        output_size = (Ashape[0]-kernelSize[0]+1,Ashape[1]-kernelSize[1]+1)
+        C = np.zeros((B.shape[1],),dtype=Adtype)
+    
+        if option == 0:#    max
+            C = np.nanmax(B,axis=0)
+            del B
+            C = C.reshape(output_size)
+        elif option == 1:#  min
+            C = np.nanmin(B,axis=0)
+            del B
+            C = C.reshape(output_size)
+        elif option == 2:#  mean
+            C = np.nanmean(B,axis=0)
+            del B
+            C = C.reshape(output_size)
+        elif option == 3:#  median
+            C = np.nanmedian(B,axis=0, overwrite_input=True)
+            del B
+            C = C.reshape(output_size)
+        elif option == 4:#  range
+            C = np.nanmax(B,axis=0) - np.nanmin(B,axis=0)
+            del B
+            C = C.reshape(output_size)
+        elif option == 6:#  MAD (Median Absolute Deviation)
+            m = B.shape[0]
+            D = np.zeros((B.shape[1],),dtype=Adtype)
+            D = np.nanmedian(B,axis=0)
+            D = np.abs(B - np.dot(np.ones((m,1),dtype=Adtype), np.array([D])))
+            del B
+            C = np.nanmedian(D,axis=0, overwrite_input=True)
+            del D
+            C = C.reshape(output_size)
+        elif option[0] == 5:#  displacement distance count with option[1] being the threshold
+            m = B.shape[0]
+            c = int(np.round((m + 1) / 2)-1)
+            #        c = 0
+            D = np.abs(B - np.dot(np.ones((m,1),dtype=Adtype), np.array([B[c,:]])))
+            del B
+            C = np.sum(D<option[1],axis=0)
+            del D
+            C = C.reshape(output_size)
+        else:
+            sys.exit('invalid option for columnwise neighborhood filtering')
+
+        C = C.astype(Adtype)
+
+        if np.isscalar(O):
+            O = C.copy()
+        else:
+            O = np.append(O,C,axis=1)
+
+    return O
 
 
 
@@ -1397,6 +1449,8 @@ class DISP_FILT:
         self.FiltWidth = 5
         self.Iter = 3
         self.MadScalar = 4
+        self.colfiltChunkSize = 4
+    
     
     def filtDisp(self, Dx, Dy, SearchLimitX, SearchLimitY, M, OverSampleRatio):
         
@@ -1419,8 +1473,8 @@ class DISP_FILT:
         for i in range(self.Iter):
             Dx[np.logical_not(M)] = np.nan
             Dy[np.logical_not(M)] = np.nan
-            M = (colfilt(Dx.copy(), (self.FiltWidth, self.FiltWidth), (5,self.FracSearch)) >= dToleranceX) & (colfilt(Dy.copy(), (self.FiltWidth, self.FiltWidth), (5,self.FracSearch)) >= dToleranceY)
-        
+            M = (colfilt(Dx.copy(), (self.FiltWidth, self.FiltWidth), (5,self.FracSearch), self.colfiltChunkSize) >= dToleranceX) & (colfilt(Dy.copy(), (self.FiltWidth, self.FiltWidth), (5,self.FracSearch), self.colfiltChunkSize) >= dToleranceY)
+
 #        if self.Iter == 3:
 #            pdb.set_trace()
 
@@ -1428,12 +1482,13 @@ class DISP_FILT:
             Dx[np.logical_not(M)] = np.nan
             Dy[np.logical_not(M)] = np.nan
             
-            DxMad = colfilt(Dx.copy(), (self.FiltWidth, self.FiltWidth), 6)
-            DyMad = colfilt(Dy.copy(), (self.FiltWidth, self.FiltWidth), 6)
-        
-            DxM = colfilt(Dx.copy(), (self.FiltWidth, self.FiltWidth), 3)
-            DyM = colfilt(Dy.copy(), (self.FiltWidth, self.FiltWidth), 3)
+            DxMad = colfilt(Dx.copy(), (self.FiltWidth, self.FiltWidth), 6, self.colfiltChunkSize)
+            DyMad = colfilt(Dy.copy(), (self.FiltWidth, self.FiltWidth), 6, self.colfiltChunkSize)
             
+            DxM = colfilt(Dx.copy(), (self.FiltWidth, self.FiltWidth), 3, self.colfiltChunkSize)
+            DyM = colfilt(Dy.copy(), (self.FiltWidth, self.FiltWidth), 3, self.colfiltChunkSize)
+
+
             M = (np.abs(Dx - DxM) <= np.maximum(self.MadScalar * DxMad, DxMadmin)) & (np.abs(Dy - DyM) <= np.maximum(self.MadScalar * DyMad, DyMadmin)) & M
         
         return M
@@ -1456,7 +1511,5 @@ def bwareaopen(image,size1):
             image[labels == label] = 0
 
     return image
-
-
 
 

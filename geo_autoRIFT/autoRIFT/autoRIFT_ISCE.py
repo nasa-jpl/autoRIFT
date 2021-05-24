@@ -165,6 +165,13 @@ MAD_SCALAR = Component.Parameter('MadScalar',
         mandatory=False,
         doc = 'Mad Scalar')
 
+COLFILT_CHUNK_SIZE = Component.Parameter('colfiltChunkSize',
+        public_name = 'COLFILT_CHUNK_SIZE',
+        default = 4,
+        type = int,
+        mandatory=False,
+        doc = 'column filter chunk size')
+
 BUFF_DISTANCE_C = Component.Parameter('BuffDistanceC',
         public_name = 'BUFF_DISTANCE_C',
         default = 8,
@@ -235,6 +242,7 @@ class autoRIFT_ISCE(autoRIFT, Component):
                       FILT_WIDTH,
                       ITER,
                       MAD_SCALAR,
+                      COLFILT_CHUNK_SIZE,
                       BUFF_DISTANCE_C,
                       COARSE_COR_CUTOFF,
                       OVER_SAMPLE_RATIO,
