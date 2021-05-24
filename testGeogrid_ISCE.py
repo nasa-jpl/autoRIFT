@@ -204,7 +204,7 @@ def runGeogrid(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, csminy, c
 
     import isce
     from components.contrib.geo_autoRIFT.geogrid import Geogrid
-#     from geogrid import Geogrid
+#    from geogrid import Geogrid
 
     from osgeo import gdal
     dem_info = gdal.Info(dem, format='json')
