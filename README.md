@@ -3,13 +3,14 @@
 
 
 [![Language](https://img.shields.io/badge/python-3.6%2B-blue.svg)](https://www.python.org/)
-[![Latest version](https://img.shields.io/badge/latest%20version-v1.1.0-yellowgreen.svg)](https://github.com/leiyangleon/autoRIFT/releases)
+[![Latest version](https://img.shields.io/badge/latest%20version-v1.3.0-yellowgreen.svg)](https://github.com/leiyangleon/autoRIFT/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/leiyangleon/autoRIFT/blob/master/LICENSE)
 [![Citation](https://img.shields.io/badge/DOI-10.3390/rs13040749-blue)](https://doi.org/10.3390/rs13040749)
 
 ### Update Notes:
 
 ```diff
++ improved memory use (by 50%) for autoRIFT and runtime (60x) for GeogridOptical
 + parallel computing for NCC
 + support for remote input files using GDAL virtual file systems (e.g., `/vsicurl/https://...`)
 +   see: https://gdal.org/user/virtual_file_systems.html
