@@ -218,8 +218,17 @@ def runGeogrid(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, csminy, c
     obj.prf = info.prf
     obj.lookSide = info.lookSide
     obj.repeatTime = (info1.sensingStart - info.sensingStart).total_seconds()
-    obj.numberOfLines = info.numberOfLines
-    obj.numberOfSamples = info.numberOfSamples
+    
+    #Checks the appropriate number of lines and samples that are in overlap between the reference and secondary images
+    if info.numberOfLines <= info1.numberOfLines:
+        obj.numberOfLines = info.numberOfLines
+    else:
+        obj.numberOfLines = info1.numberOfLines
+    if info.numberOfSamples <= info1.numberOfSamples:
+        obj.numberOfSamples = info.numberOfSamples
+    else:
+        obj.numberOfSamples = info1.numberOfSamples
+    
     obj.nodata_out = -32767
     obj.chipSizeX0 = 240
     obj.gridSpacingX = dem_info['geoTransform'][1]
