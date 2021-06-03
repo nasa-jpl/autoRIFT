@@ -138,8 +138,8 @@ class GeogridOptical():
 #        pdb.set_trace()
 
 
-        samples = self.startingX + np.array([0, self.numberOfSamples]) * self.XSize
-        lines = self.startingY + np.array([0, self.numberOfLines]) * self.YSize
+        samples = self.startingX + np.array([0, self.numberOfSamples-1]) * self.XSize
+        lines = self.startingY + np.array([0, self.numberOfLines-1]) * self.YSize
 
         coordDat = osr.SpatialReference()
         if self.epsgDat:
@@ -285,11 +285,18 @@ class GeogridOptical():
         trans1 = DS1.GetGeoTransform()
         xsize1 = DS1.RasterXSize
         ysize1 = DS1.RasterYSize
+        epsg1 = self.getProjectionSystem(in1)
 
         DS2 = gdal.Open(in2, gdal.GA_ReadOnly)
         trans2 = DS2.GetGeoTransform()
         xsize2 = DS2.RasterXSize
         ysize2 = DS2.RasterYSize
+        epsg2 = self.getProjectionSystem(in2)
+        
+        if epsg1 != epsg2:
+            raise Exception('The current version of geo_autoRIFT assumes the two images are in the same projection, i.e. it cannot handle two different projections; the users are thus recommended to do the tranformation themselves before running geo_autoRIFT.')
+        
+        
 
         W = np.max([trans1[0],trans2[0]])
         N = np.min([trans1[3],trans2[3]])
