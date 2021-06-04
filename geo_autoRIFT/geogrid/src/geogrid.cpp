@@ -1025,8 +1025,8 @@ void geoGrid::geogrid()
 //            {
 //                std::cout << "\n" << lOff+ii << " " << pOff+jj << " " << demLine[jj] << "\n";
 //            }
-            rgind = std::round((rngpix - startingRange) / dr) + 1.;
-            azind = std::round((tline - sensingStart) * prf) + 1.;
+            rgind = std::round((rngpix - startingRange) / dr) + 0.;
+            azind = std::round((tline - sensingStart) * prf) + 0.;
             
             
             //*********************Slant-range vector
@@ -1198,7 +1198,7 @@ void geoGrid::geogrid()
             }
             
             
-            if ((rgind > nPixels)|(rgind < 1)|(azind > nLines)|(azind < 1))
+            if ((rgind > nPixels-1)|(rgind < 1-1)|(azind > nLines-1)|(azind < 1-1))
             {
                 raster1[jj] = nodata_out;
                 raster2[jj] = nodata_out;

@@ -1372,11 +1372,11 @@ def colfilt(A, kernelSize, option, chunkSize=4):
             A1 = np.lib.pad(A[:,startInds:endInds],((int((kernelSize[0]-1)/2),int((kernelSize[0]-1)/2)),(int((kernelSize[1]-1)/2),int((kernelSize[1]-1)/2))),mode='constant',constant_values=np.nan)
         else:
             if ii == 0:
-                A1 = np.lib.pad(A[:,startInds:endInds+int((kernelSize[1]-1)/2)],((int((kernelSize[0]-1)/2),int((kernelSize[0]-1)/2)),(int((kernelSize[1]-1)/2),0)),mode='constant',constant_values=np.nan)
+                A1 = np.lib.pad(A[:,startInds:np.min((endInds+int((kernelSize[1]-1)/2),A.shape[1]-1))],((int((kernelSize[0]-1)/2),int((kernelSize[0]-1)/2)),(int((kernelSize[1]-1)/2),np.max((0,endInds+int((kernelSize[1]-1)/2)-A.shape[1]+1)))),mode='constant',constant_values=np.nan)
             elif ii == chunkSize-1:
-                A1 = np.lib.pad(A[:,startInds-int((kernelSize[1]-1)/2):endInds],((int((kernelSize[0]-1)/2),int((kernelSize[0]-1)/2)),(0,int((kernelSize[1]-1)/2))),mode='constant',constant_values=np.nan)
+                A1 = np.lib.pad(A[:,np.max((0,startInds-int((kernelSize[1]-1)/2))):endInds],((int((kernelSize[0]-1)/2),int((kernelSize[0]-1)/2)),(np.max((0,0-startInds+int((kernelSize[1]-1)/2))),int((kernelSize[1]-1)/2))),mode='constant',constant_values=np.nan)
             else:
-                A1 = np.lib.pad(A[:,startInds-int((kernelSize[1]-1)/2):endInds+int((kernelSize[1]-1)/2)],((int((kernelSize[0]-1)/2),int((kernelSize[0]-1)/2)),(0,0)),mode='constant',constant_values=np.nan)
+                A1 = np.lib.pad(A[:,np.max((0,startInds-int((kernelSize[1]-1)/2))):np.min((endInds+int((kernelSize[1]-1)/2),A.shape[1]-1))],((int((kernelSize[0]-1)/2),int((kernelSize[0]-1)/2)),(np.max((0,0-startInds+int((kernelSize[1]-1)/2))),np.max((0,endInds+int((kernelSize[1]-1)/2)-A.shape[1]+1)))),mode='constant',constant_values=np.nan)
 
         B = viewW(A1, kernelSize).reshape(-1,kernelSize[0]*kernelSize[1]).T[:,::1]
     

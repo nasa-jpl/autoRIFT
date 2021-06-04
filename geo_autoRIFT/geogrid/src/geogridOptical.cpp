@@ -921,8 +921,8 @@ void geoGridOptical::geogridOptical()
                 targutm0[pp] = xyzs[pp];
             }
             
-            xind = std::round((targutm0[0] - startingX) / XSize) + 1.;
-            yind = std::round((targutm0[1] - startingY) / YSize) + 1.;
+            xind = std::round((targutm0[0] - startingX) / XSize) + 0.;
+            yind = std::round((targutm0[1] - startingY) / YSize) + 0.;
 
             
             
@@ -1000,7 +1000,7 @@ void geoGridOptical::geogridOptical()
             }
             
             
-            if ((xind > nPixels)|(xind < 1)|(yind > nLines)|(yind < 1))
+            if ((xind > nPixels-1)|(xind < 1-1)|(yind > nLines-1)|(yind < 1-1))
             {
                 raster1[jj] = nodata_out;
                 raster2[jj] = nodata_out;
