@@ -563,6 +563,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
         outband = outRaster.GetRasterBand(4)
         outband.WriteArray(CHIPSIZEX)
         outband.FlushCache()
+        del outRaster
 
 
         if offset2vx is not None:
@@ -603,6 +604,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
             outband = outRaster.GetRasterBand(2)
             outband.WriteArray(VY)
             outband.FlushCache()
+            del outRaster
 
             ############ prepare for netCDF packaging
 
@@ -665,7 +667,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 DXref = offset2vy_2 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VXref - offset2vx_2 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VYref
                 DYref = offset2vx_1 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VYref - offset2vy_1 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VXref
 
-                stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
+#                stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
+                stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)))
                 
                 V_temp = np.sqrt(VX**2 + VY**2)
                 try:
@@ -674,7 +677,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 except IndexError:
                     SSM1 = np.zeros(V_temp.shape).astype('bool')
                 
-                stable_count1 = np.sum(SSM1 & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
+#                stable_count1 = np.sum(SSM1 & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
+                stable_count1 = np.sum(SSM1 & np.logical_not(np.isnan(DX)))
 
                 dx_mean_shift = 0.0
                 dy_mean_shift = 0.0
@@ -684,20 +688,24 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 if stable_count != 0:
                     temp = DX.copy() - DXref.copy()
                     temp[np.logical_not(SSM)] = np.nan
-                    dx_mean_shift = np.median(temp[(temp > -5)&(temp < 5)])
+#                    dx_mean_shift = np.median(temp[(temp > -5)&(temp < 5)])
+                    dx_mean_shift = np.median(temp[np.logical_not(np.isnan(temp))])
                     
                     temp = DY.copy() - DYref.copy()
                     temp[np.logical_not(SSM)] = np.nan
-                    dy_mean_shift = np.median(temp[(temp > -5)&(temp < 5)])
+#                    dy_mean_shift = np.median(temp[(temp > -5)&(temp < 5)])
+                    dy_mean_shift = np.median(temp[np.logical_not(np.isnan(temp))])
                     
                 if stable_count1 != 0:
                     temp = DX.copy() - DXref.copy()
                     temp[np.logical_not(SSM1)] = np.nan
-                    dx_mean_shift1 = np.median(temp[(temp > -5)&(temp < 5)])
+#                    dx_mean_shift1 = np.median(temp[(temp > -5)&(temp < 5)])
+                    dx_mean_shift1 = np.median(temp[np.logical_not(np.isnan(temp))])
                     
                     temp = DY.copy() - DYref.copy()
                     temp[np.logical_not(SSM1)] = np.nan
-                    dy_mean_shift1 = np.median(temp[(temp > -5)&(temp < 5)])
+#                    dy_mean_shift1 = np.median(temp[(temp > -5)&(temp < 5)])
+                    dy_mean_shift1 = np.median(temp[np.logical_not(np.isnan(temp))])
                 
                 if stable_count == 0:
                     if stable_count1 == 0:
