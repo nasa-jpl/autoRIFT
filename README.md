@@ -73,7 +73,7 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 * **[NEW]** For feature tracking of optical images, the program now supports fetching optical images (Landsat-8 GeoTIFF and Sentinel-2 COG formats are included) as well as other inputs (e.g. DEM, slope, etc; all in GeoTIFF format) from either local machine or remotely using [GDAL virtual file systems](https://gdal.org/user/virtual_file_systems.html) (e.g., `/vsicurl/https://...`). For feature tracking of radar images, the program now supports fetching auxiliary inputs (e.g. DEM, slope, etc; all in GeoTIFF format) from either local machine or remotely. See the changes on the Geogrid [commands](https://github.com/leiyangleon/Geogrid).
 * **[NEW]** parallel computing has been added for Normalized Cross-Correlation (NCC). When using the autoRIFT commands below, users need to append a multiprocessing flag: "-mpflag $num" with "$num" being the number of threads used; if not specified, the single-core version is used. 
 
-## 4. Possible Future Development
+## 4. [Possible Future Development](/docs/future.md)
 
 * for radar (SAR) images, it is yet to include the complex correlation of the two images, i.e. the current version only uses the amplitude correlation
 * the GPU implementation would be useful to extend 
