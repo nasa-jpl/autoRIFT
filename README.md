@@ -53,7 +53,7 @@ Gardner, A.S., Moholdt, G., Scambos, T., Fahnstock, M., Ligtenberg, S., Broeke, 
 This effort was funded by the NASA MEaSUREs program in contribution to the Inter-mission Time Series of Land Ice Velocity and Elevation (ITS_LIVE) project (https://its-live.jpl.nasa.gov/) and through Alex Gardner’s participation in the NASA NISAR Science Team
     
        
-## 3. [Features](/docs/feature.md)
+## 3. [Features](./docs/feature.md)
 
 * fast algorithm that finds displacement between the two images (where source and template image patches are extracted and correlated) using sparse search and iteratively progressive chip (template) sizes
 * for intelligent use, user can specify unstructured spatially-varying search centers (center of the source image patch), search offsets (center displacement of the template image patch compared to the source image patch), chip sizes (size of template image patch), search ranges (size of the source image patch)
