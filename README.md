@@ -39,7 +39,7 @@ Alex Gardner (JPL/Caltech; alex.s.gardner@jpl.nasa.gov) first described the algo
 
 Yang Lei (GPS/Caltech; ylei@caltech.edu; leiyangfrancis@gmail.com) translated it to Python, further optimized and incoporated to the ISCE software;
 
-Piyush Agram (JPL/Caltech; piyush.agram@jpl.nasa.gov) set up the installation as a standalone module and further cleaned the code.
+Piyush Agram (JPL/Caltech; piyush@gps.caltech.edu) set up the installation as a standalone module and further cleaned the code.
 
 **Reference:** 
 
