@@ -58,7 +58,7 @@ This effort was funded by the NASA MEaSUREs program in contribution to the Inter
 
 
 
-## 4. [Possible Future Development](/docs/future.md)
+## 4. [Future Development](/docs/future.md)
 
 
 
