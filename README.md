@@ -35,7 +35,7 @@ Citation: https://doi.org/10.3390/rs13040749
 
 ## 1. Authors
 
-Alex Gardner (JPL/Caltech; alex.s.gardner@jpl.nasa.gov) first described the algorithm "auto-RIFT" in (Gardner et al., 2018) and developed the first version in MATLAB;
+Alex Gardner (JPL/Caltech; alex.s.gardner@jpl.nasa.gov) first described the algorithm "auto-RIFT" in (Gardner et al., 2018), developed the first version in MATLAB and continued to refine the algorithm;
 
 Yang Lei (GPS/Caltech; ylei@caltech.edu; leiyangfrancis@gmail.com) translated it to Python, further optimized and incoporated to the ISCE software;
 
