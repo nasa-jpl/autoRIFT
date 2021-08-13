@@ -10,6 +10,7 @@
 ### Update Notes:
 
 ```diff
++ refined the workflow and ready for scaling the production of both optical and radar data results
 + improved memory use (by 50%) for autoRIFT and runtime (60x) for GeogridOptical
 + parallel computing for NCC
 + support for remote input files using GDAL virtual file systems (e.g., `/vsicurl/https://...`)
