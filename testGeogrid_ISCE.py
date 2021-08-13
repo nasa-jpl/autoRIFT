@@ -135,8 +135,8 @@ def loadMetadata(indir):
     info.prf = 1.0 / frames[0].bursts[0].azimuthTimeInterval
     info.rangePixelSize = frames[0].bursts[0].rangePixelSize
     info.lookSide = -1
-    info.numberOfLines = int( np.round( (info.sensingStop - info.sensingStart).total_seconds() * info.prf))
-    info.numberOfSamples = int( np.round( (info.farRange - info.startingRange)/info.rangePixelSize))
+    info.numberOfLines = int( np.round( (info.sensingStop - info.sensingStart).total_seconds() * info.prf)) + 1
+    info.numberOfSamples = int( np.round( (info.farRange - info.startingRange)/info.rangePixelSize)) + 1
     info.orbit = getMergedOrbit(frames)
 
     return info

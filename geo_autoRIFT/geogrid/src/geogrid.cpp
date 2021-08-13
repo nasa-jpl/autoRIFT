@@ -379,11 +379,13 @@ void geoGrid::geogrid()
     
     double raster1a[pCount];
     double raster1b[pCount];
-//    double raster1c[pCount];
+    double raster1c[pCount];
     
     double raster2a[pCount];
     double raster2b[pCount];
-//    double raster2c[pCount];
+    double raster2c[pCount];
+    
+
     
     GDALRasterBand *poBand1 = NULL;
     GDALRasterBand *poBand2 = NULL;
@@ -400,6 +402,9 @@ void geoGrid::geogrid()
     GDALRasterBand *poBand1RO2VY = NULL;
     GDALRasterBand *poBand2RO2VX = NULL;
     GDALRasterBand *poBand2RO2VY = NULL;
+    GDALRasterBand *poBand3RO2VX = NULL;
+    GDALRasterBand *poBand3RO2VY = NULL;
+    
     
     GDALDataset *poDstDS = NULL;
     GDALDataset *poDstDSOff = NULL;
@@ -409,6 +414,7 @@ void geoGrid::geogrid()
     GDALDataset *poDstDSMsk = NULL;
     GDALDataset *poDstDSRO2VX = NULL;
     GDALDataset *poDstDSRO2VY = NULL;
+
     
 
     double nodata;
@@ -602,7 +608,7 @@ void geoGrid::geogrid()
         
         str = ro2vx_name;
         const char * pszDstFilenameRO2VX = str.c_str();
-        poDstDSRO2VX = poDriverRO2VX->Create( pszDstFilenameRO2VX, pCount, lCount, 2, GDT_Float64,
+        poDstDSRO2VX = poDriverRO2VX->Create( pszDstFilenameRO2VX, pCount, lCount, 3, GDT_Float64,
                                          papszOptions );
         
         poDstDSRO2VX->SetGeoTransform( adfGeoTransform );
@@ -614,10 +620,10 @@ void geoGrid::geogrid()
     //    GDALRasterBand *poBand3Los;
         poBand1RO2VX = poDstDSRO2VX->GetRasterBand(1);
         poBand2RO2VX = poDstDSRO2VX->GetRasterBand(2);
-    //    poBand3Los = poDstDSLos->GetRasterBand(3);
+        poBand3RO2VX = poDstDSRO2VX->GetRasterBand(3);
         poBand1RO2VX->SetNoDataValue(nodata_out);
         poBand2RO2VX->SetNoDataValue(nodata_out);
-    //    poBand3Los->SetNoDataValue(nodata_out);
+        poBand3RO2VX->SetNoDataValue(nodata_out);
         
 
         GDALDriver *poDriverRO2VY;
@@ -628,7 +634,7 @@ void geoGrid::geogrid()
         
         str = ro2vy_name;
         const char * pszDstFilenameRO2VY = str.c_str();
-        poDstDSRO2VY = poDriverRO2VY->Create( pszDstFilenameRO2VY, pCount, lCount, 2, GDT_Float64,
+        poDstDSRO2VY = poDriverRO2VY->Create( pszDstFilenameRO2VY, pCount, lCount, 3, GDT_Float64,
                                          papszOptions );
         
         poDstDSRO2VY->SetGeoTransform( adfGeoTransform );
@@ -640,10 +646,11 @@ void geoGrid::geogrid()
     //    GDALRasterBand *poBand3Alt;
         poBand1RO2VY = poDstDSRO2VY->GetRasterBand(1);
         poBand2RO2VY = poDstDSRO2VY->GetRasterBand(2);
-    //    poBand3Alt = poDstDSAlt->GetRasterBand(3);
+        poBand3RO2VY = poDstDSRO2VY->GetRasterBand(3);
         poBand1RO2VY->SetNoDataValue(nodata_out);
         poBand2RO2VY->SetNoDataValue(nodata_out);
-    //    poBand3Alt->SetNoDataValue(nodata_out);
+        poBand3RO2VY->SetNoDataValue(nodata_out);
+        
         
     }
     
@@ -1215,10 +1222,10 @@ void geoGrid::geogrid()
                 
                 raster1a[jj] = nodata_out;
                 raster1b[jj] = nodata_out;
-//                raster1c[jj] = nodata_out;
+                raster1c[jj] = nodata_out;
                 raster2a[jj] = nodata_out;
                 raster2b[jj] = nodata_out;
-//                raster2c[jj] = nodata_out;
+                raster2c[jj] = nodata_out;
                 
             }
             else
@@ -1262,6 +1269,14 @@ void geoGrid::geogrid()
                         raster2a[jj] = nodata_out;
                         raster2b[jj] = nodata_out;
                     }
+                    
+                    for(int pp=0; pp<3; pp++)
+                    {
+                        targXYZ[pp] -= xyz[pp];
+                    }
+                    raster1c[jj] = dr/dt*365.0*24.0*3600.0*1;
+                    raster2c[jj] = norm_C(targXYZ)/dt*365.0*24.0*3600.0*1;
+                    
                     
                     if (srxname != "")
                     {
@@ -1341,12 +1356,7 @@ void geoGrid::geogrid()
                 
                 
                 
-//                raster1a[jj] = los[0]*dt/dr/365.0/24.0/3600.0;
-//                raster1b[jj] = los[1]*dt/dr/365.0/24.0/3600.0;
-//                raster1c[jj] = los[2]*dt/dr/365.0/24.0/3600.0;
-//                raster2a[jj] = temp[0]*dt/norm_C(alt)/365.0/24.0/3600.0;
-//                raster2b[jj] = temp[1]*dt/norm_C(alt)/365.0/24.0/3600.0;
-//                raster2c[jj] = temp[2]*dt/norm_C(alt)/365.0/24.0/3600.0;
+
             }
             
             
@@ -1407,14 +1417,15 @@ void geoGrid::geogrid()
                                  raster1a, pCount, 1, GDT_Float64, 0, 0 );
             poBand2RO2VX->RasterIO( GF_Write, 0, ii, pCount, 1,
                                  raster1b, pCount, 1, GDT_Float64, 0, 0 );
-    //        poBand3Los->RasterIO( GF_Write, 0, ii, pCount, 1,
-    //                             raster1c, pCount, 1, GDT_Float64, 0, 0 );
+            poBand3RO2VX->RasterIO( GF_Write, 0, ii, pCount, 1,
+                                 raster1c, pCount, 1, GDT_Float64, 0, 0 );
             poBand1RO2VY->RasterIO( GF_Write, 0, ii, pCount, 1,
                                  raster2a, pCount, 1, GDT_Float64, 0, 0 );
             poBand2RO2VY->RasterIO( GF_Write, 0, ii, pCount, 1,
                                  raster2b, pCount, 1, GDT_Float64, 0, 0 );
-    //        poBand3Alt->RasterIO( GF_Write, 0, ii, pCount, 1,
-    //                             raster2c, pCount, 1, GDT_Float64, 0, 0 );
+            poBand3RO2VY->RasterIO( GF_Write, 0, ii, pCount, 1,
+                                 raster2c, pCount, 1, GDT_Float64, 0, 0 );
+            
         }
         
         
@@ -1460,6 +1471,7 @@ void geoGrid::geogrid()
         
         /* Once we're done, close properly the dataset */
         GDALClose( (GDALDatasetH) poDstDSRO2VY );
+        
     }
     
     
