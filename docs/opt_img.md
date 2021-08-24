@@ -14,4 +14,4 @@ With ISCE:
        
        testautoRIFT_ISCE.py -m I1 -s I2 -fo 1
 
-where "I1" and "I2" are the reference and test images as defined in the instructions below. The "-fo" option indicates whether or not to read optical image data.
+where "I1" and "I2" are the reference and secondary images as defined in the section of instructions below. The "-fo" option indicates whether or not to read optical image data.
