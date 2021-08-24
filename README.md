@@ -12,6 +12,7 @@
 ```diff
 + refined the workflow and ready for scaling the production of both optical and radar data results
 + improved memory use (by 50%) for autoRIFT and runtime (60x) for GeogridOptical
++ refined NDC filter to accommodate fine grid with spatially overlapping (dependent) search chips
 + parallel computing for NCC
 + support for remote input files using GDAL virtual file systems (e.g., `/vsicurl/https://...`)
 +   see: https://gdal.org/user/virtual_file_systems.html
