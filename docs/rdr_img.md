@@ -11,4 +11,4 @@ With ISCE:
 
        testautoRIFT_ISCE.py -m I1 -s I2
 
-where "I1" and "I2" are the reference and test images as defined in the instructions below. 
+where "I1" and "I2" are the reference and secondary images as defined in the section of instructions below. 
