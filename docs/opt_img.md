@@ -1,4 +1,4 @@
-### 5.1 Optical image over regular grid in imaging coordinates
+### 5.1 Optical image over regular grid in image coordinates
 
 <img src="../figures/regular_grid_optical.png" width="100%">
 
