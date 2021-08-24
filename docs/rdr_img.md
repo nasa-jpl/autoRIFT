@@ -1,4 +1,4 @@
-### 5.3 Radar image over regular grid in imaging coordinates
+### 5.3 Radar image over regular grid in image coordinates
 
 <img src="../figures/regular_grid_new.png" width="100%">
 
