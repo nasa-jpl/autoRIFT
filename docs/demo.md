@@ -1,6 +1,6 @@
 ## 5. Demo
 
-### 5.1 [Optical image over regular grid in imaging coordinates](/docs/opt_img.md)
+### 5.1 [Optical image over regular grid in image coordinates](/docs/opt_img.md)
 
 
 
@@ -10,7 +10,7 @@
 
 
 
-### 5.3 [Radar image over regular grid in imaging coordinates](/docs/rdr_img.md)
+### 5.3 [Radar image over regular grid in image coordinates](/docs/rdr_img.md)
 
 
 
