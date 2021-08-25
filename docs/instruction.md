@@ -3,15 +3,18 @@
 **Note:**
 
 * When the grid is provided in geographic Cartesian (northing/easting) coordinates (geographic coordinates lat/lon is not supported), it is required to run the "Geogrid" module (https://github.com/leiyangleon/Geogrid) first before running "autoRIFT". In other words, the outputs from "testGeogrid_ISCE.py" or "testGeogridOptical.py" (a.k.a "winlocname", "winoffname", "winsrname", "wincsminname", "wincsmaxname", "winro2vxname", "winro2vyname") will serve as optional inputs for running "autoRIFT" at a geographic grid, which is required to generate the final motion velocity maps.
-* When the outputs from running the "Geogrid" module are not provided, a regular grid in the imaging coordinates will be automatically assigned
+* When the outputs from running the "Geogrid" module are not provided, a regular grid in the image coordinates will be automatically assigned
 
 **For quick use:**
 
 * Refer to the file "testautoRIFT.py" (standalone) and "testautoRIFT_ISCE.py" (with ISCE) for the usage of the module and modify it for your own purpose
-* Input files include the reference image (required), test image (required), and the outputs from running "testGeogrid_ISCE.py" or "testGeogridOptical.py" (optional; a.k.a "winlocname", "winoffname", "winsrname", "wincsminname", "wincsmaxname", "winro2vxname", "winro2vyname"). When "winlocname" (grid location) is specified, each of the rest optional input ("win * name") can be either used or omitted.
+* Refer to the Demo Section 5 for the command line use with various options
+* Input files include the reference image (required), secondary image (required), and the outputs from running "testGeogrid_ISCE.py" or "testGeogridOptical.py" (optional; a.k.a "winlocname", "winoffname", "winsrname", "wincsminname", "wincsmaxname", "winro2vxname", "winro2vyname", all of which are established on a user-defined geographic Cartesian coordinate grid). 
+* For the simplified use when the geocoded product is desired, "winlocname" (the x/y 2-D grid location represented using reference image pixel index) must be specified (otherwise it will become ungeocoded), and each of the rest optional input ("win * name") can be either used or omitted.
+* For full/combinative use of these optional inputs, "winoffname" specifies the x/y (2-D) downstream search pixel displacement (in pixels), "winsrname" determines the x/y (2-D) search range in pixels, "wincsminname" and "wincsmaxname" are the x/y (2-D) minimum and maximum chip sizes in pixels, "winro2vxname" and "winro2vyname" are the conversion matrix (transforming dx/dy to VX/VY) as defined in https://doi.org/10.3390/rs13040749.
 * Output files include 1) estimated horizontal displacement (equivalent to range for radar), 2) estimated vertical displacement (equivalent to minus azimuth for radar), 3) light interpolation mask, 4) iteratively progressive chip size used. 
 
-_Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic Cartesian (northing/easting) coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF of the final converted motion velocity in geographic x- (easting) and y- (northing) coordinates will be created and named "velocity.tif". Also, it is possible to save the outputs in netCDF standard format by adding the "-nc" option to the "testautoRIFT.py" (standalone) and "testautoRIFT_ISCE.py" (with ISCE) command._
+_Note: These four output files will be stored in a file named "offset.mat" that can be viewed in Python and MATLAB. When the grid is provided in geographic Cartesian (northing/easting) coordinates, a 4-band GeoTIFF with the same EPSG code as input grid will be created as well and named "offset.tif"; a 2-band GeoTIFF of the final converted motion velocity in geographic x- (easting) and y- (northing) coordinates will be created and named "velocity.tif". Also, it is possible to save the outputs in netCDF standard format by adding the "-nc" option to the "testautoRIFT.py" (standalone) and "testautoRIFT_ISCE.py" (with ISCE) command by using a user-defined netCDF packaging routine (not included in the source code)._
 
 **For modular use:**
 
