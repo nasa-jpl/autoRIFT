@@ -1,8 +1,8 @@
-### 5.4 Radar image over user-defined geographic Cartesian coordinate grid
+### 5.4 Radar image over user-defined map-projected Cartesian coordinate grid
 
 <img src="../figures/autorift1.png" width="100%">
 
-***Output of "autoRIFT" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) at Jakobshavn Glacier of Greenland over user-defined geographic Cartesian (northing/easting) coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/Geogrid): (a) estimated range pixel displacement (in pixels), (b) estimated azimuth pixel displacement (in pixels), (c) light interpolation mask, (d) chip size used (in pixels). Notes: all maps are established exactly over the same geographic Cartesian coordinate grid from input.***
+***Output of "autoRIFT" module for a pair of Sentinel-1A/B images (20170221-20170227; same as the Demo dataset at https://github.com/leiyangleon/Geogrid) at Jakobshavn Glacier of Greenland over user-defined map-projected Cartesian (northing/easting) coordinate grid (same grid used in the Demo at https://github.com/leiyangleon/Geogrid): (a) estimated range pixel displacement (in pixels), (b) estimated azimuth pixel displacement (in pixels), (c) light interpolation mask, (d) chip size used (in pixels). Notes: all maps are established exactly over the same map-projected Cartesian coordinate grid from input.***
 
 This is done by implementing the following command line:
 
@@ -20,4 +20,4 @@ where "I1" and "I2" are the reference and secondary images as defined in the sec
 
 <img src="../figures/autorift2.png" width="100%">
 
-***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules (i.e. estimated range/azimuth pixel displacement shown above): (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) reference motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (d) reference motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same geographic Cartesian (northing/easting) coordinate grid from input.***
+***Final motion velocity results by combining outputs from "Geogrid" (i.e. matrix of conversion coefficients from the Demo at https://github.com/leiyangleon/Geogrid) and "autoRIFT" modules (i.e. estimated range/azimuth pixel displacement shown above): (a) estimated motion velocity from Sentinel-1 data (x-direction; in m/yr), (b) reference motion velocity from input data (x-direction; in m/yr), (c) estimated motion velocity from Sentinel-1 data (y-direction; in m/yr), (d) reference motion velocity from input data (y-direction; in m/yr). Notes: all maps are established exactly over the same map-projected Cartesian (northing/easting) coordinate grid from input.***
