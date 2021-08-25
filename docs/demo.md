@@ -5,7 +5,7 @@
 
 
 
-### 5.2 [Optical image over user-defined geographic Cartesian coordinate grid](/docs/opt_geo.md)
+### 5.2 [Optical image over user-defined map-projected Cartesian coordinate grid](/docs/opt_geo.md)
 
 
 
@@ -15,4 +15,4 @@
 
 
 
-### 5.4 [Radar image over user-defined geographic Cartesian coordinate grid](/docs/rdr_geo.md)
+### 5.4 [Radar image over user-defined map-projected Cartesian coordinate grid](/docs/rdr_geo.md)
