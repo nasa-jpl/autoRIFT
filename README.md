@@ -1,6 +1,6 @@
 # autoRIFT (autonomous Repeat Image Feature Tracking)
 
-***Friendly Reminder: From September 1st 2021 on, autoRIFT will migrate to , where it will be continuously maintained.***
+***Friendly Reminder: From September 1st 2021 on, autoRIFT will migrate to the GitHub account of NASA MEaSUREs project ITS_LIVE, where it will be continuously maintained.***
 
 
 
