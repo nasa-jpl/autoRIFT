@@ -25,7 +25,7 @@
 
 **Use cases include all dense feature tracking applications, including the measurement of surface displacements occurring between two repeat satellite images as a result of glacier flow, large earthquake displacements, and land slides**  
 
-**autoRIFT can be used for dense feature tracking between two images over a grid defined in an arbitrary geographic Cartesian (northing/easting) coordinate projection when used in combination with the sister Geogrid Python module (https://github.com/leiyangleon/Geogrid). Example applications include searching radar-coordinate imagery on a polar stereographic grid and searching Universal Transverse Mercator (UTM) imagery at a specified geographic Cartesian (northing/easting) coordinate grid**
+**autoRIFT can be used for dense feature tracking between two images over a grid defined in an arbitrary map-projected Cartesian (northing/easting) coordinate system when used in combination with the sister Geogrid Python module (https://github.com/leiyangleon/Geogrid). Example applications include searching radar-coordinate imagery on a polar stereographic grid and searching Universal Transverse Mercator (UTM) imagery at a user-specified map-projected Cartesian (northing/easting) coordinate grid**
 
 
 Copyright (C) 2019 California Institute of Technology.  Government Sponsorship Acknowledged.
