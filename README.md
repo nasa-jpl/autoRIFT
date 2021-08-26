@@ -32,7 +32,7 @@
 
 Copyright (C) 2019 California Institute of Technology.  Government Sponsorship Acknowledged.
 
-Link: https://github.com/leiyangleon/autoRIFT
+Link: https://github.com/nasa-jpl/autoRIFT
 
 Citation: https://doi.org/10.3390/rs13040749
 
