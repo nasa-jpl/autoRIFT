@@ -815,19 +815,21 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
 
 
-                    from datetime import date
-                    d0 = date(np.int(master_split[5][0:4]),np.int(master_split[5][4:6]),np.int(master_split[5][6:8]))
-                    d1 = date(np.int(slave_split[5][0:4]),np.int(slave_split[5][4:6]),np.int(slave_split[5][6:8]))
+                    from datetime import date, datetime
+#                    d0 = date(np.int(master_split[5][0:4]),np.int(master_split[5][4:6]),np.int(master_split[5][6:8]))
+#                    d1 = date(np.int(slave_split[5][0:4]),np.int(slave_split[5][4:6]),np.int(slave_split[5][6:8]))
+                    d0 = datetime.strptime(master_dt,"%Y%m%dT%H:%M:%S.%f")
+                    d1 = datetime.strptime(slave_dt,"%Y%m%dT%H:%M:%S.%f")
                     date_dt_base = d1 - d0
                     date_dt = np.float64(date_dt_base.days)
                     if date_dt < 0:
                         raise Exception('Input image 1 must be older than input image 2')
                     if date_dt_base.days < 0:
                         date_ct = d1 + (d0 - d1)/2
-                        date_center = date_ct.strftime("%Y%m%d")
+                        date_center = date_ct.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
                     else:
                         date_ct = d0 + (d1 - d0)/2
-                        date_center = date_ct.strftime("%Y%m%d")
+                        date_center = date_ct.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
 
                     IMG_INFO_DICT = {'mission_img1':master_split[0][0],'sensor_img1':'C','satellite_img1':master_split[0][1:3],'acquisition_img1':master_dt,'time_standard_img1':'UTC','absolute_orbit_number_img1':master_split[7],'mission_data_take_ID_img1':master_split[8],'product_unique_ID_img1':master_split[9][0:4],'flight_direction_img1':flight_direction_m,'mission_img2':slave_split[0][0],'sensor_img2':'C','satellite_img2':slave_split[0][1:3],'acquisition_img2':slave_dt,'time_standard_img2':'UTC','absolute_orbit_number_img2':slave_split[7],'mission_data_take_ID_img2':slave_split[8],'product_unique_ID_img2':slave_split[9][0:4],'flight_direction_img2':flight_direction_s,'date_dt':date_dt,'date_center':date_center,'latitude':cen_lat,'longitude':cen_lon,'roi_valid_percentage':PPP,'autoRIFT_software_version':version}
                     error_vector = np.array([[0.0356, 0.0501, 0.0266, 0.0622, 0.0357, 0.0501],
