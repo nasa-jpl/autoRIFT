@@ -1,5 +1,8 @@
 ## 6. Install
 
+### 6.0 Preparation:
+___Copy the python scripts "testautoRIFT_ISCE.py", "testautoRIFT.py", "testGeogrid_ISCE.py", "testGeogridOptical.py", "netcdf_output.py", "topsinsar_filename.py" to a directory under your machine's environmental variables $PATH and $PYTHONPATH, so that these scripts can be run anywhere on the machine.___
+
 ### 6.1 With ISCE:
 
 * First install ISCE2 (https://github.com/isce-framework/isce2)
