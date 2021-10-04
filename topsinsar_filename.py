@@ -60,6 +60,7 @@ def cmdLineParse():
     '''
         Command line parser.
         '''
+    import argparse
     parser = argparse.ArgumentParser(description="Single-pair InSAR processing of Sentinel-1 data using ISCE modules")
     
     return parser.parse_args()
