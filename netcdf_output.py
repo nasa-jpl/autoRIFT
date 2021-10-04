@@ -312,12 +312,19 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         VXR[angle_df_R < angle_threshold_R] = np.nan
         VYR[angle_df_R < angle_threshold_R] = np.nan
 
+        #   obsolete fusion routine using the sp mask file to distinguish pure smoothed slopes and reference velocity fields
 #        VXP = VXS
 #        VXP[MM == 1] = VXR[MM == 1]
 #        VYP = VYS
 #        VYP[MM == 1] = VYR[MM == 1]
-        VXP = VXR
-        VYP = VYR
+
+        #   by default, use the updated dhdxs and dhdys input files that combine the velocity fields and smoothed slopes; should be turned off when better estimates of velocity fields are available
+        VXP = VXS
+        VYP = VYS
+        
+#        #   use the updated (better) estimates of velocity fields; by default, is turned off; should be turned on after generating the new velocity fields
+#        VXP = VXR
+#        VYP = VYR
 
         VXP = VXP.astype(np.float32)
         VYP = VYP.astype(np.float32)
