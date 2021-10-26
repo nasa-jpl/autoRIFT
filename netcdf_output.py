@@ -227,7 +227,7 @@ def netCDF_read_intermediate(filename='./autoRIFT_intermediate.nc'):
     return Dx, Dy, InterpMask, ChipSizeX, GridSpacingX, ScaleChipSizeY, SearchLimitX, SearchLimitY, origSize, noDataMask
 
 
-def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1, SX, SY, offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, offset2vr, offset2va, MM, VXref, VYref, rangePixelSize, azimuthPixelSize, dt, epsg, srs, tran, out_nc_filename, pair_type, detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_count1, stable_shift_applied, dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector):
+def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1, SX, SY, offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, offset2vr, offset2va, MM, VXref, VYref, DXref, DYref, rangePixelSize, azimuthPixelSize, dt, epsg, srs, tran, out_nc_filename, pair_type, detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_count1, stable_shift_applied, dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector):
     
     
     vx_mean_shift = offset2vx_1 * dx_mean_shift + offset2vx_2 * dy_mean_shift
@@ -265,6 +265,11 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         VA = (DY) * offset2va
         VR = VR.astype(np.float32)
         VA = VA.astype(np.float32)
+        
+        VRref = DXref * offset2vr
+        VAref = (DYref) * offset2va
+        VRref = VRref.astype(np.float32)
+        VAref = VAref.astype(np.float32)
         
         
 #        vr_mean_shift = dx_mean_shift * rangePixelSize / dt * 365.0 * 24.0 * 3600.0
@@ -620,14 +625,14 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
 
     if stable_count != 0:
-        temp = VX.copy()
+        temp = VX.copy() - VXref.copy()
         temp[np.logical_not(SSM)] = np.nan
 #        vx_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
         vx_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
     else:
         vx_error_mask = np.nan
     if stable_count1 != 0:
-        temp = VX.copy()
+        temp = VX.copy() - VXref.copy()
         temp[np.logical_not(SSM1)] = np.nan
 #        vx_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
         vx_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
@@ -703,14 +708,14 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
 
     if stable_count != 0:
-        temp = VY.copy()
+        temp = VY.copy() - VYref.copy()
         temp[np.logical_not(SSM)] = np.nan
 #        vy_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
         vy_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
     else:
         vy_error_mask = np.nan
     if stable_count1 != 0:
-        temp = VY.copy()
+        temp = VY.copy() - VYref.copy()
         temp[np.logical_not(SSM1)] = np.nan
 #        vy_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
         vy_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
@@ -834,14 +839,14 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         var.setncattr('units','m/y')
         
         if stable_count != 0:
-            temp = VR.copy()
+            temp = VR.copy() - VRref.copy()
             temp[np.logical_not(SSM)] = np.nan
 #            vr_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
             vr_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
         else:
             vr_error_mask = np.nan
         if stable_count1 != 0:
-            temp = VR.copy()
+            temp = VR.copy() - VRref.copy()
             temp[np.logical_not(SSM1)] = np.nan
 #            vr_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
             vr_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
@@ -914,14 +919,14 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
 
         if stable_count != 0:
-            temp = VA.copy()
+            temp = VA.copy() - VAref.copy()
             temp[np.logical_not(SSM)] = np.nan
 #            va_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
             va_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
         else:
             va_error_mask = np.nan
         if stable_count1 != 0:
-            temp = VA.copy()
+            temp = VA.copy() - VAref.copy()
             temp[np.logical_not(SSM1)] = np.nan
 #            va_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
             va_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
@@ -985,22 +990,22 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
         # fuse the (slope parallel & reference) flow-based range-projected result with the raw observed range/azimuth-based result
         if stable_count_p != 0:
-            temp = VXP.copy()
+            temp = VXP.copy() - VXref.copy()
             temp[np.logical_not(SSM)] = np.nan
 #            vxp_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
             vxp_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
 
-            temp = VYP.copy()
+            temp = VYP.copy() - VYref.copy()
             temp[np.logical_not(SSM)] = np.nan
 #            vyp_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
             vyp_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
         if stable_count1_p != 0:
-            temp = VXP.copy()
+            temp = VXP.copy() - VXref.copy()
             temp[np.logical_not(SSM1)] = np.nan
 #            vxp_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
             vxp_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
 
-            temp = VYP.copy()
+            temp = VYP.copy() - VYref.copy()
             temp[np.logical_not(SSM1)] = np.nan
 #            vyp_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
             vyp_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
@@ -1088,14 +1093,14 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
 
         if stable_count_p != 0:
-            temp = VXP.copy()
+            temp = VXP.copy() - VXref.copy()
             temp[np.logical_not(SSM)] = np.nan
 #            vxp_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
             vxp_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
         else:
             vxp_error_mask = np.nan
         if stable_count1_p != 0:
-            temp = VXP.copy()
+            temp = VXP.copy() - VXref.copy()
             temp[np.logical_not(SSM1)] = np.nan
 #            vxp_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
             vxp_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
@@ -1170,14 +1175,14 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
 
         if stable_count_p != 0:
-            temp = VYP.copy()
+            temp = VYP.copy() - VYref.copy()
             temp[np.logical_not(SSM)] = np.nan
 #            vyp_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
             vyp_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
         else:
             vyp_error_mask = np.nan
         if stable_count1_p != 0:
-            temp = VYP.copy()
+            temp = VYP.copy() - VYref.copy()
             temp[np.logical_not(SSM1)] = np.nan
 #            vyp_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
             vyp_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
