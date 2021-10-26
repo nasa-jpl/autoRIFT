@@ -707,7 +707,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 #                stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
                 stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)))
 
-                V_temp = np.sqrt(VX**2 + VY**2)
+                V_temp = np.sqrt(VXref**2 + VYref**2)
                 try:
                     V_temp_threshold = np.percentile(V_temp[np.logical_not(np.isnan(V_temp))],25)
                     SSM1 = (V_temp <= V_temp_threshold)
@@ -830,7 +830,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     netcdf_file = no.netCDF_packaging(
                         VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1, SX, SY,
                         offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, offset2vr, offset2va, MM, VXref, VYref,
-                        rangePixelSize, azimuthPixelSize, dt, epsg, srs, tran, out_nc_filename, pair_type,
+                        DXref, DYref, rangePixelSize, azimuthPixelSize, dt, epsg, srs, tran, out_nc_filename, pair_type,
                         detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_count1, stable_shift_applied,
                         dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector
                     )
@@ -903,7 +903,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     netcdf_file = no.netCDF_packaging(
                         VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1, SX, SY,
                         offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, None, None, MM, VXref, VYref,
-                        XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type,
+                        None, None, XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type,
                         detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_count1, stable_shift_applied,
                         dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector
                     )
@@ -968,7 +968,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     netcdf_file = no.netCDF_packaging(
                         VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1, SX, SY,
                         offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, None, None, MM, VXref, VYref,
-                        XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type,
+                        None, None, XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type,
                         detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_count1, stable_shift_applied,
                         dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector
                     )
