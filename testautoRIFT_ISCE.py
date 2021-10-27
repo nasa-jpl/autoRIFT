@@ -931,9 +931,12 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
                     master_split = master_path.split('_')
                     slave_split = slave_path.split('_')
+                    
+                    master_filename = os.path.basename(master_path)
+                    slave_filename = os.path.basename(slave_path)
 
-                    master_filename = master_split[0][-3:]+'_'+master_split[2]+'_'+master_split[4][:3]+'_'+os.path.basename(master_path)
-                    slave_filename = slave_split[0][-3:]+'_'+slave_split[2]+'_'+slave_split[4][:3]+'_'+os.path.basename(slave_path)
+#                    master_filename = master_split[0][-3:]+'_'+master_split[2]+'_'+master_split[4][:3]+'_'+os.path.basename(master_path)
+#                    slave_filename = slave_split[0][-3:]+'_'+slave_split[2]+'_'+slave_split[4][:3]+'_'+os.path.basename(slave_path)
 
                     import netcdf_output as no
                     pair_type = 'optical'
