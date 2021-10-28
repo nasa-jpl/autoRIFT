@@ -928,8 +928,19 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     master_split = master_path.split('_')
                     slave_split = slave_path.split('_')
                     
-                    master_filename = os.path.basename(master_path)
-                    slave_filename = os.path.basename(slave_path)
+                    import re
+                    if re.findall("://",master_path).__len__() > 0:
+                        master_filename_full = master_path.split('/')
+                        for item in master_filename_full:
+                            if re.findall("S2._",item).__len__() > 0:
+                                master_filename = item
+                        slave_filename_full = slave_path.split('/')
+                        for item in slave_filename_full:
+                            if re.findall("S2._",item).__len__() > 0:
+                                slave_filename = item
+                    else:
+                        master_filename = os.path.basename(master_path)[:-8]
+                        slave_filename = os.path.basename(slave_path)[:-8]
 
 #                    master_filename = master_split[0][-3:]+'_'+master_split[2]+'_'+master_split[4][:3]+'_'+os.path.basename(master_path)
 #                    slave_filename = slave_split[0][-3:]+'_'+slave_split[2]+'_'+slave_split[4][:3]+'_'+os.path.basename(slave_path)
@@ -944,7 +955,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         raise Exception('Input search range is all zero everywhere, thus no search conducted')
                     PPP = roi_valid_percentage * 100
                     if ncname is None:
-                        out_nc_filename = f"./{master_filename[0:-8]}_X_{slave_filename[0:-8]}" \
+                        out_nc_filename = f"./{master_filename}_X_{slave_filename}" \
                                           f"_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
                     else:
                         out_nc_filename = f"{ncname}_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
