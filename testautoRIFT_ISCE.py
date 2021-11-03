@@ -880,7 +880,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
     #                out_nc_filename = 'Jakobshavn_opt.nc'
                     PPP = roi_valid_percentage * 100
                     if ncname is None:
-                        out_nc_filename = f"./{master_filename[0:-8]}_X_{slave_filename[0:-8]}" \
+                        out_nc_filename = f"./{master_filename[0:-7]}_X_{slave_filename[0:-7]}" \
                                           f"_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
                     else:
                         out_nc_filename = f"{ncname}_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
