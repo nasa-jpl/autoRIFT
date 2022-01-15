@@ -107,7 +107,6 @@ class Geogrid(Component):
         ds = None
 #        pdb.set_trace()
 
-
         if srs.IsProjected():
             epsgstr = srs.GetAuthorityCode('PROJCS')
         elif srs.IsGeographic():
