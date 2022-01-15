@@ -107,9 +107,8 @@ class Geogrid(Component):
         ds = None
 #        pdb.set_trace()
 
-        if srs.IsGeographic():
+        if srs.IsGeographic() and srs.IsProjected():
             epsgstr = srs.GetAuthorityCode('GEOGCS')
-        elif srs.IsProjected():
             epsgstr = srs.GetAuthorityCode('PROJCS')
         elif srs.IsLocal():
             raise Exception('Local coordinate system encountered')
