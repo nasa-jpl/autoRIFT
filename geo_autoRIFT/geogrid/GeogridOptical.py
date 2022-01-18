@@ -105,10 +105,10 @@ class GeogridOptical():
         ds = None
 #        pdb.set_trace()
 
-        if srs.IsGeographic():
-            epsgstr = srs.GetAuthorityCode('GEOGCS')
-        elif srs.IsProjected():
+        if srs.IsProjected():
             epsgstr = srs.GetAuthorityCode('PROJCS')
+        elif srs.IsGeographic():
+            raise Exception('Geographic coordinate system encountered')
         elif srs.IsLocal():
             raise Exception('Local coordinate system encountered')
         else:
