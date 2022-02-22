@@ -20,8 +20,8 @@ project = envautorift['PROJECT']
 install = envautorift['PRJ_SCONS_INSTALL'] + '/' + package + '/' + project
 build = envautorift['PRJ_SCONS_BUILD'] + '/' + package + '/' + project
 #libList = ['gomp','autorift','combinedLib','gdal']
-#libList = ['gomp','combinedLib','gdal','opencv_core','opencv_highgui','opencv_imgproc']
-libList = ['opencv_core','opencv_highgui','opencv_imgproc']
+#libList = ['gomp','combinedLib','gdal','opencv_core','opencv_imgproc']
+libList = ['opencv_core','opencv_imgproc']
 envautorift.PrependUnique(LIBS = libList)
 module = envautorift.LoadableModule(target = 'autoriftcore.so', source = 'autoriftcoremodule.cpp')
 envautorift.Install(install,module)
