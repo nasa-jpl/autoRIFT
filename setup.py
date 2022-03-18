@@ -32,7 +32,7 @@ extensions = [
                     ['geo_autoRIFT/autoRIFT/include',
                      os.path.join(path, 'include/opencv4/')],
         library_dirs = [os.path.join(path, 'lib')],
-        libraries=['opencv_core', 'opencv_highgui', 'opencv_imgproc'],
+        libraries=['opencv_core', 'opencv_imgproc'],
         extra_compile_args=['-std=c++11'],
         language="c++"
      ),
