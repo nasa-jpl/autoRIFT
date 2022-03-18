@@ -223,7 +223,7 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     if CSMINx0 is not None:
         obj.ChipSizeMaxX = CSMAXx0
         obj.ChipSizeMinX = CSMINx0
-        
+
         if geogrid_run_info is None:
             gridspacingx = float(str.split(runCmd('fgrep "Grid spacing in m:" testGeogrid.txt'))[-1])
             chipsizex0 = float(str.split(runCmd('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
@@ -235,7 +235,7 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
             gridspacingx = geogrid_run_info['gridspacingx']
             chipsizex0 = geogrid_run_info['chipsizex0']
             pixsizex = geogrid_run_info['XPixelSize']
-        
+
         obj.ChipSize0X = int(np.ceil(chipsizex0/pixsizex/4)*4)
         obj.GridSpacingX = int(obj.ChipSize0X*gridspacingx/chipsizex0)
 
@@ -250,7 +250,7 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
             obj.ChipSizeMaxX = 32
             obj.ChipSizeMinX = 16
             obj.ChipSize0X = 16
-    
+
     # create the downstream search offset if not provided as input
     if Dx0 is not None:
         obj.Dx0 = Dx0
@@ -492,7 +492,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
 
     intermediate_nc_file = 'autoRIFT_intermediate.nc'
-    
+
     if os.path.exists(intermediate_nc_file):
         import netcdf_output as no
         Dx, Dy, InterpMask, ChipSizeX, GridSpacingX, ScaleChipSizeY, SearchLimitX, SearchLimitY, origSize, noDataMask = no.netCDF_read_intermediate(intermediate_nc_file)
@@ -531,7 +531,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
     SEARCHLIMITY[noDataMask] = 0
     if SSM is not None:
         SSM[noDataMask] = False
-    
+
     DX[SEARCHLIMITX == 0] = np.nan
     DY[SEARCHLIMITX == 0] = np.nan
     INTERPMASK[SEARCHLIMITX == 0] = 0
@@ -644,13 +644,13 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
             ############ prepare for netCDF packaging
 
             if nc_sensor is not None:
-                
+
                 if nc_sensor == "S":
                     swath_offset_bias_ref = [-0.01, 0.019, -0.0068, 0.006]
                     import netcdf_output as no
                     DX, DY, flight_direction_m, flight_direction_s = no.cal_swath_offset_bias(indir_m, xGrid, yGrid, VX, VY, DX, DY, nodata, tran, proj, GridSpacingX, ScaleChipSizeY, swath_offset_bias_ref)
-                
-                
+
+
                 if geogrid_run_info is None:
                     vxrefname = str.split(runCmd('fgrep "Velocities:" testGeogrid.txt'))[1]
                     vyrefname = str.split(runCmd('fgrep "Velocities:" testGeogrid.txt'))[2]
@@ -711,14 +711,14 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
 #                stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
                 stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)))
-                
+
                 V_temp = np.sqrt(VXref**2 + VYref**2)
                 try:
                     V_temp_threshold = np.percentile(V_temp[np.logical_not(np.isnan(V_temp))],25)
                     SSM1 = (V_temp <= V_temp_threshold)
                 except IndexError:
                     SSM1 = np.zeros(V_temp.shape).astype('bool')
-                
+
 #                stable_count1 = np.sum(SSM1 & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
                 stable_count1 = np.sum(SSM1 & np.logical_not(np.isnan(DX)))
 
@@ -726,29 +726,29 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 dy_mean_shift = 0.0
                 dx_mean_shift1 = 0.0
                 dy_mean_shift1 = 0.0
-                            
+
                 if stable_count != 0:
                     temp = DX.copy() - DXref.copy()
                     temp[np.logical_not(SSM)] = np.nan
 #                    dx_mean_shift = np.median(temp[(temp > -5)&(temp < 5)])
                     dx_mean_shift = np.median(temp[np.logical_not(np.isnan(temp))])
-                    
+
                     temp = DY.copy() - DYref.copy()
                     temp[np.logical_not(SSM)] = np.nan
 #                    dy_mean_shift = np.median(temp[(temp > -5)&(temp < 5)])
                     dy_mean_shift = np.median(temp[np.logical_not(np.isnan(temp))])
-                    
+
                 if stable_count1 != 0:
                     temp = DX.copy() - DXref.copy()
                     temp[np.logical_not(SSM1)] = np.nan
 #                    dx_mean_shift1 = np.median(temp[(temp > -5)&(temp < 5)])
                     dx_mean_shift1 = np.median(temp[np.logical_not(np.isnan(temp))])
-                    
+
                     temp = DY.copy() - DYref.copy()
                     temp[np.logical_not(SSM1)] = np.nan
 #                    dy_mean_shift1 = np.median(temp[(temp > -5)&(temp < 5)])
                     dy_mean_shift1 = np.median(temp[np.logical_not(np.isnan(temp))])
-                
+
                 if stable_count == 0:
                     if stable_count1 == 0:
                         stable_shift_applied = 0
@@ -760,7 +760,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     stable_shift_applied = 1
                     DX = DX - dx_mean_shift
                     DY = DY - dy_mean_shift
-                
+
 
                 VX = offset2vx_1 * DX + offset2vx_2 * DY
                 VY = offset2vy_1 * DX + offset2vy_2 * DY
@@ -828,7 +828,32 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     date_ct = d0 + (d1 - d0)/2
                     date_center = date_ct.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
 
-                    IMG_INFO_DICT = {'mission_img1':master_split[0][0],'sensor_img1':'C','satellite_img1':master_split[0][1:3],'acquisition_img1':master_dt,'time_standard_img1':'UTC','absolute_orbit_number_img1':master_split[7],'mission_data_take_ID_img1':master_split[8],'product_unique_ID_img1':master_split[9][0:4],'flight_direction_img1':flight_direction_m,'mission_img2':slave_split[0][0],'sensor_img2':'C','satellite_img2':slave_split[0][1:3],'acquisition_img2':slave_dt,'time_standard_img2':'UTC','absolute_orbit_number_img2':slave_split[7],'mission_data_take_ID_img2':slave_split[8],'product_unique_ID_img2':slave_split[9][0:4],'flight_direction_img2':flight_direction_s,'date_dt':date_dt,'date_center':date_center,'latitude':cen_lat,'longitude':cen_lon,'roi_valid_percentage':PPP,'autoRIFT_software_version':version}
+                    IMG_INFO_DICT = {
+                        'absolute_orbit_number_img1': master_split[7],
+                        'absolute_orbit_number_img2': slave_split[7],
+                        'acquisition_date_img1': master_dt,
+                        'acquisition_date_img2': slave_dt,
+                        'flight_direction_img1': flight_direction_m,
+                        'flight_direction_img2': flight_direction_s,
+                        'mission_data_take_ID_img1': master_split[8],
+                        'mission_data_take_ID_img2': slave_split[8],
+                        'mission_img1': master_split[0][0],
+                        'mission_img2': slave_split[0][0],
+                        'product_unique_ID_img1': master_split[9][0:4],
+                        'product_unique_ID_img2': slave_split[9][0:4],
+                        'satellite_img1': master_split[0][1:3],
+                        'satellite_img2': slave_split[0][1:3],
+                        'sensor_img1': 'C',
+                        'sensor_img2': 'C',
+                        'time_standard_img1': 'UTC',
+                        'time_standard_img2': 'UTC',
+                        'date_center': date_center,
+                        'date_dt': date_dt,
+                        'latitude': cen_lat,
+                        'longitude': cen_lon,
+                        'roi_valid_percentage': PPP,
+                        'autoRIFT_software_version': version
+                    }
                     error_vector = np.array([[0.0356, 0.0501, 0.0266, 0.0622, 0.0357, 0.0501],
                                              [0.5194, 1.1638, 0.3319, 1.3701, 0.5191, 1.1628]])
 
@@ -900,7 +925,36 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     master_dt = d0.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
                     slave_dt = d1.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
 
-                    IMG_INFO_DICT = {'mission_img1':master_split[0][0],'sensor_img1':master_split[0][1],'satellite_img1':np.float64(master_split[0][2:4]),'correction_level_img1':master_split[1],'path_img1':np.float64(master_split[2][0:3]),'row_img1':np.float64(master_split[2][3:6]),'acquisition_date_img1':master_dt,'time_standard_img1':'UTC','processing_date_img1':master_split[4][0:8],'collection_number_img1':np.float64(master_split[5]),'collection_category_img1':master_split[6],'mission_img2':slave_split[0][0],'sensor_img2':slave_split[0][1],'satellite_img2':np.float64(slave_split[0][2:4]),'correction_level_img2':slave_split[1],'path_img2':np.float64(slave_split[2][0:3]),'row_img2':np.float64(slave_split[2][3:6]),'acquisition_date_img2':slave_dt,'time_standard_img2':'UTC','processing_date_img2':slave_split[4][0:8],'collection_number_img2':np.float64(slave_split[5]),'collection_category_img2':slave_split[6],'date_dt':date_dt,'date_center':date_center,'latitude':cen_lat,'longitude':cen_lon,'roi_valid_percentage':PPP,'autoRIFT_software_version':version}
+                    IMG_INFO_DICT = {
+                        'acquisition_date_img1': master_dt,
+                        'acquisition_date_img2': slave_dt,
+                        'collection_category_img1': master_split[6],
+                        'collection_category_img2': slave_split[6],
+                        'collection_number_img1': np.float64(master_split[5]),
+                        'collection_number_img2': np.float64(slave_split[5]),
+                        'correction_level_img1': master_split[1],
+                        'correction_level_img2': slave_split[1],
+                        'mission_img1': master_split[0][0],
+                        'mission_img2': slave_split[0][0],
+                        'path_img1': np.float64(master_split[2][0:3]),
+                        'path_img2': np.float64(slave_split[2][0:3]),
+                        'processing_date_img1': master_split[4][0:8],
+                        'processing_date_img2': slave_split[4][0:8],
+                        'row_img1': np.float64(master_split[2][3:6]),
+                        'row_img2': np.float64(slave_split[2][3:6]),
+                        'satellite_img1': np.float64(master_split[0][2:4]),
+                        'satellite_img2': np.float64(slave_split[0][2:4]),
+                        'sensor_img1': master_split[0][1],
+                        'sensor_img2': slave_split[0][1],
+                        'time_standard_img1': 'UTC',
+                        'time_standard_img2': 'UTC',
+                        'date_center': date_center,
+                        'date_dt': date_dt,
+                        'latitude': cen_lat,
+                        'longitude': cen_lon,
+                        'roi_valid_percentage': PPP,
+                        'autoRIFT_software_version': version
+                    }
 
                     error_vector = np.array([25.5,25.5])
 
@@ -911,7 +965,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_count1, stable_shift_applied,
                         dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector
                     )
-                    
+
                 elif nc_sensor == "L7":
                     if geogrid_run_info is None:
                         chipsizex0 = float(str.split(runCmd('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
@@ -972,7 +1026,36 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     master_dt = d0.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
                     slave_dt = d1.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
 
-                    IMG_INFO_DICT = {'mission_img1':master_split[0][0],'sensor_img1':master_split[0][1],'satellite_img1':np.float64(master_split[0][2:4]),'correction_level_img1':master_split[1],'path_img1':np.float64(master_split[2][0:3]),'row_img1':np.float64(master_split[2][3:6]),'acquisition_date_img1':master_dt,'time_standard_img1':'UTC','processing_date_img1':master_split[4][0:8],'collection_number_img1':np.float64(master_split[5]),'collection_category_img1':master_split[6],'mission_img2':slave_split[0][0],'sensor_img2':slave_split[0][1],'satellite_img2':np.float64(slave_split[0][2:4]),'correction_level_img2':slave_split[1],'path_img2':np.float64(slave_split[2][0:3]),'row_img2':np.float64(slave_split[2][3:6]),'acquisition_date_img2':slave_dt,'time_standard_img2':'UTC','processing_date_img2':slave_split[4][0:8],'collection_number_img2':np.float64(slave_split[5]),'collection_category_img2':slave_split[6],'date_dt':date_dt,'date_center':date_center,'latitude':cen_lat,'longitude':cen_lon,'roi_valid_percentage':PPP,'autoRIFT_software_version':version}
+                    IMG_INFO_DICT = {
+                        'mission_img1': master_split[0][0],
+                        'sensor_img1': master_split[0][1],
+                        'satellite_img1': np.float64(master_split[0][2:4]),
+                        'correction_level_img1': master_split[1],
+                        'path_img1': np.float64(master_split[2][0:3]),
+                        'row_img1': np.float64(master_split[2][3:6]),
+                        'acquisition_date_img1': master_dt,
+                        'time_standard_img1': 'UTC',
+                        'processing_date_img1': master_split[4][0:8],
+                        'collection_number_img1': np.float64(master_split[5]),
+                        'collection_category_img1': master_split[6],
+                        'mission_img2': slave_split[0][0],
+                        'sensor_img2': slave_split[0][1],
+                        'satellite_img2': np.float64(slave_split[0][2:4]),
+                        'correction_level_img2': slave_split[1],
+                        'path_img2': np.float64(slave_split[2][0:3]),
+                        'row_img2': np.float64(slave_split[2][3:6]),
+                        'acquisition_date_img2': slave_dt,
+                        'time_standard_img2': 'UTC',
+                        'processing_date_img2': slave_split[4][0:8],
+                        'collection_number_img2': np.float64(slave_split[5]),
+                        'collection_category_img2': slave_split[6],
+                        'date_dt': date_dt,
+                        'date_center': date_center,
+                        'latitude': cen_lat,
+                        'longitude': cen_lon,
+                        'roi_valid_percentage': PPP,
+                        'autoRIFT_software_version': version
+                    }
 
                     error_vector = np.array([25.5,25.5])
 
@@ -1003,7 +1086,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
                     master_split = master_path.split('_')
                     slave_split = slave_path.split('_')
-                    
+
                     import re
                     if re.findall("://",master_path).__len__() > 0:
                         master_filename_full = master_path.split('/')
@@ -1051,7 +1134,26 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     master_dt = d0.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
                     slave_dt = d1.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
 
-                    IMG_INFO_DICT = {'mission_img1':master_split[0][-3],'satellite_img1':master_split[0][-2:],'correction_level_img1':master_split[4][:3],'acquisition_date_img1':master_dt,'time_standard_img1':'UTC','mission_img2':slave_split[0][-3],'satellite_img2':slave_split[0][-2:],'correction_level_img2':slave_split[4][:3],'acquisition_date_img2':slave_dt,'time_standard_img2':'UTC','date_dt':date_dt,'date_center':date_center,'latitude':cen_lat,'longitude':cen_lon,'roi_valid_percentage':PPP,'autoRIFT_software_version':version}
+                    IMG_INFO_DICT = {
+                        'acquisition_date_img1': master_dt,
+                        'acquisition_date_img2': slave_dt,
+                        'correction_level_img1': master_split[4][:3],
+                        'correction_level_img2': slave_split[4][:3],
+                        'mission_img1': master_split[0][-3],
+                        'mission_img2': slave_split[0][-3],
+                        'satellite_img1': master_split[0][-2:],
+                        'satellite_img2': slave_split[0][-2:],
+                        'sensor_img1': 'MSI',
+                        'sensor_img2': 'MSI',
+                        'time_standard_img1': 'UTC',
+                        'time_standard_img2': 'UTC',
+                        'date_center': date_center,
+                        'date_dt': date_dt,
+                        'latitude': cen_lat,
+                        'longitude': cen_lon,
+                        'roi_valid_percentage': PPP,
+                        'autoRIFT_software_version': version
+                    }
 
                     error_vector = np.array([25.5,25.5])
 
