@@ -26,14 +26,8 @@
 #
 # Author: Yang Lei
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-import pdb
-from osgeo import gdal, osr
-
-
+from osgeo import gdal
+from datetime import date, datetime, timedelta
 
 
 def runCmd(cmd):
@@ -130,7 +124,7 @@ def loadProductOptical(file_m, file_s):
 
 
 def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0, noDataMask, optflag,
-                nodata, mpflag, geogrid_run_info=None):
+                nodata, mpflag, geogrid_run_info=None, preprocessing_methods=('hps', 'hps')):
     '''
     Wire and run geogrid.
     '''
@@ -282,7 +276,15 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     t1 = time.time()
     print("Pre-process Start!!!")
 #    obj.zeroMask = 1
-    obj.preprocess_filt_hps()
+
+    # TODO: Allow different filters to be applied images independently
+    # default to most stringent filtering
+    if 'wallis_fill' in preprocessing_methods:
+        obj.preprocess_filt_wal_nodata_fill()
+    elif 'wallis' in preprocessing_methods:
+        obj.preprocess_filt_wal()
+    else:
+        obj.preprocess_filt_hps()
 #    obj.I1 = np.abs(I1)
 #    obj.I2 = np.abs(I2)
     print("Pre-process Done!!!")
@@ -451,7 +453,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
         band = ds.GetRasterBand(1)
         Dx0 = band.ReadAsArray()
         band = ds.GetRasterBand(2)
-        Dy0 = band.ReadAsArray()
+        Dy0 = band.ReadAsArray()#                    d0 = datetime(np.int(master_split[5][0:4]),np.int(master_split[5][4:6]),np.int(master_split[5][6:8]))
+
         band=None
         ds=None
 
@@ -491,16 +494,25 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
         ds=None
 
 
-
     intermediate_nc_file = 'autoRIFT_intermediate.nc'
 
     if os.path.exists(intermediate_nc_file):
         import netcdf_output as no
         Dx, Dy, InterpMask, ChipSizeX, GridSpacingX, ScaleChipSizeY, SearchLimitX, SearchLimitY, origSize, noDataMask = no.netCDF_read_intermediate(intermediate_nc_file)
     else:
+        m_name = os.path.basename(indir_m)
+        s_name = os.path.basename(indir_s)
+
+        preprocessing_methods = ['hps', 'hps']
+        for ii, name in enumerate(m_name, s_name):
+            if name.startswith('L7'):
+                acquisition = datetime.strptime(name.spilt('_')[3], '%Y%m%d')
+                if acquisition >= date(2003, 5, 31):
+                    preprocessing_methods[ii] = 'wallis_fill'
+
         Dx, Dy, InterpMask, ChipSizeX, GridSpacingX, ScaleChipSizeY, SearchLimitX, SearchLimitY, origSize, noDataMask = runAutorift(
             data_m, data_s, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0,
-            noDataMask, optical_flag, nodata, mpflag, geogrid_run_info=geogrid_run_info,
+            noDataMask, optical_flag, nodata, mpflag, geogrid_run_info=geogrid_run_info, preprocessing_methods=preprocessing_methods,
         )
         if nc_sensor is not None:
             import netcdf_output as no
@@ -810,7 +822,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
 
 
-                    from datetime import datetime, timedelta
 #                    d0 = datetime(np.int(master_split[5][0:4]),np.int(master_split[5][4:6]),np.int(master_split[5][6:8]))
 #                    d1 = datetime(np.int(slave_split[5][0:4]),np.int(slave_split[5][4:6]),np.int(slave_split[5][6:8]))
                     d0 = datetime.strptime(master_dt,"%Y%m%dT%H:%M:%S.%f")
@@ -904,10 +915,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                                           f"_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
                     else:
                         out_nc_filename = f"{ncname}_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
-
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
-                    from datetime import datetime, timedelta
                     d0 = datetime(np.int(master_split[3][0:4]),np.int(master_split[3][4:6]),np.int(master_split[3][6:8]))
                     d1 = datetime(np.int(slave_split[3][0:4]),np.int(slave_split[3][4:6]),np.int(slave_split[3][6:8]))
                     date_dt_base = (d1 - d0).total_seconds() / timedelta(days=1).total_seconds()
@@ -1006,10 +1015,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                                           f"_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
                     else:
                         out_nc_filename = f"{ncname}_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
-
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
-                    from datetime import datetime, timedelta
                     d0 = datetime(np.int(master_split[3][0:4]),np.int(master_split[3][4:6]),np.int(master_split[3][6:8]))
                     d1 = datetime(np.int(slave_split[3][0:4]),np.int(slave_split[3][4:6]),np.int(slave_split[3][6:8]))
                     date_dt_base = (d1 - d0).total_seconds() / timedelta(days=1).total_seconds()
@@ -1117,7 +1124,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         out_nc_filename = f"{ncname}_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
-                    from datetime import datetime, timedelta
                     d0 = datetime(np.int(master_split[2][0:4]),np.int(master_split[2][4:6]),np.int(master_split[2][6:8]))
                     d1 = datetime(np.int(slave_split[2][0:4]),np.int(slave_split[2][4:6]),np.int(slave_split[2][6:8]))
                     date_dt_base = (d1 - d0).total_seconds() / timedelta(days=1).total_seconds()
