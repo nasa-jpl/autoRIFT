@@ -504,7 +504,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
         s_name = os.path.basename(indir_s)
 
         preprocessing_methods = ['hps', 'hps']
-        for ii, name in enumerate(m_name, s_name):
+        for ii, name in enumerate((m_name, s_name)):
             if name.startswith('L7'):
                 acquisition = datetime.strptime(name.spilt('_')[3], '%Y%m%d')
                 if acquisition >= date(2003, 5, 31):
