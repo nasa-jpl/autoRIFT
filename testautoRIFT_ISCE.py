@@ -26,8 +26,9 @@
 #
 # Author: Yang Lei
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+import re
 from osgeo import gdal
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 
 def runCmd(cmd):
@@ -503,10 +504,12 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
         preprocessing_methods = ['hps', 'hps']
         for ii, name in enumerate((m_name, s_name)):
-            if name.startswith('L7'):
-                acquisition = datetime.strptime(name.spilt('_')[3], '%Y%m%d')
-                if acquisition >= date(2003, 5, 31):
+            if len(re.findall("L[EO]07_", name)) > 0:
+                acquisition = datetime.strptime(name.split('_')[3], '%Y%m%d')
+                if acquisition >= datetime(2003, 5, 31):
                     preprocessing_methods[ii] = 'wallis_fill'
+
+        print(f'Using preprocessing methods {preprocessing_methods}')
 
         Dx, Dy, InterpMask, ChipSizeX, GridSpacingX, ScaleChipSizeY, SearchLimitX, SearchLimitY, origSize, noDataMask = runAutorift(
             data_m, data_s, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0,

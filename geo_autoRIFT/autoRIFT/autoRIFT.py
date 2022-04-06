@@ -46,7 +46,7 @@ class autoRIFT:
         """
         Wallis filter with nodata infill for L7 SLC Off preprocessing
         """
-        self.zeroMask = np.ones(self.I1.shape())
+        self.zeroMask = np.full(self.I1.shape, True)
         for image in (self.I1, self.I2):
             zero_mask_1 = image == 0
             buff = np.sqrt(2 * ((self.WallisFilterWidth - 1) / 2) ** 2) + 0.01
@@ -84,7 +84,7 @@ class autoRIFT:
             #  populate random values with same std and mean
             fill_data = valid_domain & missing_data
             random_fill = np.random.random((fill_data.sum(), 1))
-            image[fill_data] = random_fill
+            image[fill_data.ravel()] = random_fill
 
 
     def preprocess_filt_wal(self):
