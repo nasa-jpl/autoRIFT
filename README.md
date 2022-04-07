@@ -1,9 +1,5 @@
 # autoRIFT (autonomous Repeat Image Feature Tracking)
 
-***Friendly Reminder: From September 1st 2021 on, autoRIFT will migrate to the GitHub account of NASA/JPL under the team of NASA MEaSUREs project ITS_LIVE (https://github.com/nasa-jpl/autoRIFT), where it will be continuously maintained.***
-
-
-
 [![Language](https://img.shields.io/badge/python-3.6%2B-blue.svg)](https://www.python.org/)
 [![Latest version](https://img.shields.io/badge/latest%20version-v1.4.0-yellowgreen.svg)](https://github.com/leiyangleon/autoRIFT/releases)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/leiyangleon/autoRIFT/blob/master/LICENSE)
