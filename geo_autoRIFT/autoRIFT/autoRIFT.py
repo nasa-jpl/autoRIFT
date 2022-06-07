@@ -81,10 +81,11 @@ class autoRIFT:
             valid_data = valid_domain & ~missing_data
             image[~valid_data] = 0
 
-            #  populate random values with same std and mean
+            # wallis filter normalizes the imagery to have a mean=0 and std=1;
+            # fill with random values from a normal distribution with same mean and std
             fill_data = valid_domain & missing_data
-            random_fill = np.random.random((fill_data.sum(), 1))
-            image[fill_data.ravel()] = random_fill
+            random_fill = np.random.normal(size=(fill_data.sum(),))
+            image[fill_data] = random_fill
 
 
     def preprocess_filt_wal(self):
