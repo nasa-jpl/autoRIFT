@@ -44,10 +44,10 @@ class autoRIFT:
     """
 
     def preprocess_filt_std(self, image):
-        filter_kernel = np.ones((self.WallisFilterWidth, self.WallisFilterWidth))
-        n = np.sum(filter_kernel)
+        filter_kernel = np.ones((self.WallisFilterWidth, self.WallisFilterWidth), dtype=np.float32)
+        n = float(filter_kernel.size)
 
-        shifted = image - np.mean(image)
+        shifted = image - image.mean()
         conv_sum = cv2.filter2D(shifted, -1, filter_kernel, borderType=cv2.BORDER_REFLECT)
         conv_squared_sum = cv2.filter2D(shifted ** 2, -1, filter_kernel, borderType=cv2.BORDER_REFLECT)
 
@@ -61,17 +61,17 @@ class autoRIFT:
         """
         self.zeroMask = np.full(self.I1.shape, True)
         for image in (self.I1, self.I2):
-            zero_mask_1 = image == 0
+            image = np.ma.masked_values(image, 0.)
             buff = np.sqrt(2 * ((self.WallisFilterWidth - 1) / 2) ** 2) + 0.01
 
             # find edges of image, this makes missing scan lines valid and will
             # later be filled with random white noise
-            missing_data = distance_transform_edt(zero_mask_1) < 30
-            missing_data = missing_data & zero_mask_1
+            missing_data = distance_transform_edt(image.mask) < 30
+            missing_data = missing_data & image.mask
             missing_data = distance_transform_edt(~missing_data) <= buff
 
             # trying to frame out the image
-            valid_domain = ~zero_mask_1 | missing_data
+            valid_domain = ~image.mask | missing_data
             self.zeroMask &= ~valid_domain
 
             std = self.preprocess_filt_std(image)
@@ -86,7 +86,10 @@ class autoRIFT:
             image = (image - mean) / std
 
             valid_data = valid_domain & ~missing_data
-            image[~valid_data] = 0
+            image.mask |= ~valid_data
+
+            # FIXME: Ensure bounds after filter; clip or mask?
+            image = np.clip(image, -1., 1.)
 
             # wallis filter normalizes the imagery to have a mean=0 and std=1;
             # fill with random values from a normal distribution with same mean and std
