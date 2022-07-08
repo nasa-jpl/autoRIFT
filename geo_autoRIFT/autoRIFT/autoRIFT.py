@@ -38,64 +38,76 @@ from scipy.ndimage.morphology import distance_transform_edt
 from scipy.ndimage.filters import generic_filter
 
 
+def _preprocess_filt_std(image, filter_width):
+    filter_kernel = np.ones((filter_width, filter_width), dtype=np.float32)
+    n = float(filter_kernel.size)
+
+    shifted = image - image.mean()
+    conv_sum = cv2.filter2D(shifted, -1, filter_kernel, borderType=cv2.BORDER_REFLECT)
+    conv_squared_sum = cv2.filter2D(shifted ** 2, -1, filter_kernel, borderType=cv2.BORDER_REFLECT)
+
+    variance = (conv_squared_sum - ((conv_sum ** 2) / n)) / n
+    std = np.sqrt(variance)
+    return std
+
+
+def _wallis_filter(image, filter_width, std_cutoff):
+    image = np.ma.masked_values(image, 0.)
+    buff = np.sqrt(2 * ((filter_width - 1) / 2) ** 2) + 0.01
+
+    # find edges of image, this makes missing scan lines valid and will
+    # later be filled with random white noise
+    missing_data = distance_transform_edt(image.mask) < 30
+    missing_data = missing_data & image.mask
+    missing_data = distance_transform_edt(~missing_data) <= buff
+
+    # trying to frame out the image
+    valid_domain = ~image.mask | missing_data
+    zero_mask = ~valid_domain  # TODO, return this
+
+    std = _preprocess_filt_std(image, filter_width)
+    print('using newer version...')
+    low_std = std < std_cutoff
+    low_std = distance_transform_edt(~low_std) <= buff
+    missing_data = (missing_data | low_std) & valid_domain
+
+    # apply wallis filter
+    kernel = np.ones((filter_width, filter_width), dtype=np.float32)
+    mean = cv2.filter2D(image, -1, kernel, borderType=cv2.BORDER_CONSTANT) / np.sum(kernel)
+    image = (image - mean) / std
+
+    valid_data = valid_domain & ~missing_data
+    image.mask |= ~valid_data
+
+    # FIXME: Ensure bounds after filter; clip or mask?
+    # image = np.clip(image, -1., 1.)
+
+    # wallis filter normalizes the imagery to have a mean=0 and std=1;
+    # fill with random values from a normal distribution with same mean and std
+    fill_data = valid_domain & missing_data
+    random_fill = np.random.normal(size=(fill_data.sum(),))
+    image[fill_data] = random_fill
+
+    return image, zero_mask
+
+
 class autoRIFT:
     """
     Class for mapping regular geographic grid on radar imagery.
     """
 
-    def preprocess_filt_std(self, image):
-        filter_kernel = np.ones((self.WallisFilterWidth, self.WallisFilterWidth), dtype=np.float32)
-        n = float(filter_kernel.size)
-
-        shifted = image - image.mean()
-        conv_sum = cv2.filter2D(shifted, -1, filter_kernel, borderType=cv2.BORDER_REFLECT)
-        conv_squared_sum = cv2.filter2D(shifted ** 2, -1, filter_kernel, borderType=cv2.BORDER_REFLECT)
-
-        variance = (conv_squared_sum - ((conv_sum ** 2) / n)) / n
-        std = np.sqrt(variance)
-        return std
-
     def preprocess_filt_wal_nodata_fill(self):
         """
         Wallis filter with nodata infill for L7 SLC Off preprocessing
         """
-        self.zeroMask = np.full(self.I1.shape, True)
-        for image in (self.I1, self.I2):
-            image = np.ma.masked_values(image, 0.)
-            buff = np.sqrt(2 * ((self.WallisFilterWidth - 1) / 2) ** 2) + 0.01
+        image_1, zero_mask_1 = _wallis_filter(self.I1, self.WallisFilterWidth, self.StandardDeviationCutoff)
+        image_2, zero_mask_2 = _wallis_filter(self.I2, self.WallisFilterWidth, self.StandardDeviationCutoff)
 
-            # find edges of image, this makes missing scan lines valid and will
-            # later be filled with random white noise
-            missing_data = distance_transform_edt(image.mask) < 30
-            missing_data = missing_data & image.mask
-            missing_data = distance_transform_edt(~missing_data) <= buff
+        self.I1 = image_1
+        self.I2 = image_2
 
-            # trying to frame out the image
-            valid_domain = ~image.mask | missing_data
-            self.zeroMask &= ~valid_domain
+        self.zeroMask = zero_mask_1 & zero_mask_2
 
-            std = self.preprocess_filt_std(image)
-            print('using new version...')
-            low_std = std < self.StandardDeviationCutoff
-            low_std = distance_transform_edt(~low_std) <= buff
-            missing_data = (missing_data | low_std) & valid_domain
-
-            # apply wallis filter
-            kernel = np.ones((self.WallisFilterWidth, self.WallisFilterWidth), dtype=np.float32)
-            mean = cv2.filter2D(image, -1, kernel, borderType=cv2.BORDER_CONSTANT) / np.sum(kernel)
-            image = (image - mean) / std
-
-            valid_data = valid_domain & ~missing_data
-            image.mask |= ~valid_data
-
-            # FIXME: Ensure bounds after filter; clip or mask?
-            image = np.clip(image, -1., 1.)
-
-            # wallis filter normalizes the imagery to have a mean=0 and std=1;
-            # fill with random values from a normal distribution with same mean and std
-            fill_data = valid_domain & missing_data
-            random_fill = np.random.normal(size=(fill_data.sum(),))
-            image[fill_data] = random_fill
 
     def preprocess_filt_wal(self):
         """
