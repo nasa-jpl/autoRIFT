@@ -51,7 +51,14 @@ def _preprocess_filt_std(image, filter_width):
     return std
 
 
-def _wallis_filter(image, filter_width, std_cutoff):
+def _wallis_filter(image, std, filter_width):
+    kernel = np.ones((filter_width, filter_width), dtype=np.float32)
+    mean = cv2.filter2D(image, -1, kernel, borderType=cv2.BORDER_CONSTANT) / np.sum(kernel)
+    return (image - mean) / std
+
+
+
+def _wallis_filter_fill(image, filter_width, std_cutoff):
     image = np.ma.masked_values(image, 0.)
     buff = np.sqrt(2 * ((filter_width - 1) / 2) ** 2) + 0.01
 
@@ -63,24 +70,20 @@ def _wallis_filter(image, filter_width, std_cutoff):
 
     # trying to frame out the image
     valid_domain = ~image.mask | missing_data
-    zero_mask = ~valid_domain  # TODO, return this
+    zero_mask = ~valid_domain
 
     std = _preprocess_filt_std(image, filter_width)
-    print('using newer version...')
     low_std = std < std_cutoff
     low_std = distance_transform_edt(~low_std) <= buff
     missing_data = (missing_data | low_std) & valid_domain
 
-    # apply wallis filter
-    kernel = np.ones((filter_width, filter_width), dtype=np.float32)
-    mean = cv2.filter2D(image, -1, kernel, borderType=cv2.BORDER_CONSTANT) / np.sum(kernel)
-    image = (image - mean) / std
+    image = _wallis_filter(image, std, filter_width)
 
     valid_data = valid_domain & ~missing_data
     image.mask |= ~valid_data
 
     # FIXME: Ensure bounds after filter; clip or mask?
-    # image = np.clip(image, -1., 1.)
+    # image = np.clip(image, -5., 5.)
 
     # wallis filter normalizes the imagery to have a mean=0 and std=1;
     # fill with random values from a normal distribution with same mean and std
@@ -100,8 +103,9 @@ class autoRIFT:
         """
         Wallis filter with nodata infill for L7 SLC Off preprocessing
         """
-        image_1, zero_mask_1 = _wallis_filter(self.I1, self.WallisFilterWidth, self.StandardDeviationCutoff)
-        image_2, zero_mask_2 = _wallis_filter(self.I2, self.WallisFilterWidth, self.StandardDeviationCutoff)
+        image_1, zero_mask_1 = _wallis_filter_fill(self.I1, self.WallisFilterWidth, self.StandardDeviationCutoff)
+
+        image_2, zero_mask_2 = _wallis_filter_fill(self.I2, self.WallisFilterWidth, self.StandardDeviationCutoff)
 
         self.I1 = image_1
         self.I2 = image_2
@@ -116,50 +120,12 @@ class autoRIFT:
 
         self.zeroMask = (self.I1 == 0) | (self.I2 == 0)
 
-        kernel = np.ones((self.WallisFilterWidth, self.WallisFilterWidth), dtype=np.float32)
+        std_1 = _preprocess_filt_std(self.I1,  self.WallisFilterWidth)
+        self.I1 = _wallis_filter(self.I1, std_1, self.WallisFilterWidth)
 
-        m = cv2.filter2D(self.I1, -1, kernel, borderType=cv2.BORDER_CONSTANT) / np.sum(kernel)
+        std_2 = _preprocess_filt_std(self.I2, self.WallisFilterWidth)
+        self.I2 = _wallis_filter(self.I2, std_2, self.WallisFilterWidth)
 
-        m2 = (self.I1) ** 2
-
-        m2 = cv2.filter2D(m2, -1, kernel, borderType=cv2.BORDER_CONSTANT) / np.sum(kernel)
-
-        s = np.sqrt(m2 - m ** 2) * np.sqrt(np.sum(kernel) / (np.sum(kernel) - 1.0))
-
-        self.I1 = (self.I1 - m) / s
-
-        #        pdb.set_trace()
-
-        m = cv2.filter2D(self.I2, -1, kernel, borderType=cv2.BORDER_CONSTANT) / np.sum(kernel)
-
-        m2 = (self.I2) ** 2
-
-        m2 = cv2.filter2D(m2, -1, kernel, borderType=cv2.BORDER_CONSTANT) / np.sum(kernel)
-
-        s = np.sqrt(m2 - m ** 2) * np.sqrt(np.sum(kernel) / (np.sum(kernel) - 1.0))
-
-        self.I2 = (self.I2 - m) / s
-
-    #    ####   obsolete definition of "preprocess_filt_hps"
-    #    def preprocess_filt_hps(self):
-    #        '''
-    #        Do the pre processing using (orig - low-pass filter) = high-pass filter filter (3.9/5.3 min).
-    #        '''
-    #        import cv2
-    #        import numpy as np
-    #
-    #        if self.zeroMask is not None:
-    #            self.zeroMask = (self.I1 == 0)
-    #
-    #        kernel = np.ones((self.WallisFilterWidth,self.WallisFilterWidth), dtype=np.float32)
-    #
-    #        lp = cv2.filter2D(self.I1,-1,kernel,borderType=cv2.BORDER_CONSTANT)/np.sum(kernel)
-    #
-    #        self.I1 = (self.I1 - lp)
-    #
-    #        lp = cv2.filter2D(self.I2,-1,kernel,borderType=cv2.BORDER_CONSTANT)/np.sum(kernel)
-    #
-    #        self.I2 = (self.I2 - lp)
 
     def preprocess_filt_hps(self):
         '''
