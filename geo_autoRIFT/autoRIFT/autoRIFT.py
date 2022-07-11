@@ -29,13 +29,10 @@
 # Note: this is based on the MATLAB code, "auto-RIFT", written by Alex S. Gardner,
 #       and has been translated to Python and further optimized.
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-import random
-
 import cv2
 import sys
 import numpy as np
-from scipy.ndimage.morphology import distance_transform_edt
-from scipy.ndimage.filters import generic_filter
+from scipy.ndimage import distance_transform_edt
 
 
 def _preprocess_filt_std(image, filter_width):
@@ -57,15 +54,14 @@ def _wallis_filter(image, std, filter_width):
     return (image - mean) / std
 
 
-
 def _wallis_filter_fill(image, filter_width, std_cutoff):
     image = np.ma.masked_values(image, 0.)
     buff = np.sqrt(2 * ((filter_width - 1) / 2) ** 2) + 0.01
 
     # find edges of image, this makes missing scan lines valid and will
     # later be filled with random white noise
-    missing_data = distance_transform_edt(image.mask) < 30
-    missing_data = missing_data & image.mask
+    potential_data = distance_transform_edt(image.mask) < 30
+    missing_data = potential_data & image.mask
     missing_data = distance_transform_edt(~missing_data) <= buff
 
     # trying to frame out the image
@@ -81,9 +77,6 @@ def _wallis_filter_fill(image, filter_width, std_cutoff):
 
     valid_data = valid_domain & ~missing_data
     image.mask |= ~valid_data
-
-    # FIXME: Ensure bounds after filter; clip or mask?
-    # image = np.clip(image, -5., 5.)
 
     # wallis filter normalizes the imagery to have a mean=0 and std=1;
     # fill with random values from a normal distribution with same mean and std
@@ -104,7 +97,6 @@ class autoRIFT:
         Wallis filter with nodata infill for L7 SLC Off preprocessing
         """
         image_1, zero_mask_1 = _wallis_filter_fill(self.I1, self.WallisFilterWidth, self.StandardDeviationCutoff)
-
         image_2, zero_mask_2 = _wallis_filter_fill(self.I2, self.WallisFilterWidth, self.StandardDeviationCutoff)
 
         self.I1 = image_1
