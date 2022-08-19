@@ -24,20 +24,14 @@
 # authority as may be required before exporting this software to any 'EAR99'
 # embargoed foreign country or citizen of those countries.
 #
-# Author: Yang Lei
+# Author: Yang Lei, Alex S. Gardner
 #
-# Note: this is based on the MATLAB code, "auto-RIFT", written by Alex Gardner,
+# Note: this is based on the MATLAB code, "auto-RIFT", written by Alex S. Gardner,
 #       and has been translated to Python and further optimized.
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 import isce
 from iscesys.Component.Component import Component
-import pdb
-import subprocess
-import re
-import string
-import sys
+
 
 WALLIS_FILTER_WIDTH = Component.Parameter('WallisFilterWidth',
         public_name='WALLIS_FILTER_WIDTH',

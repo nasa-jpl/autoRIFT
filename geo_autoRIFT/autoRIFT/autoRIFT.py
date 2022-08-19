@@ -28,7 +28,7 @@
 #
 # Note: this is based on the MATLAB code, "auto-RIFT", written by Alex S. Gardner,
 #       and has been translated to Python and further optimized.
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 import cv2
 import sys
 import numpy as np
