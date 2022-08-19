@@ -41,7 +41,7 @@ import sys
 
 WALLIS_FILTER_WIDTH = Component.Parameter('WallisFilterWidth',
         public_name='WALLIS_FILTER_WIDTH',
-        default = 21,
+        default = 5,
         type = int,
         mandatory = False,
         doc = 'Width of the Wallis filter to be used for the pre-processing')

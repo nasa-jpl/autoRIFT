@@ -35,23 +35,28 @@ import numpy as np
 from scipy.ndimage import distance_transform_edt
 
 
-def _preprocess_filt_std(image, filter_width):
-    filter_kernel = np.ones((filter_width, filter_width), dtype=np.float32)
-    n = float(filter_kernel.size)
+def _remove_local_mean(image, kernel):
+    mean = cv2.filter2D(image, -1, kernel, borderType=cv2.BORDER_CONSTANT)
+    return image - mean
 
-    shifted = image - image.mean()
-    conv_sum = cv2.filter2D(shifted, -1, filter_kernel, borderType=cv2.BORDER_REFLECT)
-    conv_squared_sum = cv2.filter2D(shifted ** 2, -1, filter_kernel, borderType=cv2.BORDER_REFLECT)
 
-    variance = (conv_squared_sum - ((conv_sum ** 2) / n)) / n
+def _preprocess_filt_std(image, kernel):
+    conv_sum = cv2.filter2D(image, -1, kernel, borderType=cv2.BORDER_REFLECT)
+    conv_squared_sum = cv2.filter2D(image ** 2, -1, kernel, borderType=cv2.BORDER_REFLECT)
+
+    variance = conv_squared_sum - (conv_sum ** 2)
     std = np.sqrt(variance)
     return std
 
 
-def _wallis_filter(image, std, filter_width):
+def _wallis_filter(image, filter_width):
     kernel = np.ones((filter_width, filter_width), dtype=np.float32)
-    mean = cv2.filter2D(image, -1, kernel, borderType=cv2.BORDER_CONSTANT) / np.sum(kernel)
-    return (image - mean) / std
+    kernel = kernel / np.sum(kernel)
+
+    shifted = _remove_local_mean(image, kernel)
+    std = _preprocess_filt_std(shifted, kernel)
+
+    return shifted / std
 
 
 def _wallis_filter_fill(image, filter_width, std_cutoff):
@@ -68,12 +73,17 @@ def _wallis_filter_fill(image, filter_width, std_cutoff):
     valid_domain = ~image.mask | missing_data
     zero_mask = ~valid_domain
 
-    std = _preprocess_filt_std(image, filter_width)
+    kernel = np.ones((filter_width, filter_width), dtype=np.float32)
+    kernel = kernel / np.sum(kernel)
+
+    shifted = _remove_local_mean(image, kernel)
+    std = _preprocess_filt_std(shifted, kernel)
+
     low_std = std < std_cutoff
     low_std = distance_transform_edt(~low_std) <= buff
     missing_data = (missing_data | low_std) & valid_domain
 
-    image = _wallis_filter(image, std, filter_width)
+    image = shifted / std
 
     valid_data = valid_domain & ~missing_data
     image.mask |= ~valid_data
@@ -112,11 +122,8 @@ class autoRIFT:
 
         self.zeroMask = (self.I1 == 0) | (self.I2 == 0)
 
-        std_1 = _preprocess_filt_std(self.I1,  self.WallisFilterWidth)
-        self.I1 = _wallis_filter(self.I1, std_1, self.WallisFilterWidth)
-
-        std_2 = _preprocess_filt_std(self.I2, self.WallisFilterWidth)
-        self.I2 = _wallis_filter(self.I2, std_2, self.WallisFilterWidth)
+        self.I1 = _wallis_filter(self.I1, self.WallisFilterWidth)
+        self.I2 = _wallis_filter(self.I2, self.WallisFilterWidth)
 
 
     def preprocess_filt_hps(self):
@@ -636,7 +643,7 @@ class autoRIFT:
         self.ChipSizeY = None
 
         ##Parameter list
-        self.WallisFilterWidth = 21
+        self.WallisFilterWidth = 5
         self.StandardDeviationCutoff = 0.25
         self.ChipSizeMinX = 32
         self.ChipSizeMaxX = 64

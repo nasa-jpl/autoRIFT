@@ -456,8 +456,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
         band = ds.GetRasterBand(1)
         Dx0 = band.ReadAsArray()
         band = ds.GetRasterBand(2)
-        Dy0 = band.ReadAsArray()#                    d0 = datetime(np.int(master_split[5][0:4]),np.int(master_split[5][4:6]),np.int(master_split[5][6:8]))
-
+        Dy0 = band.ReadAsArray()
         band=None
         ds=None
 
