@@ -223,7 +223,7 @@ class autoRIFT_ISCE(autoRIFT, Component):
     '''
     Class for mapping regular geographic grid on radar imagery.
     '''
-    
+
     parameter_list = (WALLIS_FILTER_WIDTH,
                       CHIP_SIZE_MIN_X,
                       CHIP_SIZE_MAX_X,
@@ -248,13 +248,10 @@ class autoRIFT_ISCE(autoRIFT, Component):
                       OVER_SAMPLE_RATIO,
                       DATA_TYPE,
                       MULTI_THREAD)
-    
-    
-    
+
+
+
 
     def __init__(self):
-        
+
         super(autoRIFT_ISCE, self).__init__()
-
-        
-
