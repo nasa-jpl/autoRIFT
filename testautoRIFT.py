@@ -188,16 +188,18 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
         obj.xGrid = xGrid
         obj.yGrid = yGrid
 
-    # FIXME: This assumes the zero values in the image are only outside the valid image "frame",
+    # NOTE: This assumes the zero values in the image are only outside the valid image "frame",
     #        but is not true for Landsat-7 after the failure of the Scan Line Corrector, May 31, 2003.
-    #        We should not masked based on zero values in the L7 images as this percolates into SearchLimit{X,Y}
-    #        and prevents autoRIFT from looking at large parts of the images.
+    #        We should not mask based on zero values in the L7 images as this percolates into SearchLimit{X,Y}
+    #        and prevents autoRIFT from looking at large parts of the images, but untangling the logic here
+    #        has proved too difficult, so lets just turn it off if `wallis_fill` preprocessing is going to be used.
     # generate the nodata mask where offset searching will be skipped based on 1) imported nodata mask and/or 2) zero values in the image
-    # for ii in range(obj.xGrid.shape[0]):
-    #     for jj in range(obj.xGrid.shape[1]):
-    #         if (obj.yGrid[ii,jj] != nodata)&(obj.xGrid[ii,jj] != nodata):
-    #             if (I1[obj.yGrid[ii,jj]-1,obj.xGrid[ii,jj]-1]==0)|(I2[obj.yGrid[ii,jj]-1,obj.xGrid[ii,jj]-1]==0):
-    #                 noDataMask[ii,jj] = True
+    if 'wallis_fill' not in preprocessing_methods:
+        for ii in range(obj.xGrid.shape[0]):
+            for jj in range(obj.xGrid.shape[1]):
+                if (obj.yGrid[ii,jj] != nodata)&(obj.xGrid[ii,jj] != nodata):
+                    if (I1[obj.yGrid[ii,jj]-1,obj.xGrid[ii,jj]-1]==0)|(I2[obj.yGrid[ii,jj]-1,obj.xGrid[ii,jj]-1]==0):
+                        noDataMask[ii,jj] = True
 
 
 
@@ -565,9 +567,12 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 #    DY = conts['Dy']
 #    INTERPMASK = conts['InterpMask']
 #    CHIPSIZEX = conts['ChipSizeX']
+#    GridSpacingX = conts['GridSpacingX']
 #    ScaleChipSizeY = conts['ScaleChipSizeY']
 #    SEARCHLIMITX = conts['SearchLimitX']
 #    SEARCHLIMITY = conts['SearchLimitY']
+#    origSize = (conts['origSize'][0][0],conts['origSize'][0][1])
+#    noDataMask = conts['noDataMask']
 #    #####################
 
     netcdf_file = None
