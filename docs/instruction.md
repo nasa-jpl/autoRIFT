@@ -82,7 +82,7 @@ where "XXX" can be "wal" for the Wallis filter, "hps" for the trivial high-pass 
        MadScalar                   Scalar to be multiplied by Mad used as threshold for disparity filtering of the chip displacement deviation from the median (default = 4)
        
        ------------------parameter list: miscellaneous------------------
-       WallisFilterWidth           Width of the filter to be used for the preprocessing (default = 21)
+       WallisFilterWidth           Width of the filter to be used for the preprocessing (default = 5)
        fillFiltWidth               Light interpolation filling filter width (default = 3)
        sparseSearchSampleRate      downsampling rate for sparse search  (default = 4)
        BuffDistanceC               Buffer coarse correlation mask by this many pixels for use as fine search mask (default = 8)
