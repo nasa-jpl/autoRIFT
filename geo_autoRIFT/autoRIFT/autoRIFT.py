@@ -32,7 +32,9 @@
 import cv2
 import sys
 import numpy as np
+from scipy import ndimage
 from scipy.ndimage import distance_transform_edt
+
 
 
 def _remove_local_mean(image, kernel):
@@ -97,6 +99,78 @@ def _wallis_filter_fill(image, filter_width, std_cutoff):
     return image, zero_mask
 
 
+def _find_largest_region(arr):
+    binary_arr = np.zeros(arr.shape)
+    binary_arr[arr != 0] = 1
+    label_arr, nb_labels = ndimage.label(binary_arr)
+    sizes = ndimage.sum(binary_arr, label_arr, range(nb_labels + 1))
+    max_label = sizes.argmax()
+    label_arr[label_arr != max_label] = 0
+    return label_arr
+
+
+def _fft_filter(Ix, valid_domain, power_threshold=500):
+    import numpy.fft as fft
+    m, n = valid_domain.shape
+    center_m = int(np.floor(m / 2))
+    center_n = int(np.floor(n / 2))
+
+    single_region = _find_largest_region(Ix)
+    single_region = np.uint8(single_region * 255)
+    contours, hierarchy = cv2.findContours(single_region, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if hierarchy.shape[1] > 1:
+        raise ValueError(f'{hierarchy.shape[1]} external objects founds, only expecting 1.')
+    contour = contours[0]
+    moment = cv2.moments(contour)
+
+    centroid_m = int(np.floor(moment['m01'] / moment['m00']))
+    centroid_n = int(np.floor(moment['m10'] / moment['m00']))
+    rectangle = cv2.minAreaRect(contour)
+    angle = rectangle[2]
+
+    filter_base = np.full((m, n), False)
+    filter_base[center_m - 70:center_m + 70, :] = 1
+    filter_base[:, center_n - 100:center_n + 100] = 0
+
+    filter_a = ndimage.rotate(filter_base, -angle, reshape=False)
+    filter_b = ndimage.rotate(filter_base, 90 - angle, reshape=False)
+
+    ctr_shift = [centroid_m - center_m, centroid_n - center_n]
+
+    translate_matrix = np.array([(1, 0, ctr_shift[0]), (0, 1, ctr_shift[1]), (0, 0, 1)])
+    filter_a = ndimage.affine_transform(filter_a, matrix=translate_matrix)
+    filter_b = ndimage.affine_transform(filter_b, matrix=translate_matrix)
+
+    image = Ix.copy()
+    image[image > 3] = 3
+    image[image < -3] = -3
+    image[np.isnan(image)] = 0
+
+    fft_image = fft.fftshift(fft.fft2(image))
+    P = abs(fft_image)
+    mP = np.mean(P)
+    stdP = np.std(P)
+    P = (P - mP) > (10 * stdP)
+
+    sA = np.nansum(P[filter_a == 1])
+    sB = np.nansum(P[filter_b == 1])
+    print(sA, sB)
+    if ((sA / sB >= 2) | (sB / sA >= 2)) & ((sA > power_threshold) | (sB > power_threshold)):
+        if sA > sB:
+            final_filter = filter_a.copy()
+        elif sB > sA:
+            final_filter = filter_b.copy()
+
+        filtered_image = np.real(fft.ifft2(fft.ifftshift(fft_image * (1 - (final_filter)))))
+        filtered_image[~valid_domain] = 0
+    else:
+        print(f'Power along flight direction ({max(sB, sA)}) does not exceed banding threshold ({power_threshold}). '
+              f'No banding filter applied.')
+        return image
+
+    return filtered_image
+
+
 class autoRIFT:
     """
     Class for mapping regular geographic grid on radar imagery.
@@ -114,7 +188,6 @@ class autoRIFT:
 
         self.zeroMask = zero_mask_1 & zero_mask_2
 
-
     def preprocess_filt_wal(self):
         """
         Do the preprocessing using wallis filter (10 min vs 15 min in Matlab).
@@ -124,7 +197,6 @@ class autoRIFT:
 
         self.I1 = _wallis_filter(self.I1, self.WallisFilterWidth)
         self.I2 = _wallis_filter(self.I2, self.WallisFilterWidth)
-
 
     def preprocess_filt_hps(self):
         '''
@@ -144,6 +216,13 @@ class autoRIFT:
         self.I1 = cv2.filter2D(self.I1, -1, kernel, borderType=cv2.BORDER_CONSTANT)
 
         self.I2 = cv2.filter2D(self.I2, -1, kernel, borderType=cv2.BORDER_CONSTANT)
+
+    def preprocess_filt_fft(self):
+        '''
+        Preprocess images to remove banding perpendicular to the along flight direction by masking in frequency space
+        '''
+        self.I1 = _fft_filter(self.I1, (self.I1 != 0).astype(int), power_threshold=500)
+        self.I2 = _fft_filter(self.I2, (self.I2 != 0).astype(int), power_threshold=500)
 
     def preprocess_db(self):
         '''

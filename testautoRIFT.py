@@ -290,6 +290,8 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
         obj.preprocess_filt_wal_nodata_fill()
     elif 'wallis' in preprocessing_methods:
         obj.preprocess_filt_wal()
+    elif 'fft' in preprocessing_methods:
+        obj.preprocess_filt_fft()
     else:
         obj.preprocess_filt_hps()
 #    obj.I1 = np.abs(I1)
@@ -515,6 +517,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 acquisition = datetime.strptime(name.split('_')[3], '%Y%m%d')
                 if acquisition >= datetime(2003, 5, 31):
                     preprocessing_methods[ii] = 'wallis_fill'
+            elif len(re.findall("L[TM]0[45]_", name)) > 0:
+                preprocessing_methods[ii] = 'fft'
 
         print(f'Using preprocessing methods {preprocessing_methods}')
 
