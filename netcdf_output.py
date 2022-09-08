@@ -181,7 +181,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
     V = np.sqrt(VX**2+VY**2)
 
-    if pair_type is 'radar':
+    if pair_type == 'radar':
         dr_2_vr_factor = np.median(offset2vr[np.logical_not(np.isnan(offset2vr))])
         SlantRangePixelSize = np.median(offset2vr[np.logical_not(np.isnan(offset2vr))]) * dt/365.0/24.0/3600.0
         azimuthPixelSize = np.median(offset2va[np.logical_not(np.isnan(offset2va))]) * dt/365.0/24.0/3600.0
@@ -320,7 +320,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     # VXref[noDataMask] = NoDataValue
     # VYref[noDataMask] = NoDataValue
 
-    # if pair_type is 'radar':
+    # if pair_type == 'radar':
     #     VRref[noDataMask] = NoDataValue
     #     VAref[noDataMask] = NoDataValue
 
@@ -335,7 +335,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     # VX = np.round(np.clip(VX, -32768, 32767)).astype(np.int16)
     # VY = np.round(np.clip(VY, -32768, 32767)).astype(np.int16)
     # V = np.round(np.clip(V, -32768, 32767)).astype(np.int16)
-    # if pair_type is 'radar':
+    # if pair_type == 'radar':
     #     VR = np.round(np.clip(VR, -32768, 32767)).astype(np.int16)
     #     VA = np.round(np.clip(VA, -32768, 32767)).astype(np.int16)
     # CHIPSIZEX = np.round(np.clip(CHIPSIZEX, 0, 65535)).astype(np.uint16)
@@ -499,7 +499,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     var = nc_outfile.createVariable('vx', np.dtype('int16'), ('y', 'x'), fill_value=NoDataValue,
                                     zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
     var.setncattr('standard_name', 'x_velocity')
-    if pair_type is 'radar':
+    if pair_type == 'radar':
         var.setncattr('description', 'velocity component in x direction from radar range and azimuth measurements')
     else:
         var.setncattr('description', 'velocity component in x direction')
@@ -520,7 +520,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         vx_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
     else:
         vx_error_slow = np.nan
-    if pair_type is 'radar':
+    if pair_type == 'radar':
         vx_error_mod = (error_vector[0][0]*IMG_INFO_DICT['date_dt']+error_vector[1][0])/IMG_INFO_DICT['date_dt']*365
     else:
         vx_error_mod = error_vector[0]/IMG_INFO_DICT['date_dt']*365
@@ -585,7 +585,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     var = nc_outfile.createVariable('vy', np.dtype('int16'), ('y', 'x'), fill_value=NoDataValue,
                                     zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
     var.setncattr('standard_name', 'y_velocity')
-    if pair_type is 'radar':
+    if pair_type == 'radar':
         var.setncattr('description', 'velocity component in y direction from radar range and azimuth measurements')
     else:
         var.setncattr('description', 'velocity component in y direction')
@@ -606,7 +606,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         vy_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
     else:
         vy_error_slow = np.nan
-    if pair_type is 'radar':
+    if pair_type == 'radar':
         vy_error_mod = (error_vector[0][1]*IMG_INFO_DICT['date_dt']+error_vector[1][1])/IMG_INFO_DICT['date_dt']*365
     else:
         vy_error_mod = error_vector[1]/IMG_INFO_DICT['date_dt']*365
@@ -671,7 +671,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     var = nc_outfile.createVariable('v', np.dtype('int16'), ('y', 'x'), fill_value=NoDataValue,
                                     zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
     var.setncattr('standard_name', 'velocity')
-    if pair_type is 'radar':
+    if pair_type == 'radar':
         var.setncattr('description', 'velocity magnitude from radar range and azimuth measurements')
     else:
         var.setncattr('description', 'velocity magnitude')
@@ -686,7 +686,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     var = nc_outfile.createVariable('v_error', np.dtype('int16'), ('y', 'x'), fill_value=NoDataValue,
                                     zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
     var.setncattr('standard_name', 'velocity_error')
-    if pair_type is 'radar':
+    if pair_type == 'radar':
         var.setncattr('description', 'velocity magnitude error from radar range and azimuth measurements')
     else:
         var.setncattr('description', 'velocity magnitude error')
@@ -701,7 +701,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 #    var.setncattr('missing_value',np.int16(NoDataValue))
 
 
-    if pair_type is 'radar':
+    if pair_type == 'radar':
         var = nc_outfile.createVariable('vr', np.dtype('int16'), ('y', 'x'), fill_value=NoDataValue,
                                         zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
 
@@ -1207,7 +1207,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     var.setncattr('units', 'm')
     var.setncattr('grid_mapping', mapping_var_name)
 
-    if pair_type is 'radar':
+    if pair_type == 'radar':
         var.setncattr('range_pixel_size', rangePixelSize)
         var.setncattr('chip_size_coordinates', 'radar geometry: width = range, height = azimuth')
     else:
@@ -1226,7 +1226,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     var.setncattr('units', 'm')
     var.setncattr('grid_mapping', mapping_var_name)
 
-    if pair_type is 'radar':
+    if pair_type == 'radar':
         var.setncattr('azimuth_pixel_size', azimuthPixelSize)
         var.setncattr('chip_size_coordinates', 'radar geometry: width = range, height = azimuth')
     else:
