@@ -32,7 +32,6 @@
 import cv2
 import sys
 import numpy as np
-from scipy import ndimage
 from scipy.ndimage import distance_transform_edt
 from scipy.spatial import distance as dist
 import numpy.fft as fft
@@ -44,11 +43,13 @@ def _remove_local_mean(image, kernel):
 
 
 def _preprocess_filt_std(image, kernel):
+    n = np.prod(kernel.shape)
     conv_sum = cv2.filter2D(image, -1, kernel, borderType=cv2.BORDER_REFLECT)
     conv_squared_sum = cv2.filter2D(image**2, -1, kernel, borderType=cv2.BORDER_REFLECT)
 
     variance = conv_squared_sum - (conv_sum**2)
-    std = np.sqrt(variance)
+    std = np.sqrt(variance) * np.sqrt(n / (n - 1))
+
     return std
 
 
@@ -57,7 +58,7 @@ def _wallis_filter(image, filter_width):
     kernel = kernel / np.sum(kernel)
 
     shifted = _remove_local_mean(image, kernel)
-    std = _preprocess_filt_std(shifted, kernel)
+    std = _preprocess_filt_std(image, kernel)
 
     return shifted / std
 
@@ -80,7 +81,7 @@ def _wallis_filter_fill(image, filter_width, std_cutoff):
     kernel = kernel / np.sum(kernel)
 
     shifted = _remove_local_mean(image, kernel)
-    std = _preprocess_filt_std(shifted, kernel)
+    std = _preprocess_filt_std(image, kernel)
 
     low_std = std < std_cutoff
     low_std = distance_transform_edt(~low_std) <= buff
@@ -238,7 +239,7 @@ class autoRIFT:
         """
 
         self.zeroMask = (self.I1 == 0) | (self.I2 == 0)
-
+        print(f'Wallis filter width is {self.WallisFilterWidth}')
         self.I1 = _wallis_filter(self.I1, self.WallisFilterWidth)
         self.I2 = _wallis_filter(self.I2, self.WallisFilterWidth)
 
@@ -265,7 +266,6 @@ class autoRIFT:
         """
         Preprocess images to remove banding perpendicular to the along flight direction by masking in frequency space
         """
-        self.WallisFilterWidth = 5
         self.zeroMask = self.I1 == 0
         self.I1 = _wallis_filter(self.I1, self.WallisFilterWidth)
         self.I1 = _fft_filter(self.I1, self.zeroMask.astype(int), power_threshold=500)
