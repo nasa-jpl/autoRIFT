@@ -278,7 +278,7 @@ class autoRIFT:
         Preprocess images to remove banding perpendicular to the along flight direction by masking in frequency space
         """
         self.I1 = _fft_filter(self.I1, ~self.I1zeroMask, power_threshold=500)
-        #        self.I2 = _fft_filter(self.I1, ~self.I2zeroMask, power_threshold=500)
+        self.I2 = _fft_filter(self.I2, ~self.I2zeroMask, power_threshold=500)
         print("fft done")
 
     def preprocess_db(self):
