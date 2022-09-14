@@ -59,7 +59,7 @@ def _wallis_filter(image, filter_width):
 
     shifted = _remove_local_mean(image, kernel)
     std = _preprocess_filt_std(image, kernel)
-
+    std[std == 0] = np.nan
     return shifted / std
 
 
@@ -125,7 +125,7 @@ def _order_points(pts):
     return np.array([tl, tr, br, bl], dtype="float32")
 
 
-def get_slopes(corners):
+def _get_slopes(corners):
     tl, tr, br, bl = _order_points(corners)
     slope1 = _calculate_slope(br, bl)
     slope2 = _calculate_slope(tr, tl)
@@ -143,7 +143,7 @@ def _fft_filter(Ix, valid_domain, power_threshold):
     center_x = x / 2
     center_x_int = np.floor(x / 2).astype(int)
 
-    regions = (valid_domain != 0).astype("uint8") * 255
+    regions = (valid_domain).astype("uint8") * 255
     single_region = _find_largest_region(regions)
     single_region = np.uint8(single_region * 255)
     contours, hierarchy = cv2.findContours(single_region, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -155,10 +155,10 @@ def _fft_filter(Ix, valid_domain, power_threshold):
     hull_image = np.zeros(valid_domain.shape, dtype=np.uint8)
     hull_image = cv2.drawContours(hull_image, [hull], -1, 255)
     corners = cv2.goodFeaturesToTrack(hull_image, 4, 0.33, 1000)[:, 0, :]
-    if corners[0] < 4:
+    if corners.shape[0] < 4:
         raise ValueError(f"Only {corners[0]} corners found, expecting 4.")
 
-    along_track, cross_track = get_slopes(corners)
+    along_track, cross_track = _get_slopes(corners)
     print(f"Along track angle is {along_track:.2f} degrees")
 
     filter_base = np.zeros((y, x))
@@ -187,7 +187,8 @@ def _fft_filter(Ix, valid_domain, power_threshold):
     image = Ix.copy()
     image[image > 3] = 3
     image[image < -3] = -3
-    image[np.isnan(image)] = 0
+    valid_data = ~np.isnan(image) & valid_domain
+    image[~valid_data] = 0
 
     fft_image = fft.fftshift(fft.fft2(image))
     P = abs(fft_image)
@@ -205,14 +206,14 @@ def _fft_filter(Ix, valid_domain, power_threshold):
             final_filter = filter_b.copy()
 
         filtered_image = np.real(fft.ifft2(fft.ifftshift(fft_image * (1 - (final_filter)))))
-        filtered_image[~valid_domain] = 0
+        filtered_image[~valid_data] = 0
     else:
         print(
             f"Power along flight direction ({max(sB, sA)}) does not exceed banding threshold ({power_threshold}). "
             f"No banding filter applied."
         )
+        image[~valid_data] = 0
         return image
-
     return filtered_image
 
 
@@ -237,11 +238,21 @@ class autoRIFT:
         """
         Do the preprocessing using wallis filter (10 min vs 15 min in Matlab).
         """
+        self.I1zeroMask = self.I1 == 0
+        self.I2zeroMask = self.I2 == 0
+        print(f"Wallis filter width is {self.WallisFilterWidth}")
 
-        self.zeroMask = (self.I1 == 0) | (self.I2 == 0)
-        print(f'Wallis filter width is {self.WallisFilterWidth}')
         self.I1 = _wallis_filter(self.I1, self.WallisFilterWidth)
+        nan_mask = np.isnan(self.I1)
+        self.I1zeroMask = self.I1zeroMask | nan_mask
+        self.I1[self.I1zeroMask] = 0
+
         self.I2 = _wallis_filter(self.I2, self.WallisFilterWidth)
+        nan_mask = np.isnan(self.I2)
+        self.I2zeroMask = self.I2zeroMask | nan_mask
+        self.I2[self.I2zeroMask] = 0
+
+        self.zeroMask = self.I1zeroMask | self.I2zeroMask
 
     def preprocess_filt_hps(self):
         """
@@ -266,11 +277,9 @@ class autoRIFT:
         """
         Preprocess images to remove banding perpendicular to the along flight direction by masking in frequency space
         """
-        self.zeroMask = self.I1 == 0
-        self.I1 = _wallis_filter(self.I1, self.WallisFilterWidth)
-        self.I1 = _fft_filter(self.I1, self.zeroMask.astype(int), power_threshold=500)
+        self.I1 = _fft_filter(self.I1, ~self.I1zeroMask, power_threshold=500)
+        #        self.I2 = _fft_filter(self.I1, ~self.I2zeroMask, power_threshold=500)
         print("fft done")
-        # self.I2 = _fft_filter(self.I2, (self.I2 != 0).astype(int), power_threshold=500)
 
     def preprocess_db(self):
         """
@@ -829,6 +838,8 @@ class autoRIFT:
         self.Dy0 = 0
         self.origSize = None
         self.zeroMask = None
+        self.I1zeroMask = None
+        self.I2zeroMask = None
 
         ##Output file
         self.Dx = None
