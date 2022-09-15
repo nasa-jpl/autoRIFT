@@ -154,9 +154,9 @@ def _fft_filter(Ix, valid_domain, power_threshold):
     hull = cv2.convexHull(contour, returnPoints=True)
     hull_image = np.zeros(valid_domain.shape, dtype=np.uint8)
     hull_image = cv2.drawContours(hull_image, [hull], -1, 255)
-    corners = cv2.goodFeaturesToTrack(hull_image, 4, 0.33, 1000)[:, 0, :]
+    corners = cv2.goodFeaturesToTrack(hull_image, 4, 0.1, 1000)[:, 0, :]
     if corners.shape[0] < 4:
-        raise ValueError(f"Only {corners[0]} corners found, expecting 4.")
+        raise ValueError(f"Only {corners.shape[0]} corners found, expecting 4.")
 
     along_track, cross_track = _get_slopes(corners)
     print(f"Along track angle is {along_track:.2f} degrees")
