@@ -59,7 +59,7 @@ def _wallis_filter(image, filter_width):
 
     shifted = _remove_local_mean(image, kernel)
     std = _preprocess_filt_std(image, kernel)
-    std[std == 0] = np.nan
+    std[np.isclose(std, 0.)] = np.nan
     return shifted / std
 
 
