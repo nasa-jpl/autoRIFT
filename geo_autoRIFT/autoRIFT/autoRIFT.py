@@ -160,6 +160,7 @@ def _fft_filter(Ix, valid_domain, power_threshold):
 
     along_track, cross_track = _get_slopes(corners)
     print(f"Along track angle is {along_track:.2f} degrees")
+    print(f"Cross track angle is {cross_track:.2f} degrees")
 
     filter_base = np.zeros((y, x))
     filter_base[center_y_int - 70 : center_y_int + 70, :] = 1
@@ -198,7 +199,8 @@ def _fft_filter(Ix, valid_domain, power_threshold):
 
     sA = np.nansum(P[filter_a == 1])
     sB = np.nansum(P[filter_b == 1])
-    print(sA, sB)
+    print(f"Along track power is {sB:.0f}")
+    print(f"Cross track power is {sA:.0f}")
     if ((sA / sB >= 2) | (sB / sA >= 2)) & ((sA > power_threshold) | (sB > power_threshold)):
         if sA > sB:
             final_filter = filter_a.copy()
