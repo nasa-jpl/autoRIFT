@@ -125,14 +125,13 @@ def _order_points(pts):
     return np.array([tl, tr, br, bl], dtype="float32")
 
 
-def _get_slopes(corners):
-    tl, tr, br, bl = _order_points(corners)
-    slope1 = _calculate_slope(br, bl)
-    slope2 = _calculate_slope(tr, tl)
-    slope3 = _calculate_slope(tr, br)
-    slope4 = _calculate_slope(tl, bl)
-    along_track_angle = -1 * np.nanmax([slope3, slope4])
-    cross_track_angle = -1 * np.nanmax([slope1, slope2])
+def _get_slopes(tl, tr, bl, br):
+    slope1 = _calculate_slope(bl, br)
+    slope2 = _calculate_slope(tl, tr)
+    slope3 = _calculate_slope(br, tr)
+    slope4 = _calculate_slope(bl, tl)
+    along_track_angle = np.nanmax([slope1, slope2])
+    cross_track_angle = np.nanmax([slope3, slope4])
     return along_track_angle, cross_track_angle
 
 
@@ -143,22 +142,47 @@ def _fft_filter(Ix, valid_domain, power_threshold):
     center_x = x / 2
     center_x_int = np.floor(x / 2).astype(int)
 
-    regions = (valid_domain).astype("uint8") * 255
+    regions = (valid_domain != 0).astype("uint8") * 255
     single_region = _find_largest_region(regions)
     single_region = np.uint8(single_region * 255)
     contours, hierarchy = cv2.findContours(single_region, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if hierarchy.shape[1] > 1:
-        raise ValueError(f"{hierarchy.shape[1]} external objects found, only expecting 1.")
+        raise ValueError(f"{hierarchy.shape[1]} external objects founds, only expecting 1.")
     contour = contours[0]
+    moment = cv2.moments(contour)
 
-    hull = cv2.convexHull(contour, returnPoints=True)
-    hull_image = np.zeros(valid_domain.shape, dtype=np.uint8)
-    hull_image = cv2.drawContours(hull_image, [hull], -1, 255)
-    corners = cv2.goodFeaturesToTrack(hull_image, 4, 0.1, 1000)[:, 0, :]
-    if corners.shape[0] < 4:
-        raise ValueError(f"Only {corners.shape[0]} corners found, expecting 4.")
+    centroid_y = moment["m01"] / moment["m00"]
+    centroid_x = moment["m10"] / moment["m00"]
+    centroid_y_int = np.floor(centroid_y).astype(int)
+    centroid_x_int = np.floor(centroid_x).astype(int)
+    angle = cv2.minAreaRect(contour)[2]
+    quadrants = np.ones(single_region.shape).astype("uint8")
+    quadrants[:, centroid_x_int:] += 1
+    quadrants[centroid_y_int:, :] += 2
 
-    along_track, cross_track = _get_slopes(corners)
+    rotation = cv2.getRotationMatrix2D(center=(centroid_x, centroid_y), angle=-angle, scale=1)
+    rotated_quadrants = cv2.warpAffine(src=quadrants, M=rotation, dsize=(x, y))
+
+    centroid_array = np.ones(single_region.shape).astype("uint8")
+    centroid_array[centroid_y_int, centroid_x_int] = 0
+    distance_from_centroid = cv2.distanceTransform(centroid_array, cv2.DIST_L2, 5)
+    distance_from_centroid[single_region != 255] = 0
+    slices = {
+        "tl": 1,
+        "tr": 2,
+        "bl": 3,
+        "br": 4,
+    }
+    corners = {}
+    for s in slices:
+        window = np.zeros(distance_from_centroid.shape)
+        roi = rotated_quadrants == slices[s]
+        window[roi] = distance_from_centroid[roi]
+        max_index_of_flattened = np.argmax(window)
+        max_point = np.unravel_index(max_index_of_flattened, window.shape)
+        corners[s] = max_point
+
+    along_track, cross_track = _get_slopes(**corners)
     print(f"Along track angle is {along_track:.2f} degrees")
     print(f"Cross track angle is {cross_track:.2f} degrees")
 
@@ -171,18 +195,13 @@ def _fft_filter(Ix, valid_domain, power_threshold):
     filter_a = cv2.warpAffine(src=filter_base, M=rotation_a, dsize=(x, y))
     filter_b = cv2.warpAffine(src=filter_base, M=rotation_b, dsize=(x, y))
 
-    # Alex's code appears note to use this shift
-    # moment = cv2.moments(contour)
-    # centroid_y = moment["m01"] / moment["m00"]
-    # centroid_x = moment["m10"] / moment["m00"]
+    # Alex's code appears not to use this shift
     # y_shift = centroid_y - center_y
     # x_shift = centroid_x - center_x
     # print(f"shift = ({x_shift:.1f},{y_shift:.1f})")
 
     # translation = np.array([[1, 0, x_shift],
     #                         [0, 1, y_shift]],
-    #                        dtype=np.float32)
-    # filter_a = cv2.warpAffine(src=filter_a, M=translation, dsize=(x, y))
     # filter_b = cv2.warpAffine(src=filter_b, M=translation, dsize=(x, y))
 
     image = Ix.copy()
@@ -208,13 +227,13 @@ def _fft_filter(Ix, valid_domain, power_threshold):
             final_filter = filter_b.copy()
 
         filtered_image = np.real(fft.ifft2(fft.ifftshift(fft_image * (1 - (final_filter)))))
-        filtered_image[~valid_data] = 0
+        filtered_image[~valid_domain] = 0
     else:
         print(
             f"Power along flight direction ({max(sB, sA)}) does not exceed banding threshold ({power_threshold}). "
             f"No banding filter applied."
         )
-        image[~valid_data] = 0
+        image[~valid_domain] = 0
         return image
     return filtered_image
 
