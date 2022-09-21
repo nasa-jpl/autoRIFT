@@ -114,17 +114,6 @@ def _calculate_slope(point1, point2):
     return slope
 
 
-def _order_points(pts):
-    x_sorted = pts[np.argsort(pts[:, 0]), :]
-    left_most = x_sorted[:2, :]
-    right_most = x_sorted[2:, :]
-    left_most = left_most[np.argsort(left_most[:, 1]), :]
-    (tl, bl) = left_most
-    D = dist.cdist(tl[np.newaxis], right_most, "euclidean")[0]
-    (br, tr) = right_most[np.argsort(D)[::-1], :]
-    return np.array([tl, tr, br, bl], dtype="float32")
-
-
 def _get_slopes(tl, tr, bl, br):
     slope1 = _calculate_slope(bl, br)
     slope2 = _calculate_slope(tl, tr)
@@ -135,7 +124,7 @@ def _get_slopes(tl, tr, bl, br):
     return along_track_angle, cross_track_angle
 
 
-def _fft_filter(Ix, valid_domain, power_threshold):
+def _fft_filter(Ix, valid_domain, power_threshold=500):
     y, x = valid_domain.shape
     center_y = y / 2
     center_y_int = np.floor(y / 2).astype(int)
@@ -202,13 +191,14 @@ def _fft_filter(Ix, valid_domain, power_threshold):
 
     # translation = np.array([[1, 0, x_shift],
     #                         [0, 1, y_shift]],
+    #                        dtype=np.float32)
+    # filter_a = cv2.warpAffine(src=filter_a, M=translation, dsize=(x, y))
     # filter_b = cv2.warpAffine(src=filter_b, M=translation, dsize=(x, y))
 
     image = Ix.copy()
     image[image > 3] = 3
     image[image < -3] = -3
-    valid_data = ~np.isnan(image) & valid_domain
-    image[~valid_data] = 0
+    image[np.isnan(image)] = 0
 
     fft_image = fft.fftshift(fft.fft2(image))
     P = abs(fft_image)
@@ -218,12 +208,12 @@ def _fft_filter(Ix, valid_domain, power_threshold):
 
     sA = np.nansum(P[filter_a == 1])
     sB = np.nansum(P[filter_b == 1])
-    print(f"Along track power is {sB:.0f}")
-    print(f"Cross track power is {sA:.0f}")
+    print(f"Along track power is {sA:.0f} degrees")
+    print(f"Cross track power is {sB:.0f} degrees")
     if ((sA / sB >= 2) | (sB / sA >= 2)) & ((sA > power_threshold) | (sB > power_threshold)):
         if sA > sB:
             final_filter = filter_a.copy()
-        elif sB > sA:
+        else:
             final_filter = filter_b.copy()
 
         filtered_image = np.real(fft.ifft2(fft.ifftshift(fft_image * (1 - (final_filter)))))
@@ -231,10 +221,9 @@ def _fft_filter(Ix, valid_domain, power_threshold):
     else:
         print(
             f"Power along flight direction ({max(sB, sA)}) does not exceed banding threshold ({power_threshold}). "
-            f"No banding filter applied."
-        )
-        image[~valid_domain] = 0
+            f"No banding filter applied.")
         return image
+
     return filtered_image
 
 
