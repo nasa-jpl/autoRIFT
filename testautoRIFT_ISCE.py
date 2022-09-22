@@ -27,6 +27,7 @@
 # Author: Yang Lei
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 import re
+import warnings
 from osgeo import gdal
 from datetime import datetime, timedelta
 
@@ -290,7 +291,15 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     elif 'wallis' in preprocessing_methods:
         obj.preprocess_filt_wal()
     elif 'fft' in preprocessing_methods:
-        obj.preprocess_filt_fft()
+        # FIXME: The Landsat 4/5 FFT preprocessor looks for the image corners to
+        #        determine the scene rotation, but Geogrid + autoRIFT rond the
+        #        corners when co-registering and chop the non-overlapping corners
+        #        when subsetting to the common image overlap. FFT filer needs to
+        #        be applied to the native images before they are processed by
+        #        Geogrid or autoRIFT.
+        # obj.preprocess_filt_wal()
+        # obj.preprocess_filt_fft()
+        warnings.warn('FFT filtering must be done before processing with geogrid! Be careful when using this method', UserWarning)
     else:
         obj.preprocess_filt_hps()
 #    obj.I1 = np.abs(I1)
@@ -516,7 +525,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 acquisition = datetime.strptime(name.split('_')[3], '%Y%m%d')
                 if acquisition >= datetime(2003, 5, 31):
                     preprocessing_methods[ii] = 'wallis_fill'
-            elif len(re.findall("L[TM]0[45]_", name)) > 0:
+            elif len(re.findall("LT0[45]_", name)) > 0:
                 preprocessing_methods[ii] = 'fft'
 
         print(f'Using preprocessing methods {preprocessing_methods}')
@@ -997,7 +1006,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector
                     )
 
-                elif nc_sensor == "L7":
+                elif nc_sensor in ("L7", "L5", "L4"):
                     if geogrid_run_info is None:
                         chipsizex0 = float(str.split(runCmd('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
                         gridspacingx = float(str.split(runCmd('fgrep "Grid spacing in m:" testGeogrid.txt'))[-1])
