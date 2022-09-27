@@ -97,6 +97,7 @@ void geoGridOptical::geogridOptical()
         
         std::cout << "Window rdr_off2vel_x vector: " << ro2vx_name << "\n";
         std::cout << "Window rdr_off2vel_y vector: " << ro2vy_name << "\n";
+        std::cout << "Window scale factor: " << sfname << "\n";
         
         if (srxname != "")
         {
@@ -360,6 +361,11 @@ void geoGridOptical::geogridOptical()
     double raster2b[pCount];
 //    double raster2c[pCount];
     
+    double sf_raster1[pCount];
+    double sf_raster2[pCount];
+    
+    
+    
     GDALRasterBand *poBand1 = NULL;
     GDALRasterBand *poBand2 = NULL;
     GDALRasterBand *poBand1Off = NULL;
@@ -375,6 +381,10 @@ void geoGridOptical::geogridOptical()
     GDALRasterBand *poBand1RO2VY = NULL;
     GDALRasterBand *poBand2RO2VX = NULL;
     GDALRasterBand *poBand2RO2VY = NULL;
+    GDALRasterBand *poBand1SF = NULL;
+    GDALRasterBand *poBand2SF = NULL;
+    
+    
     
     GDALDataset *poDstDS = NULL;
     GDALDataset *poDstDSOff = NULL;
@@ -384,6 +394,7 @@ void geoGridOptical::geogridOptical()
     GDALDataset *poDstDSMsk = NULL;
     GDALDataset *poDstDSRO2VX = NULL;
     GDALDataset *poDstDSRO2VY = NULL;
+    GDALDataset *poDstDSSF = NULL;
     
 
     double nodata;
@@ -615,6 +626,29 @@ void geoGridOptical::geogridOptical()
         poBand1RO2VY->SetNoDataValue(nodata_out);
         poBand2RO2VY->SetNoDataValue(nodata_out);
     //    poBand3Alt->SetNoDataValue(nodata_out);
+        
+        
+        GDALDriver *poDriverSF;
+        poDriverSF = GetGDALDriverManager()->GetDriverByName(pszFormat);
+        if( poDriverSF == NULL )
+        exit(107);
+        
+        str = sfname;
+        const char * pszDstFilenameSF = str.c_str();
+        poDstDSSF = poDriverSF->Create( pszDstFilenameSF, pCount, lCount, 2, GDT_Float64,
+                                         papszOptions );
+        
+        poDstDSSF->SetGeoTransform( adfGeoTransform );
+        poDstDSSF->SetProjection( pszSRS_WKT );
+    //    CPLFree( pszSRS_WKT );
+        
+//        GDALRasterBand *poBand1RO2VX;
+//        GDALRasterBand *poBand2RO2VX;
+    //    GDALRasterBand *poBand3Los;
+        poBand1SF = poDstDSSF->GetRasterBand(1);
+        poBand2SF = poDstDSSF->GetRasterBand(2);
+        poBand1SF->SetNoDataValue(nodata_out);
+        poBand2SF->SetNoDataValue(nodata_out);
         
     }
     
@@ -1022,6 +1056,9 @@ void geoGridOptical::geogridOptical()
                 raster2b[jj] = nodata_out;
 //                raster2c[jj] = nodata_out;
                 
+                sf_raster1[jj] = nodata_out;
+                sf_raster2[jj] = nodata_out;
+                
             }
             else
             {
@@ -1040,8 +1077,8 @@ void geoGridOptical::geogridOptical()
                         }
                         else
                         {
-                            raster11[jj] = std::round(dot_C(vel,xunit)*dt/XSize/365.0/24.0/3600.0*1);
-                            raster22[jj] = std::round(dot_C(vel,yunit)*dt/YSize/365.0/24.0/3600.0*1);
+                            raster11[jj] = std::round(dot_C(vel,xunit)*dt/norm_C(xdiff)/365.0/24.0/3600.0*1);
+                            raster22[jj] = std::round(dot_C(vel,yunit)*dt/norm_C(ydiff)/365.0/24.0/3600.0*1);
                         }
                       
                     }
@@ -1064,6 +1101,10 @@ void geoGridOptical::geogridOptical()
                         raster2a[jj] = nodata_out;
                         raster2b[jj] = nodata_out;
                     }
+                    
+                    // range/azimuth distance to DEM distance scale factor
+                    sf_raster1[jj] = norm_C(xdiff) / std::abs(XSize);
+                    sf_raster2[jj] = norm_C(ydiff) / std::abs(YSize);
                     
                     if (srxname != "")
                     {
@@ -1217,6 +1258,10 @@ void geoGridOptical::geogridOptical()
                                  raster2b, pCount, 1, GDT_Float64, 0, 0 );
     //        poBand3Alt->RasterIO( GF_Write, 0, ii, pCount, 1,
     //                             raster2c, pCount, 1, GDT_Float64, 0, 0 );
+            poBand1SF->RasterIO( GF_Write, 0, ii, pCount, 1,
+                                 sf_raster1, pCount, 1, GDT_Float64, 0, 0 );
+            poBand2SF->RasterIO( GF_Write, 0, ii, pCount, 1,
+                                 sf_raster2, pCount, 1, GDT_Float64, 0, 0 );
         }
         
         
@@ -1262,6 +1307,9 @@ void geoGridOptical::geogridOptical()
         
         /* Once we're done, close properly the dataset */
         GDALClose( (GDALDatasetH) poDstDSRO2VY );
+        
+        /* Once we're done, close properly the dataset */
+        GDALClose( (GDALDatasetH) poDstDSSF );
     }
     
     

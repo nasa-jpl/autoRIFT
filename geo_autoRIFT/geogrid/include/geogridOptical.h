@@ -79,6 +79,7 @@ struct geoGridOptical
     std::string stablesurfacemaskname;
     std::string ro2vx_name;
     std::string ro2vy_name;
+    std::string sfname;
 
     //Functions
     void computeBbox(double *);

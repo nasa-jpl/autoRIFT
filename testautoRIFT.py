@@ -64,6 +64,8 @@ def cmdLineParse():
             help='Input pixel offsets to vx conversion coefficients file name')
     parser.add_argument('-vy', '--input_vy', dest='offset2vy', type=str, required=False,
             help='Input pixel offsets to vy conversion coefficients file name')
+    parser.add_argument('-sf', '--input_scale_factor', dest='scale_factor', type=str, required=False,
+            help='Input map projection scale factor file name')
     parser.add_argument('-ssm', '--input_ssm', dest='stable_surface_mask', type=str, required=False,
             help='Input stable surface mask file name')
     parser.add_argument('-fo', '--flag_optical', dest='optical_flag', type=bool, required=False, default=0,
@@ -395,13 +397,13 @@ def main():
     generateAutoriftProduct(indir_m=inps.indir_m, indir_s=inps.indir_s, grid_location=inps.grid_location,
                             init_offset=inps.init_offset, search_range=inps.search_range,
                             chip_size_min=inps.chip_size_min,chip_size_max=inps.chip_size_max,
-                            offset2vx=inps.offset2vx, offset2vy=inps.offset2vy,
+                            offset2vx=inps.offset2vx, offset2vy=inps.offset2vy, scale_factor=inps.scale_factor,
                             stable_surface_mask=inps.stable_surface_mask, optical_flag=inps.optical_flag,
                             nc_sensor=inps.nc_sensor, mpflag=inps.mpflag, ncname=inps.ncname)
 
 
 def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search_range, chip_size_min, chip_size_max,
-                            offset2vx, offset2vy, stable_surface_mask, optical_flag, nc_sensor, mpflag, ncname,
+                            offset2vx, offset2vy, scale_factor, stable_surface_mask, optical_flag, nc_sensor, mpflag, ncname,
                             geogrid_run_info=None):
 
     import numpy as np
@@ -605,6 +607,16 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
 
         if offset2vx is not None:
+        
+            ds = gdal.Open(scale_factor)
+            band = ds.GetRasterBand(1)
+            scale_factor_1 = band.ReadAsArray()
+            band = ds.GetRasterBand(2)
+            scale_factor_2 = band.ReadAsArray()
+            band=None
+            ds=None
+            scale_factor_1[scale_factor_1 == nodata] = np.nan
+            scale_factor_2[scale_factor_2 == nodata] = np.nan
 
             ds = gdal.Open(offset2vx)
             band = ds.GetRasterBand(1)
@@ -640,8 +652,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
             if offset2va is not None:
                 offset2va[offset2va == nodata] = np.nan
 
-            VX = offset2vx_1 * DX + offset2vx_2 * DY
-            VY = offset2vy_1 * DX + offset2vy_2 * DY
+            VX = offset2vx_1 * (DX * scale_factor_1) + offset2vx_2 * (DY * scale_factor_2)
+            VY = offset2vy_1 * (DX * scale_factor_1) + offset2vy_2 * (DY * scale_factor_2)
             VX = VX.astype(np.float32)
             VY = VY.astype(np.float32)
 
@@ -724,6 +736,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
                 DXref = offset2vy_2 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VXref - offset2vx_2 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VYref
                 DYref = offset2vx_1 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VYref - offset2vy_1 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) * VXref
+                DXref = DXref / scale_factor_1
+                DYref = DYref / scale_factor_2
 
 #                stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
                 stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)))
@@ -778,8 +792,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     DY = DY - dy_mean_shift
 
 
-                VX = offset2vx_1 * DX + offset2vx_2 * DY
-                VY = offset2vy_1 * DX + offset2vy_2 * DY
+                VX = offset2vx_1 * (DX * scale_factor_1) + offset2vx_2 * (DY * scale_factor_2)
+                VY = offset2vy_1 * (DX * scale_factor_1) + offset2vy_2 * (DY * scale_factor_2)
                 VX = VX.astype(np.float32)
                 VY = VY.astype(np.float32)
 
@@ -874,7 +888,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
                     netcdf_file = no.netCDF_packaging(
                         VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1, SX, SY,
-                        offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, offset2vr, offset2va, MM, VXref, VYref,
+                        offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, offset2vr, offset2va, scale_factor_1, scale_factor_2, MM, VXref, VYref,
                         DXref, DYref, rangePixelSize, azimuthPixelSize, dt, epsg, srs, tran, out_nc_filename, pair_type,
                         detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_count1, stable_shift_applied,
                         dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector
@@ -974,7 +988,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
                     netcdf_file = no.netCDF_packaging(
                         VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1, SX, SY,
-                        offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, None, None, MM, VXref, VYref,
+                        offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, None, None, scale_factor_1, scale_factor_2, MM, VXref, VYref,
                         None, None, XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type,
                         detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_count1, stable_shift_applied,
                         dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector
@@ -1074,7 +1088,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
                     netcdf_file = no.netCDF_packaging(
                         VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1, SX, SY,
-                        offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, None, None, MM, VXref, VYref,
+                        offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, None, None, scale_factor_1, scale_factor_2, MM, VXref, VYref,
                         None, None, XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type,
                         detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_count1, stable_shift_applied,
                         dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector
@@ -1171,7 +1185,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
                     netcdf_file = no.netCDF_packaging(
                         VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1, SX, SY,
-                        offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, None, None, MM, VXref, VYref,
+                        offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, None, None, scale_factor_1, scale_factor_2, MM, VXref, VYref,
                         None, None, XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type,
                         detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_count1, stable_shift_applied,
                         dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector

@@ -67,6 +67,7 @@ extern "C"
         PyObject * setWindowStableSurfaceMaskFilename(PyObject *, PyObject *);
         PyObject * setRO2VXFilename(PyObject *, PyObject *);
         PyObject * setRO2VYFilename(PyObject *, PyObject *);
+        PyObject * setSFFilename(PyObject *, PyObject *);
         PyObject * setEPSG(PyObject *, PyObject *);
         PyObject * setIncidenceAngle(PyObject *, PyObject *);
         PyObject * setChipSizeX0(PyObject *, PyObject *);
@@ -124,6 +125,7 @@ static PyMethodDef geogrid_methods[] =
         {"setWindowStableSurfaceMaskFilename_Py", setWindowStableSurfaceMaskFilename, METH_VARARGS, " "},
         {"setRO2VXFilename_Py", setRO2VXFilename, METH_VARARGS, " "},
         {"setRO2VYFilename_Py", setRO2VYFilename, METH_VARARGS, " "},
+        {"setSFFilename_Py", setSFFilename, METH_VARARGS, " "},
         {NULL, NULL, 0, NULL}
 };
 #endif //geoGridmodule_h
