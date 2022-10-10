@@ -1114,7 +1114,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     master_split = master_path.split('_')
                     slave_split = slave_path.split('_')
 
-                    import re
                     if re.findall("://",master_path).__len__() > 0:
                         master_filename_full = master_path.split('/')
                         for item in master_filename_full:

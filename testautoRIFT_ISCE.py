@@ -26,7 +26,7 @@
 #
 # Author: Yang Lei
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-import re as ree
+import re
 from osgeo import gdal
 from datetime import datetime, timedelta
 
@@ -510,7 +510,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
         preprocessing_methods = ['hps', 'hps']
         for ii, name in enumerate((m_name, s_name)):
-            if len(ree.findall("L[EO]07_", name)) > 0:
+            if len(re.findall("L[EO]07_", name)) > 0:
                 acquisition = datetime.strptime(name.split('_')[3], '%Y%m%d')
                 if acquisition >= datetime(2003, 5, 31):
                     preprocessing_methods[ii] = 'wallis_fill'
@@ -1113,7 +1113,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     master_split = master_path.split('_')
                     slave_split = slave_path.split('_')
 
-                    import re
                     if re.findall("://",master_path).__len__() > 0:
                         master_filename_full = master_path.split('/')
                         for item in master_filename_full:
