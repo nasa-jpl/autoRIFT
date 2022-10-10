@@ -405,6 +405,19 @@ PyObject* setRO2VYFilename(PyObject *self, PyObject *args)
     return Py_BuildValue("i", 0);
 }
 
+PyObject* setSFFilename(PyObject *self, PyObject *args)
+{
+    uint64_t ptr;
+    char* name;
+    if (!PyArg_ParseTuple(args, "Ks", &ptr, &name))
+    {
+        return NULL;
+    }
+    
+    ((geoGridOptical*)(ptr))->sfname = std::string(name);
+    return Py_BuildValue("i", 0);
+}
+
 
 PyObject* setNodataOut(PyObject *self, PyObject *args)
 {

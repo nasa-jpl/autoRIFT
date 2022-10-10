@@ -251,6 +251,7 @@ def runGeogrid(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, csminy, c
     obj.winssmname = "window_stable_surface_mask.tif"
     obj.winro2vxname = "window_rdr_off2vel_x_vec.tif"
     obj.winro2vyname = "window_rdr_off2vel_y_vec.tif"
+    obj.winsfname = "window_scale_factor.tif"
     ##dt-varying search range scale (srs) rountine parameters
 #    obj.srs_dt_unity = 5
 #    obj.srs_max_scale = 10
@@ -335,6 +336,7 @@ def runGeogridOptical(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, cs
     obj.winssmname = "window_stable_surface_mask.tif"
     obj.winro2vxname = "window_rdr_off2vel_x_vec.tif"
     obj.winro2vyname = "window_rdr_off2vel_y_vec.tif"
+    obj.winsfname = "window_scale_factor.tif"
     ##dt-varying search range scale (srs) rountine parameters
 #    obj.srs_dt_unity = 32
 #    obj.srs_max_scale = 10

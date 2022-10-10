@@ -102,6 +102,7 @@ void geoGrid::geogrid()
         
         std::cout << "Window rdr_off2vel_x vector: " << ro2vx_name << "\n";
         std::cout << "Window rdr_off2vel_y vector: " << ro2vy_name << "\n";
+        std::cout << "Window scale factor: " << sfname << "\n";
         
         if (srxname != "")
         {
@@ -121,6 +122,7 @@ void geoGrid::geogrid()
     {
         std::cout << "Window stable surface mask: " << stablesurfacemaskname << "\n";
     }
+    
     
     std::cout << "Output Nodata Value: " << nodata_out << "\n";
     
@@ -385,6 +387,9 @@ void geoGrid::geogrid()
     double raster2b[pCount];
     double raster2c[pCount];
     
+    double sf_raster1[pCount];
+    double sf_raster2[pCount];
+    
 
     
     GDALRasterBand *poBand1 = NULL;
@@ -404,6 +409,9 @@ void geoGrid::geogrid()
     GDALRasterBand *poBand2RO2VY = NULL;
     GDALRasterBand *poBand3RO2VX = NULL;
     GDALRasterBand *poBand3RO2VY = NULL;
+    GDALRasterBand *poBand1SF = NULL;
+    GDALRasterBand *poBand2SF = NULL;
+    
     
     
     GDALDataset *poDstDS = NULL;
@@ -414,6 +422,7 @@ void geoGrid::geogrid()
     GDALDataset *poDstDSMsk = NULL;
     GDALDataset *poDstDSRO2VX = NULL;
     GDALDataset *poDstDSRO2VY = NULL;
+    GDALDataset *poDstDSSF = NULL;
 
     
 
@@ -650,6 +659,29 @@ void geoGrid::geogrid()
         poBand1RO2VY->SetNoDataValue(nodata_out);
         poBand2RO2VY->SetNoDataValue(nodata_out);
         poBand3RO2VY->SetNoDataValue(nodata_out);
+        
+        
+        GDALDriver *poDriverSF;
+        poDriverSF = GetGDALDriverManager()->GetDriverByName(pszFormat);
+        if( poDriverSF == NULL )
+        exit(107);
+        
+        str = sfname;
+        const char * pszDstFilenameSF = str.c_str();
+        poDstDSSF = poDriverSF->Create( pszDstFilenameSF, pCount, lCount, 2, GDT_Float64,
+                                         papszOptions );
+        
+        poDstDSSF->SetGeoTransform( adfGeoTransform );
+        poDstDSSF->SetProjection( pszSRS_WKT );
+    //    CPLFree( pszSRS_WKT );
+        
+//        GDALRasterBand *poBand1RO2VX;
+//        GDALRasterBand *poBand2RO2VX;
+    //    GDALRasterBand *poBand3Los;
+        poBand1SF = poDstDSSF->GetRasterBand(1);
+        poBand2SF = poDstDSSF->GetRasterBand(2);
+        poBand1SF->SetNoDataValue(nodata_out);
+        poBand2SF->SetNoDataValue(nodata_out);
         
         
     }
@@ -992,6 +1024,7 @@ void geoGrid::geogrid()
             double radius, hgt, zsch;
             double a, b, costheta, sintheta;
             double rdiff;
+            double da[3];
             
             for(int kk=0; kk<3; kk++) 
             {
@@ -1227,6 +1260,9 @@ void geoGrid::geogrid()
                 raster2b[jj] = nodata_out;
                 raster2c[jj] = nodata_out;
                 
+                sf_raster1[jj] = nodata_out;
+                sf_raster2[jj] = nodata_out;
+                
             }
             else
             {
@@ -1245,7 +1281,7 @@ void geoGrid::geogrid()
                         }
                         else
                         {
-                            raster11[jj] = std::round(dot_C(vel,los)*dt/dr/365.0/24.0/3600.0*1);
+                            raster11[jj] = std::round(dot_C(vel,los)*dt/norm_C(drpos)/365.0/24.0/3600.0*1);
                             raster22[jj] = std::round(dot_C(vel,temp)*dt/norm_C(alt)/365.0/24.0/3600.0*1);
                         }
                       
@@ -1255,12 +1291,17 @@ void geoGrid::geogrid()
                     unitvec_C(cross, cross);
                     cross_check = std::abs(std::acos(dot_C(normal,cross))/deg2rad-90.0);
                     
+                    for(int pp=0; pp<3; pp++)
+                    {
+                        da[pp] = targXYZ[pp] - xyz[pp];
+                    }
+                    
                     if (cross_check > 1.0)
                     {
                         raster1a[jj] = normal[2]/(dt/dr/365.0/24.0/3600.0)*(normal[2]*temp[1]-normal[1]*temp[2])/((normal[2]*los[0]-normal[0]*los[2])*(normal[2]*temp[1]-normal[1]*temp[2])-(normal[2]*temp[0]-normal[0]*temp[2])*(normal[2]*los[1]-normal[1]*los[2]));
-                        raster1b[jj] = -normal[2]/(dt/norm_C(alt)/365.0/24.0/3600.0)*(normal[2]*los[1]-normal[1]*los[2])/((normal[2]*los[0]-normal[0]*los[2])*(normal[2]*temp[1]-normal[1]*temp[2])-(normal[2]*temp[0]-normal[0]*temp[2])*(normal[2]*los[1]-normal[1]*los[2]));
+                        raster1b[jj] = -normal[2]/(dt/norm_C(da)/365.0/24.0/3600.0)*(normal[2]*los[1]-normal[1]*los[2])/((normal[2]*los[0]-normal[0]*los[2])*(normal[2]*temp[1]-normal[1]*temp[2])-(normal[2]*temp[0]-normal[0]*temp[2])*(normal[2]*los[1]-normal[1]*los[2]));
                         raster2a[jj] = -normal[2]/(dt/dr/365.0/24.0/3600.0)*(normal[2]*temp[0]-normal[0]*temp[2])/((normal[2]*los[0]-normal[0]*los[2])*(normal[2]*temp[1]-normal[1]*temp[2])-(normal[2]*temp[0]-normal[0]*temp[2])*(normal[2]*los[1]-normal[1]*los[2]));
-                        raster2b[jj] = normal[2]/(dt/norm_C(alt)/365.0/24.0/3600.0)*(normal[2]*los[0]-normal[0]*los[2])/((normal[2]*los[0]-normal[0]*los[2])*(normal[2]*temp[1]-normal[1]*temp[2])-(normal[2]*temp[0]-normal[0]*temp[2])*(normal[2]*los[1]-normal[1]*los[2]));
+                        raster2b[jj] = normal[2]/(dt/norm_C(da)/365.0/24.0/3600.0)*(normal[2]*los[0]-normal[0]*los[2])/((normal[2]*los[0]-normal[0]*los[2])*(normal[2]*temp[1]-normal[1]*temp[2])-(normal[2]*temp[0]-normal[0]*temp[2])*(normal[2]*los[1]-normal[1]*los[2]));
                     }
                     else
                     {
@@ -1270,12 +1311,13 @@ void geoGrid::geogrid()
                         raster2b[jj] = nodata_out;
                     }
                     
-                    for(int pp=0; pp<3; pp++)
-                    {
-                        targXYZ[pp] -= xyz[pp];
-                    }
+                    // range/azimuth pixel displacement to range/azimuth velocity
                     raster1c[jj] = dr/dt*365.0*24.0*3600.0*1;
-                    raster2c[jj] = norm_C(targXYZ)/dt*365.0*24.0*3600.0*1;
+                    raster2c[jj] = norm_C(da)/dt*365.0*24.0*3600.0*1;
+                    
+                    // range/azimuth distance to DEM distance scale factor
+                    sf_raster1[jj] = norm_C(drpos) / dr;
+                    sf_raster2[jj] = norm_C(alt) / norm_C(da);
                     
                     
                     if (srxname != "")
@@ -1425,6 +1467,10 @@ void geoGrid::geogrid()
                                  raster2b, pCount, 1, GDT_Float64, 0, 0 );
             poBand3RO2VY->RasterIO( GF_Write, 0, ii, pCount, 1,
                                  raster2c, pCount, 1, GDT_Float64, 0, 0 );
+            poBand1SF->RasterIO( GF_Write, 0, ii, pCount, 1,
+                                 sf_raster1, pCount, 1, GDT_Float64, 0, 0 );
+            poBand2SF->RasterIO( GF_Write, 0, ii, pCount, 1,
+                                 sf_raster2, pCount, 1, GDT_Float64, 0, 0 );
             
         }
         
@@ -1471,6 +1517,9 @@ void geoGrid::geogrid()
         
         /* Once we're done, close properly the dataset */
         GDALClose( (GDALDatasetH) poDstDSRO2VY );
+        
+        /* Once we're done, close properly the dataset */
+        GDALClose( (GDALDatasetH) poDstDSSF );
         
     }
     

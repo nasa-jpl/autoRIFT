@@ -245,6 +245,7 @@ class GeogridOptical():
         geogridOptical.setWindowStableSurfaceMaskFilename_Py( self._geogridOptical, self.winssmname)
         geogridOptical.setRO2VXFilename_Py( self._geogridOptical, self.winro2vxname)
         geogridOptical.setRO2VYFilename_Py( self._geogridOptical, self.winro2vyname)
+        geogridOptical.setSFFilename_Py( self._geogridOptical, self.winsfname)
         geogridOptical.setNodataOut_Py(self._geogridOptical, self.nodata_out)
         
     
@@ -380,6 +381,7 @@ class GeogridOptical():
         self.winssmname = None
         self.winro2vxname = None
         self.winro2vyname = None
+        self.winsfname = None
         
         ##dt-varying search range scale (srs) rountine parameters
         self.srs_dt_unity = 182
