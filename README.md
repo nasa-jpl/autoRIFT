@@ -37,7 +37,7 @@ Citation: https://doi.org/10.3390/rs13040749
 
 Alex Gardner (JPL/Caltech; alex.s.gardner@jpl.nasa.gov) first described the algorithm "auto-RIFT" in (Gardner et al., 2018), developed the first version in MATLAB and continued to refine the algorithm;
 
-Yang Lei (GPS/Caltech; ylei@caltech.edu; leiyangfrancis@gmail.com) translated it to Python, further optimized and incoporated to the ISCE software while also developed its sister module Geogrid;
+Yang Lei (GPS/Caltech; ylei@caltech.edu; leiyangfrancis@gmail.com) translated it to Python, further optimized and incorporated to the ISCE software while also developed its sister module Geogrid;
 
 Piyush Agram (GPS/Caltech; piyush@gps.caltech.edu) set up the installation as a standalone module and further cleaned the code.
 
