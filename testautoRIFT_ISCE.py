@@ -130,7 +130,8 @@ def loadProductOptical(file_m, file_s):
 
 
 def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0, noDataMask, optflag,
-                nodata, mpflag, geogrid_run_info=None, preprocessing_methods=('hps', 'hps')):
+                nodata, mpflag, geogrid_run_info=None, preprocessing_methods=('hps', 'hps'),
+                preprocessing_filter_width=5):
     '''
     Wire and run geogrid.
     '''
@@ -280,6 +281,7 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     ######## preprocessing
     t1 = time.time()
     print("Pre-process Start!!!")
+    print(f"Using Wallis Filter Width: {obj.WallisFilterWidth}")
 #    obj.zeroMask = 1
 
     # TODO: Allow different filters to be applied images independently
@@ -517,6 +519,12 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
         m_name = os.path.basename(indir_m)
         s_name = os.path.basename(indir_s)
 
+        # FIXME: Filter width is a magic variable here and not exposed well.
+        preprocessing_filter_width = 5
+        for ii, name in enumerate((m_name, s_name)):
+            if len(re.findall("S1[AB]_", name)) > 0:
+                preprocessing_filter_width = 21
+
         preprocessing_methods = ['hps', 'hps']
         for ii, name in enumerate((m_name, s_name)):
             if len(re.findall("L[EO]07_", name)) > 0:
@@ -531,6 +539,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
         Dx, Dy, InterpMask, ChipSizeX, GridSpacingX, ScaleChipSizeY, SearchLimitX, SearchLimitY, origSize, noDataMask = runAutorift(
             data_m, data_s, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0,
             noDataMask, optical_flag, nodata, mpflag, geogrid_run_info=geogrid_run_info, preprocessing_methods=preprocessing_methods,
+            preprocessing_filter_width=preprocessing_filter_width,
         )
         if nc_sensor is not None:
             import netcdf_output as no
