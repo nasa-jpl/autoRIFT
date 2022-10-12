@@ -203,9 +203,6 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
                     if (I1[obj.yGrid[ii,jj]-1,obj.xGrid[ii,jj]-1]==0)|(I2[obj.yGrid[ii,jj]-1,obj.xGrid[ii,jj]-1]==0):
                         noDataMask[ii,jj] = True
 
-
-
-
     ######### mask out nodata to skip the offset searching using the nodata mask (by setting SearchLimit to be 0)
 
     if SRx0 is None:
@@ -241,14 +238,13 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
         obj.ChipSize0X = int(np.ceil(chipsizex0/pixsizex/4)*4)
         obj.GridSpacingX = int(obj.ChipSize0X*gridspacingx/chipsizex0)
 
-#        obj.ChipSize0X = np.min(CSMINx0[CSMINx0!=nodata])
+        # obj.ChipSize0X = np.min(CSMINx0[CSMINx0!=nodata])
         RATIO_Y2X = CSMINy0/CSMINx0
         obj.ScaleChipSizeY = np.median(RATIO_Y2X[(CSMINx0!=nodata)&(CSMINy0!=nodata)])
-#        obj.ChipSizeMaxX = obj.ChipSizeMaxX / obj.ChipSizeMaxX * 544
-#        obj.ChipSizeMinX = obj.ChipSizeMinX / obj.ChipSizeMinX * 68
+        # obj.ChipSizeMaxX = obj.ChipSizeMaxX / obj.ChipSizeMaxX * 544
+        # obj.ChipSizeMinX = obj.ChipSizeMinX / obj.ChipSizeMinX * 68
     else:
         if ((optflag == 1)&(xGrid is not None)):
-#            print('test')
             obj.ChipSizeMaxX = 32
             obj.ChipSizeMinX = 16
             obj.ChipSize0X = 16
@@ -1066,30 +1062,30 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     slave_dt = d1.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
 
                     IMG_INFO_DICT = {
-                        'mission_img1': master_split[0][0],
-                        'sensor_img1': master_split[0][1],
-                        'satellite_img1': np.float64(master_split[0][2:4]),
-                        'correction_level_img1': master_split[1],
-                        'path_img1': np.float64(master_split[2][0:3]),
-                        'row_img1': np.float64(master_split[2][3:6]),
                         'acquisition_date_img1': master_dt,
-                        'time_standard_img1': 'UTC',
-                        'processing_date_img1': master_split[4][0:8],
-                        'collection_number_img1': np.float64(master_split[5]),
-                        'collection_category_img1': master_split[6],
-                        'mission_img2': slave_split[0][0],
-                        'sensor_img2': slave_split[0][1],
-                        'satellite_img2': np.float64(slave_split[0][2:4]),
-                        'correction_level_img2': slave_split[1],
-                        'path_img2': np.float64(slave_split[2][0:3]),
-                        'row_img2': np.float64(slave_split[2][3:6]),
                         'acquisition_date_img2': slave_dt,
-                        'time_standard_img2': 'UTC',
-                        'processing_date_img2': slave_split[4][0:8],
-                        'collection_number_img2': np.float64(slave_split[5]),
+                        'collection_category_img1': master_split[6],
                         'collection_category_img2': slave_split[6],
-                        'date_dt': date_dt,
+                        'collection_number_img1': np.float64(master_split[5]),
+                        'collection_number_img2': np.float64(slave_split[5]),
+                        'correction_level_img1': master_split[1],
+                        'correction_level_img2': slave_split[1],
+                        'mission_img1': master_split[0][0],
+                        'mission_img2': slave_split[0][0],
+                        'path_img1': np.float64(master_split[2][0:3]),
+                        'path_img2': np.float64(slave_split[2][0:3]),
+                        'processing_date_img1': master_split[4][0:8],
+                        'processing_date_img2': slave_split[4][0:8],
+                        'row_img1': np.float64(master_split[2][3:6]),
+                        'row_img2': np.float64(slave_split[2][3:6]),
+                        'satellite_img1': np.float64(master_split[0][2:4]),
+                        'satellite_img2': np.float64(slave_split[0][2:4]),
+                        'sensor_img1': master_split[0][1],
+                        'sensor_img2': slave_split[0][1],
+                        'time_standard_img1': 'UTC',
+                        'time_standard_img2': 'UTC',
                         'date_center': date_center,
+                        'date_dt': date_dt,
                         'latitude': cen_lat,
                         'longitude': cen_lon,
                         'roi_valid_percentage': PPP,
