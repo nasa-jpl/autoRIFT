@@ -685,7 +685,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
             if nc_sensor is not None:
 
-                if nc_sensor == "S":
+                if nc_sensor == "S1":
                     swath_offset_bias_ref = [-0.01, 0.019, -0.0068, 0.006]
                     import netcdf_output as no
                     DX, DY, flight_direction_m, flight_direction_s = no.cal_swath_offset_bias(indir_m, xGrid, yGrid, VX, VY, DX, DY, nodata, tran, proj, GridSpacingX, ScaleChipSizeY, swath_offset_bias_ref)
