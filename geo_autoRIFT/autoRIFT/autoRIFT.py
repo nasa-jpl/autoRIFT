@@ -69,9 +69,9 @@ def _wallis_filter_fill(image, filter_width, std_cutoff):
 
     # find edges of image, this makes missing scan lines valid and will
     # later be filled with random white noise
-    potential_data = distance_transform_edt(image.mask) < 30
+    potential_data = cv2.distanceTransform(image.mask.astype(np.uint8), distanceType=cv2.DIST_L2, maskSize=cv2.DIST_MASK_PRECISE) < 30
     missing_data = potential_data & image.mask
-    missing_data = distance_transform_edt(~missing_data) <= buff
+    missing_data = cv2.distanceTransform((~missing_data).astype(np.uint8), distanceType=cv2.DIST_L2, maskSize=cv2.DIST_MASK_PRECISE) <= buff
 
     # trying to frame out the image
     valid_domain = ~image.mask | missing_data
@@ -84,7 +84,7 @@ def _wallis_filter_fill(image, filter_width, std_cutoff):
     std = _preprocess_filt_std(image, kernel)
 
     low_std = std < std_cutoff
-    low_std = distance_transform_edt(~low_std) <= buff
+    low_std = cv2.distanceTransform((~low_std).astype(np.uint8), distanceType=cv2.DIST_L2, maskSize=cv2.DIST_MASK_PRECISE) <= buff
     missing_data = (missing_data | low_std) & valid_domain
 
     image = shifted / std
