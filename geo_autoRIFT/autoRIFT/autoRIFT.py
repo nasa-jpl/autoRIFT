@@ -64,17 +64,17 @@ def _wallis_filter(image, filter_width):
 
 
 def _wallis_filter_fill(image, filter_width, std_cutoff):
-    image = np.ma.masked_values(image, 0.0)
+    invalid_data = np.isclose(image, 0.0)
     buff = np.sqrt(2 * ((filter_width - 1) / 2) ** 2) + 0.01
 
     # find edges of image, this makes missing scan lines valid and will
     # later be filled with random white noise
-    potential_data = cv2.distanceTransform(image.mask.astype(np.uint8), distanceType=cv2.DIST_L2, maskSize=cv2.DIST_MASK_PRECISE) < 30
-    missing_data = potential_data & image.mask
+    potential_data = cv2.distanceTransform(invalid_data.astype(np.uint8), distanceType=cv2.DIST_L2, maskSize=cv2.DIST_MASK_PRECISE) < 30
+    missing_data = potential_data & invalid_data
     missing_data = cv2.distanceTransform((~missing_data).astype(np.uint8), distanceType=cv2.DIST_L2, maskSize=cv2.DIST_MASK_PRECISE) <= buff
 
     # trying to frame out the image
-    valid_domain = ~image.mask | missing_data
+    valid_domain = ~invalid_data | missing_data
     zero_mask = ~valid_domain
 
     kernel = np.ones((filter_width, filter_width), dtype=np.float32)
@@ -90,7 +90,7 @@ def _wallis_filter_fill(image, filter_width, std_cutoff):
     image = shifted / std
 
     valid_data = valid_domain & ~missing_data
-    image.mask |= ~valid_data
+    invalid_data |= ~valid_data
 
     # wallis filter normalizes the imagery to have a mean=0 and std=1;
     # fill with random values from a normal distribution with same mean and std
