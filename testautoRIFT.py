@@ -149,6 +149,7 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     # obj.configure()
 
     obj.WallisFilterWidth = preprocessing_filter_width
+    print(f'Setting Wallis Filter Width to {preprocessing_filter_width}')
 
 #    ##########     uncomment if starting from preprocessed images
 #    I1 = I1.astype(np.uint8)
@@ -524,9 +525,10 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
         # FIXME: Filter width is a magic variable here and not exposed well.
         preprocessing_filter_width = 5
-        for ii, name in enumerate((m_name, s_name)):
-            if len(re.findall("S1[AB]_", name)) > 0:
-                preprocessing_filter_width = 21
+        if nc_sensor == 'S1':
+            preprocessing_filter_width = 21
+
+        print(f'Preprocessing filter width {preprocessing_filter_width}')
 
         preprocessing_methods = ['hps', 'hps']
         for ii, name in enumerate((m_name, s_name)):
@@ -539,10 +541,11 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
         print(f'Using preprocessing methods {preprocessing_methods}')
 
-        Dx, Dy, InterpMask, ChipSizeX, GridSpacingX, ScaleChipSizeY, SearchLimitX, SearchLimitY, origSize, noDataMask = runAutorift(
-            data_m, data_s, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0,
-            noDataMask, optical_flag, nodata, mpflag, geogrid_run_info=geogrid_run_info, preprocessing_methods=preprocessing_methods,
-            preprocessing_filter_width=preprocessing_filter_width,
+        Dx, Dy, InterpMask, ChipSizeX, GridSpacingX, ScaleChipSizeY, SearchLimitX, SearchLimitY, origSize, noDataMask = \
+            runAutorift(
+                data_m, data_s, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CSMAXx0, CSMAXy0,
+                noDataMask, optical_flag, nodata, mpflag, geogrid_run_info=geogrid_run_info,
+                preprocessing_methods=preprocessing_methods, preprocessing_filter_width=preprocessing_filter_width,
         )
         if nc_sensor is not None:
             import netcdf_output as no
@@ -629,7 +632,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
 
         if offset2vx is not None:
-        
+
             ds = gdal.Open(scale_factor)
             band = ds.GetRasterBand(1)
             scale_factor_1 = band.ReadAsArray()
