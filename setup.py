@@ -50,7 +50,7 @@ extensions = [
 ]
  
 setup (name = 'geo_autoRIFT',
-        version = '1.3.0',
+        version = '1.5.0',
         description = 'This is the autoRIFT python package',
         package_dir={'autoRIFT': 'geo_autoRIFT/autoRIFT','geogrid': 'geo_autoRIFT/geogrid'},
         packages=['autoRIFT','geogrid'],
