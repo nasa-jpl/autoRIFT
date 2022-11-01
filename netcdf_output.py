@@ -1,29 +1,14 @@
 #!/usr/bin/env python3
-
-########
 # Yang Lei, Jet Propulsion Laboratory
 # November 2017
 
 import datetime
 import os
-import subprocess
 
 import netCDF4
 import numpy as np
 import pandas as pd
 
-#def cmdLineParse():
-#    '''
-#    Command line parser.
-#    '''
-#    parser = argparse.ArgumentParser(description="Single-pair InSAR processing of Sentinel-1 data using ISCE modules")
-#
-#    return parser.parse_args()
-
-
-def runCmd(cmd):
-    out = subprocess.getoutput(cmd)
-    return out
 
 def v_error_cal(vx_error, vy_error):
     vx = np.random.normal(0, vx_error, 1000000)
@@ -342,6 +327,23 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     # CHIPSIZEY = np.round(np.clip(CHIPSIZEY, 0, 65535)).astype(np.uint16)
     # INTERPMASK = np.round(np.clip(INTERPMASK, 0, 255)).astype(np.uint8)
 
+    source = f'NASA MEaSUREs ITS_LIVE project. Processed with autoRIFT version ' \
+             f'{IMG_INFO_DICT["autoRIFT_software_version"]}'
+    if IMG_INFO_DICT['mission_img1'].startswith('S'):
+        source += f'. Contains modified Copernicus Sentinel data {IMG_INFO_DICT["date_center"][0:4]}, processed by ESA'
+    if IMG_INFO_DICT['mission_img1'].startswith('L'):
+        source += f'. Landsat-{IMG_INFO_DICT["satellite_img1"]:.0f} images courtesy of the U.S. Geological Survey'
+
+    references = 'When using this data, please acknowledge the source (see global source attribute) and cite:\n' \
+                 '* Gardner, A. S., Moholdt, G., Scambos, T., Fahnestock, M., Ligtenberg, S., van den Broeke, M.,\n' \
+                 '  and Nilsson, J., 2018. Increased West Antarctic and unchanged East Antarctic ice discharge over\n' \
+                 '  the last 7 years. The Cryosphere, 12, p.521. https://doi.org/10.5194/tc-12-521-2018\n' \
+                 '* Lei, Y., Gardner, A. and Agram, P., 2021. Autonomous Repeat Image Feature Tracking (autoRIFT)\n' \
+                 '  and Its Application for Tracking Ice Displacement. Remote Sensing, 13(4), p.749.\n' \
+                 '  https://doi.org/10.3390/rs13040749\n' \
+                 '\n' \
+                 'Additionally, a DOI is provided for the software used to generate this data:\n' \
+                 '* autoRIFT: https://doi.org/10.5281/zenodo.4025445\n' \
 
     tran = [tran[0] + tran[1]/2, tran[1], 0.0, tran[3] + tran[5]/2, 0.0, tran[5]]
 
@@ -354,83 +356,31 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     nc_outfile.setncattr('Conventions', 'CF-1.6')
     nc_outfile.setncattr('date_created', datetime.datetime.now().strftime("%d-%b-%Y %H:%M:%S"))
     nc_outfile.setncattr('title', title)
-    nc_outfile.setncattr('author', author)
-    nc_outfile.setncattr('institution', institution)
-    # nc_outfile.setncattr('Software', version)
+    nc_outfile.setncattr('autoRIFT_software_version', IMG_INFO_DICT["autoRIFT_software_version"])
     nc_outfile.setncattr('scene_pair_type', pair_type)
     nc_outfile.setncattr('motion_detection_method', detection_method)
     nc_outfile.setncattr('motion_coordinates', coordinates)
+    nc_outfile.setncattr('author', author)
+    nc_outfile.setncattr('institution', institution)
+    nc_outfile.setncattr('source', source)
+    nc_outfile.setncattr('references', references)
 
-    # if we were copying from an nc file, we would...
-    # for attr in vv_nc_basefile.ncattrs():
-    #     nc_outfile.setncattr(attr,vv_nc_basefile.getncattr(attr))
-
-    # from topsApp import TopsInSAR
-    # insar = TopsInSAR(name="topsApp")
-    # insar.configure()
-    # master_filename = os.path.basename(insar.master.safe[0])
-    # slave_filename = os.path.basename(insar.slave.safe[0])
-
-    # import topsinsar_filename as tf
-    # master_filename, slave_filename = tf.loadXml()
-
-
-    # runCmd('topsinsar_filename.py')
-    # import scipy.io as sio
-    # conts = sio.loadmat('topsinsar_filename.mat')
-    # master_filename = conts['master_filename'][0]
-    # slave_filename = conts['slave_filename'][0]
-    # master_split = str.split(master_filename,'_')
-    # slave_split = str.split(slave_filename,'_')
 
     var = nc_outfile.createVariable('img_pair_info', 'U1', (), fill_value=None)
-    # variable made, now add attributes
-
-    # var.setncattr('mission_img1',master_split[0][0])
-    # var.setncattr('sensor_img1','C')
-    # var.setncattr('satellite_img1',master_split[0][1:3])
-    # var.setncattr('acquisition_img1',master_split[5][0:8])
-    # var.setncattr('absolute_orbit_number_img1',master_split[7])
-    # var.setncattr('mission_data_take_ID_img1',master_split[8])
-    # var.setncattr('product_unique_ID_img1',master_split[9][0:4])
-    #
-    # var.setncattr('mission_img2',slave_split[0][0])
-    # var.setncattr('sensor_img2','C')
-    # var.setncattr('satellite_img2',slave_split[0][1:3])
-    # var.setncattr('acquisition_img2',slave_split[5][0:8])
-    # var.setncattr('absolute_orbit_number_img2',slave_split[7])
-    # var.setncattr('mission_data_take_ID_img2',slave_split[8])
-    # var.setncattr('product_unique_ID_img2',slave_split[9][0:4])
-    #
-    # from datetime import date
-    # d0 = date(np.int(master_split[5][0:4]),np.int(master_split[5][4:6]),np.int(master_split[5][6:8]))
-    # d1 = date(np.int(slave_split[5][0:4]),np.int(slave_split[5][4:6]),np.int(slave_split[5][6:8]))
-    # date_dt = d1 - d0
-    # var.setncattr('date_dt',np.float64(np.abs(date_dt.days)))
-    # if date_dt.days < 0:
-    #     date_ct = d1 + (d0 - d1)/2
-    #     var.setncattr('date_center',date_ct.strftime("%Y%m%d"))
-    # else:
-    #     date_ct = d0 + (d1 - d0)/2
-    #     var.setncattr('date_center',date_ct.strftime("%Y%m%d"))
-    #  # var.setncattr('date_center',np.abs(np.int(slave_split[5][0:8])+np.int(master_split[5][0:8]))/2)
-    #
-    # var.setncattr('roi_valid_percentage',roi_valid_percentage)
-    # var.setncattr('autoRIFT_software_version',version)
-
     for key in IMG_INFO_DICT:
+        if key == 'autoRIFT_software_version':
+            continue
         var.setncattr(key, IMG_INFO_DICT[key])
 
     # set dimensions
     dimidY, dimidX = VX.shape
     nc_outfile.createDimension('x', dimidX)
     nc_outfile.createDimension('y', dimidY)
-    # pdb.set_trace()
-    x = np.arange(tran[0], tran[0]+tran[1]*dimidX, tran[1])
-    y = np.arange(tran[3], tran[3]+tran[5]*dimidY, tran[5])
-    # pdb.set_trace()
+
+    x = np.arange(tran[0], tran[0] + tran[1] * dimidX, tran[1])
+    y = np.arange(tran[3], tran[3] + tran[5] * dimidY, tran[5])
+
     chunk_lines = np.min([np.ceil(8192/dimidY)*128, dimidY])
-    # ChunkSize = [dimidX, chunk_lines]
     ChunkSize = [chunk_lines, dimidX]
 
 
@@ -1253,6 +1203,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     nc_outfile.sync()  # flush data to disk
     nc_outfile.close()
 
+    return out_nc_filename
 
 
 def rotate_vel2radar(rngind, azmind, vel_x, vel_y, swath_border, swath_border_full, GridSpacingX, ScaleChipSizeY, flag):

@@ -173,7 +173,9 @@ def coregisterLoadMetadataOptical(indir_m, indir_s):
         nameString = os.path.basename(DS.GetDescription())
         info.time = nameString.split('_')[3]
     elif re.findall("L[EO]07_",DS.GetDescription()).__len__() > 0:
-         #pdb.set_trace()
+        nameString = os.path.basename(DS.GetDescription())
+        info.time = nameString.split('_')[3]
+    elif re.findall("LT0[45]_",DS.GetDescription()).__len__() > 0:
         nameString = os.path.basename(DS.GetDescription())
         info.time = nameString.split('_')[3]
     elif re.findall("S2._",DS.GetDescription()).__len__() > 0:
@@ -194,6 +196,9 @@ def coregisterLoadMetadataOptical(indir_m, indir_s):
         nameString1 = os.path.basename(DS1.GetDescription())
         info1.time = nameString1.split('_')[3]
     elif re.findall("L[EO]07_",DS1.GetDescription()).__len__() > 0:
+        nameString1 = os.path.basename(DS1.GetDescription())
+        info1.time = nameString1.split('_')[3]
+    elif re.findall("LT0[45]_",DS1.GetDescription()).__len__() > 0:
         nameString1 = os.path.basename(DS1.GetDescription())
         info1.time = nameString1.split('_')[3]
     elif re.findall("S2._",DS1.GetDescription()).__len__() > 0:

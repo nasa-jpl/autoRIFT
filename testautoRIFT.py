@@ -27,6 +27,7 @@
 # Author: Yang Lei
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 import re
+import warnings
 from osgeo import gdal
 from datetime import datetime, timedelta
 
@@ -44,6 +45,8 @@ def cmdLineParse():
     Command line parser.
     '''
     import argparse
+
+    SUPPORTED_MISSIONS = ['S1', 'S2', 'L4', 'L5', 'L7', 'L8', 'L9']
 
     parser = argparse.ArgumentParser(description='Output geo grid')
     parser.add_argument('-m', '--input_m', dest='indir_m', type=str, required=True,
@@ -70,8 +73,8 @@ def cmdLineParse():
             help='Input stable surface mask file name')
     parser.add_argument('-fo', '--flag_optical', dest='optical_flag', type=bool, required=False, default=0,
             help='flag for reading optical data (e.g. Landsat): use 1 for on and 0 (default) for off')
-    parser.add_argument('-nc', '--sensor_flag_netCDF', dest='nc_sensor', type=str, required=False, default=None,
-            help='flag for packaging output formatted for Sentinel ("S") and Landsat ("L") dataset; default is None')
+    parser.add_argument('-nc', '--sensor_flag_netCDF', dest='nc_sensor', type=str, required=False, default=None, choices=SUPPORTED_MISSIONS,
+            help=f'flag for packaging output formatted for Satellite missions. Default is None; supported missions: {SUPPORTED_MISSIONS}')
     parser.add_argument('-mpflag', '--mpflag', dest='mpflag', type=int, required=False, default=0,
             help='number of threads for multiple threading (default is specified by 0, which uses the original single-core version and surpasses the multithreading routine)')
     parser.add_argument('-ncname', '--ncname', dest='ncname', type=str, required=False, default=None,
@@ -203,9 +206,6 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
                     if (I1[obj.yGrid[ii,jj]-1,obj.xGrid[ii,jj]-1]==0)|(I2[obj.yGrid[ii,jj]-1,obj.xGrid[ii,jj]-1]==0):
                         noDataMask[ii,jj] = True
 
-
-
-
     ######### mask out nodata to skip the offset searching using the nodata mask (by setting SearchLimit to be 0)
 
     if SRx0 is None:
@@ -241,14 +241,13 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
         obj.ChipSize0X = int(np.ceil(chipsizex0/pixsizex/4)*4)
         obj.GridSpacingX = int(obj.ChipSize0X*gridspacingx/chipsizex0)
 
-#        obj.ChipSize0X = np.min(CSMINx0[CSMINx0!=nodata])
+        # obj.ChipSize0X = np.min(CSMINx0[CSMINx0!=nodata])
         RATIO_Y2X = CSMINy0/CSMINx0
         obj.ScaleChipSizeY = np.median(RATIO_Y2X[(CSMINx0!=nodata)&(CSMINy0!=nodata)])
-#        obj.ChipSizeMaxX = obj.ChipSizeMaxX / obj.ChipSizeMaxX * 544
-#        obj.ChipSizeMinX = obj.ChipSizeMinX / obj.ChipSizeMinX * 68
+        # obj.ChipSizeMaxX = obj.ChipSizeMaxX / obj.ChipSizeMaxX * 544
+        # obj.ChipSizeMinX = obj.ChipSizeMinX / obj.ChipSizeMinX * 68
     else:
         if ((optflag == 1)&(xGrid is not None)):
-#            print('test')
             obj.ChipSizeMaxX = 32
             obj.ChipSizeMinX = 16
             obj.ChipSize0X = 16
@@ -290,6 +289,16 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
         obj.preprocess_filt_wal_nodata_fill()
     elif 'wallis' in preprocessing_methods:
         obj.preprocess_filt_wal()
+    elif 'fft' in preprocessing_methods:
+        # FIXME: The Landsat 4/5 FFT preprocessor looks for the image corners to
+        #        determine the scene rotation, but Geogrid + autoRIFT rond the
+        #        corners when co-registering and chop the non-overlapping corners
+        #        when subsetting to the common image overlap. FFT filer needs to
+        #        be applied to the native images before they are processed by
+        #        Geogrid or autoRIFT.
+        # obj.preprocess_filt_wal()
+        # obj.preprocess_filt_fft()
+        warnings.warn('FFT filtering must be done before processing with geogrid! Be careful when using this method', UserWarning)
     else:
         obj.preprocess_filt_hps()
 #    obj.I1 = np.abs(I1)
@@ -515,6 +524,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 acquisition = datetime.strptime(name.split('_')[3], '%Y%m%d')
                 if acquisition >= datetime(2003, 5, 31):
                     preprocessing_methods[ii] = 'wallis_fill'
+            elif len(re.findall("LT0[45]_", name)) > 0:
+                preprocessing_methods[ii] = 'fft'
 
         print(f'Using preprocessing methods {preprocessing_methods}')
 
@@ -674,7 +685,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
             if nc_sensor is not None:
 
-                if nc_sensor == "S":
+                if nc_sensor == "S1":
                     swath_offset_bias_ref = [-0.01, 0.019, -0.0068, 0.006]
                     import netcdf_output as no
                     DX, DY, flight_direction_m, flight_direction_s = no.cal_swath_offset_bias(indir_m, xGrid, yGrid, VX, VY, DX, DY, nodata, tran, proj, GridSpacingX, ScaleChipSizeY, swath_offset_bias_ref)
@@ -799,7 +810,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
             ########################################################################################
                 ############   netCDF packaging for Sentinel and Landsat dataset; can add other sensor format as well
-                if nc_sensor == "S":
+                if nc_sensor == "S1":
                     if geogrid_run_info is None:
                         chipsizex0 = float(str.split(runCmd('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
                         gridspacingx = float(str.split(runCmd('fgrep "Grid spacing in m:" testGeogrid.txt'))[-1])
@@ -894,7 +905,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector
                     )
 
-                elif nc_sensor == "L":
+                elif nc_sensor in ("L4", "L5", "L7", "L8", "L9"):
                     if geogrid_run_info is None:
                         chipsizex0 = float(str.split(runCmd('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
                         gridspacingx = float(str.split(runCmd('fgrep "Grid spacing in m:" testGeogrid.txt'))[-1])
@@ -978,106 +989,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         'time_standard_img2': 'UTC',
                         'date_center': date_center,
                         'date_dt': date_dt,
-                        'latitude': cen_lat,
-                        'longitude': cen_lon,
-                        'roi_valid_percentage': PPP,
-                        'autoRIFT_software_version': version
-                    }
-
-                    error_vector = np.array([25.5,25.5])
-
-                    netcdf_file = no.netCDF_packaging(
-                        VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1, SX, SY,
-                        offset2vx_1, offset2vx_2, offset2vy_1, offset2vy_2, None, None, scale_factor_1, scale_factor_2, MM, VXref, VYref,
-                        None, None, XPixelSize, YPixelSize, None, epsg, srs, tran, out_nc_filename, pair_type,
-                        detection_method, coordinates, IMG_INFO_DICT, stable_count, stable_count1, stable_shift_applied,
-                        dx_mean_shift, dy_mean_shift, dx_mean_shift1, dy_mean_shift1, error_vector
-                    )
-
-                elif nc_sensor == "L7":
-                    if geogrid_run_info is None:
-                        chipsizex0 = float(str.split(runCmd('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
-                        gridspacingx = float(str.split(runCmd('fgrep "Grid spacing in m:" testGeogrid.txt'))[-1])
-                        XPixelSize = float(str.split(runCmd('fgrep "X-direction pixel size:" testGeogrid.txt'))[3])
-                        YPixelSize = float(str.split(runCmd('fgrep "Y-direction pixel size:" testGeogrid.txt'))[3])
-                        epsg = float(str.split(runCmd('fgrep "EPSG:" testGeogrid.txt'))[1])
-                    else:
-                        chipsizex0 = geogrid_run_info['chipsizex0']
-                        gridspacingx = geogrid_run_info['gridspacingx']
-                        XPixelSize = geogrid_run_info['XPixelSize']
-                        YPixelSize = geogrid_run_info['YPixelSize']
-                        epsg = geogrid_run_info['epsg']
-
-                    master_path = indir_m
-                    slave_path = indir_s
-
-                    master_filename = os.path.basename(master_path)
-                    slave_filename = os.path.basename(slave_path)
-
-                    master_split = str.split(master_filename,'_')
-                    slave_split = str.split(slave_filename,'_')
-
-#                    master_MTL_path = master_path[:-6]+'MTL.txt'
-#                    slave_MTL_path = slave_path[:-6]+'MTL.txt'
-#
-#                    master_time = str.split(str.split(runCmd('fgrep "SCENE_CENTER_TIME" '+master_MTL_path))[2][1:-2],':')
-#                    slave_time = str.split(str.split(runCmd('fgrep "SCENE_CENTER_TIME" '+slave_MTL_path))[2][1:-2],':')
-
-                    import netcdf_output as no
-                    pair_type = 'optical'
-                    detection_method = 'feature'
-                    coordinates = 'map'
-                    if np.sum(SEARCHLIMITX!=0)!=0:
-                        roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
-                    else:
-                        raise Exception('Input search range is all zero everywhere, thus no search conducted')
-    #                out_nc_filename = 'Jakobshavn_opt.nc'
-                    PPP = roi_valid_percentage * 100
-                    if ncname is None:
-                        out_nc_filename = f"./{master_filename[0:-7]}_X_{slave_filename[0:-7]}" \
-                                          f"_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
-                    else:
-                        out_nc_filename = f"{ncname}_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
-                    CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
-
-                    d0 = datetime(np.int(master_split[3][0:4]),np.int(master_split[3][4:6]),np.int(master_split[3][6:8]))
-                    d1 = datetime(np.int(slave_split[3][0:4]),np.int(slave_split[3][4:6]),np.int(slave_split[3][6:8]))
-                    date_dt_base = (d1 - d0).total_seconds() / timedelta(days=1).total_seconds()
-                    date_dt = np.float64(date_dt_base)
-                    if date_dt < 0:
-                        raise Exception('Input image 1 must be older than input image 2')
-
-                    date_ct = d0 + (d1 - d0)/2
-                    date_center = date_ct.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
-
-                    master_dt = d0.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
-                    slave_dt = d1.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
-
-                    IMG_INFO_DICT = {
-                        'mission_img1': master_split[0][0],
-                        'sensor_img1': master_split[0][1],
-                        'satellite_img1': np.float64(master_split[0][2:4]),
-                        'correction_level_img1': master_split[1],
-                        'path_img1': np.float64(master_split[2][0:3]),
-                        'row_img1': np.float64(master_split[2][3:6]),
-                        'acquisition_date_img1': master_dt,
-                        'time_standard_img1': 'UTC',
-                        'processing_date_img1': master_split[4][0:8],
-                        'collection_number_img1': np.float64(master_split[5]),
-                        'collection_category_img1': master_split[6],
-                        'mission_img2': slave_split[0][0],
-                        'sensor_img2': slave_split[0][1],
-                        'satellite_img2': np.float64(slave_split[0][2:4]),
-                        'correction_level_img2': slave_split[1],
-                        'path_img2': np.float64(slave_split[2][0:3]),
-                        'row_img2': np.float64(slave_split[2][3:6]),
-                        'acquisition_date_img2': slave_dt,
-                        'time_standard_img2': 'UTC',
-                        'processing_date_img2': slave_split[4][0:8],
-                        'collection_number_img2': np.float64(slave_split[5]),
-                        'collection_category_img2': slave_split[6],
-                        'date_dt': date_dt,
-                        'date_center': date_center,
                         'latitude': cen_lat,
                         'longitude': cen_lon,
                         'roi_valid_percentage': PPP,
