@@ -507,7 +507,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     elif stable_shift_applied == 1:
         var.setncattr('stable_shift', int(round(vx_mean_shift*10))/10)
     else:
-        var.setncattr('stable_shift', np.nan)
+        var.setncattr('stable_shift', 0)
     var.setncattr('stable_shift_flag', stable_shift_applied)
     var.setncattr('stable_shift_flag_description', 'flag for applying velocity bias correction: 0 = no correction; '
                                                    '1 = correction from overlapping stable surface mask (stationary '
@@ -592,7 +592,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     elif stable_shift_applied == 1:
         var.setncattr('stable_shift', int(round(vy_mean_shift*10))/10)
     else:
-        var.setncattr('stable_shift', np.nan)
+        var.setncattr('stable_shift', 0)
 
     var.setncattr('stable_shift_flag', stable_shift_applied)
     var.setncattr('stable_shift_flag_description', 'flag for applying velocity bias correction: 0 = no correction; '
@@ -708,7 +708,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         elif stable_shift_applied == 1:
             var.setncattr('stable_shift', int(round(vr_mean_shift*10))/10)
         else:
-            var.setncattr('stable_shift', np.nan)
+            var.setncattr('stable_shift', 0)
         var.setncattr('stable_shift_flag', stable_shift_applied)
         var.setncattr('stable_shift_flag_description', 'flag for applying velocity bias correction: 0 = no correction; '
                                                        '1 = correction from overlapping stable surface mask '
@@ -787,7 +787,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         elif stable_shift_applied == 1:
             var.setncattr('stable_shift', int(round(va_mean_shift*10))/10)
         else:
-            var.setncattr('stable_shift', np.nan)
+            var.setncattr('stable_shift', 0)
         var.setncattr('stable_shift_flag', stable_shift_applied)
         var.setncattr('stable_shift_flag_description', 'flag for applying velocity bias correction: 0 = no correction; '
                                                        '1 = correction from overlapping stable surface mask '
@@ -951,7 +951,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         # elif stable_shift_applied_p == 1:
         #     var.setncattr('stable_shift', int(round(vxp_mean_shift*10))/10)
         # else:
-        #     var.setncattr('stable_shift', np.nan)
+        #     var.setncattr('stable_shift', 0)
         # var.setncattr('stable_shift_flag', stable_shift_applied_p)
         # var.setncattr('stable_shift_flag_description', 'flag for applying velocity bias correction: 0 = no correction; '
         #                                                '1 = correction from overlapping stable surface mask '
@@ -1031,7 +1031,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         # elif stable_shift_applied_p == 1:
         #     var.setncattr('stable_shift', int(round(vyp_mean_shift*10))/10)
         # else:
-        #     var.setncattr('stable_shift', np.nan)
+        #     var.setncattr('stable_shift', 0)
         # var.setncattr('stable_shift_flag', stable_shift_applied_p)
         # var.setncattr('stable_shift_flag_description', 'flag for applying velocity bias correction: 0 = no correction; '
         #                                                '1 = correction from overlapping stable surface mask '
