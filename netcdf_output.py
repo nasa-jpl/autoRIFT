@@ -332,7 +332,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     if IMG_INFO_DICT['mission_img1'].startswith('S'):
         source += f'. Contains modified Copernicus Sentinel data {IMG_INFO_DICT["date_center"][0:4]}, processed by ESA'
     if IMG_INFO_DICT['mission_img1'].startswith('L'):
-        source += f'. Landsat-{IMG_INFO_DICT["satellite_img1"]:.0f} images courtesy of the U.S. Geological Survey'
+        source += f'. Landsat-{IMG_INFO_DICT["satellite_img1"]} images courtesy of the U.S. Geological Survey'
 
     references = 'When using this data, please acknowledge the source (see global source attribute) and cite:\n' \
                  '* Gardner, A. S., Moholdt, G., Scambos, T., Fahnestock, M., Ligtenberg, S., van den Broeke, M.,\n' \
