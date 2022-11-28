@@ -854,7 +854,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     import netcdf_output as no
                     pair_type = 'radar'
                     detection_method = 'feature'
-                    coordinates = 'radar'
+                    coordinates = 'radar, map'
                     if np.sum(SEARCHLIMITX!=0)!=0:
                         roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
                     else:
@@ -883,6 +883,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     date_center = date_ct.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
 
                     IMG_INFO_DICT = {
+                        'id_img1': master_filename[0:-4],
+                        'id_img2': slave_filename[0:-4],
                         'absolute_orbit_number_img1': master_split[7],
                         'absolute_orbit_number_img2': slave_split[7],
                         'acquisition_date_img1': master_dt,
@@ -979,6 +981,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     slave_dt = d1.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
 
                     IMG_INFO_DICT = {
+                        'id_img1': master_filename[0:-7],
+                        'id_img2': slave_filename[0:-7],
                         'acquisition_date_img1': master_dt,
                         'acquisition_date_img2': slave_dt,
                         'collection_category_img1': master_split[6],
@@ -1085,6 +1089,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     slave_dt = d1.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
 
                     IMG_INFO_DICT = {
+                        'id_img1': master_id,
+                        'id_img2': slave_id,
                         'acquisition_date_img1': master_dt,
                         'acquisition_date_img2': slave_dt,
                         'correction_level_img1': master_split[4][:3],
