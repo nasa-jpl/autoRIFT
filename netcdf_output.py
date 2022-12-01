@@ -1201,7 +1201,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     var.setncattr('standard_name', 'interpolated_value_mask')
     var.setncattr('description', 'true where values have been interpolated')
     var.setncattr('flag_values', [np.uint8(0), np.uint8(1)])
-    var.setncattr('flag_meanings', 'measured, interpolated')
+    var.setncattr('flag_meanings', 'measured interpolated')
     var.setncattr('grid_mapping', mapping_var_name)
 
     # var[:] = np.flipud(vx_nomask).astype('float32')
