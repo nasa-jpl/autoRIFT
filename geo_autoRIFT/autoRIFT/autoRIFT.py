@@ -48,8 +48,9 @@ def _preprocess_filt_std(image, kernel):
     conv_squared_sum = cv2.filter2D(image**2, -1, kernel, borderType=cv2.BORDER_REFLECT)
 
     variance = conv_squared_sum - (conv_sum**2)
-    std = np.sqrt(variance) * np.sqrt(n / (n - 1))
+    variance = np.clip(variance, 0., None)
 
+    std = np.sqrt(variance) * np.sqrt(n / (n - 1))
     return std
 
 
