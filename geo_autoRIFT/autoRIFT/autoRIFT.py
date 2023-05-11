@@ -243,7 +243,7 @@ class autoRIFT:
         self.I1 = image_1
         self.I2 = image_2
 
-        self.zeroMask = zero_mask_1 & zero_mask_2
+        self.zeroMask = zero_mask_1 | zero_mask_2
 
     def preprocess_filt_wal(self):
         """
