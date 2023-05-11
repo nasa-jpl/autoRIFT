@@ -88,6 +88,7 @@ def _wallis_filter_fill(image, filter_width, std_cutoff):
     low_std = cv2.distanceTransform((~low_std).astype(np.uint8), distanceType=cv2.DIST_L2, maskSize=cv2.DIST_MASK_PRECISE) <= buff
     missing_data = (missing_data | low_std) & valid_domain
 
+    std[missing_data] = np.nan
     image = shifted / std
 
     valid_data = valid_domain & ~missing_data
