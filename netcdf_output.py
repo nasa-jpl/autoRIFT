@@ -629,10 +629,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     var = nc_outfile.createVariable('v', np.dtype('int16'), ('y', 'x'), fill_value=NoDataValue,
                                     zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
     var.setncattr('standard_name', 'land_ice_surface_velocity')
-    if pair_type == 'radar':
-        var.setncattr('description', 'velocity magnitude from radar range and azimuth measurements')
-    else:
-        var.setncattr('description', 'velocity magnitude')
+    var.setncattr('description', 'velocity magnitude')
     var.setncattr('units', 'meter/year')
     var.setncattr('grid_mapping', mapping_var_name)
 
