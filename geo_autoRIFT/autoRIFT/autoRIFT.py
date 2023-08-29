@@ -456,7 +456,7 @@ class autoRIFT:
             self.ChipSizeMaxX = self.ChipSizeMaxX.astype(np.float32)
 
         ChipSizeX = np.zeros(self.xGrid.shape, np.float32)
-        InterpMask = np.zeros(self.xGrid.shape, np.bool)
+        InterpMask = np.zeros(self.xGrid.shape, bool)
         Dx = np.empty(self.xGrid.shape, dtype=np.float32)
         Dx.fill(np.nan)
         Dy = np.empty(self.xGrid.shape, dtype=np.float32)
@@ -512,7 +512,7 @@ class autoRIFT:
                 M0 = colfilt(M0.copy(), (int(1 / Scale * 6), int(1 / Scale * 6)), 0, self.colfiltChunkSize)
                 M0 = cv2.resize(
                     np.logical_not(M0).astype(np.uint8), dstShape[::-1], interpolation=cv2.INTER_NEAREST
-                ).astype(np.bool)
+                ).astype(bool)
 
                 SearchLimitX0 = colfilt(
                     self.SearchLimitX.copy(), (int(1 / Scale), int(1 / Scale)), 0, self.colfiltChunkSize
@@ -654,7 +654,7 @@ class autoRIFT:
                 int(MC2.shape[1] * (self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio)),
             )
 
-            MC2 = cv2.resize(MC2.astype(np.uint8), dstShape[::-1], interpolation=cv2.INTER_NEAREST).astype(np.bool)
+            MC2 = cv2.resize(MC2.astype(np.uint8), dstShape[::-1], interpolation=cv2.INTER_NEAREST).astype(bool)
             #            pdb.set_trace()
             if np.logical_not(np.all(MC2.shape == SearchLimitX0.shape)):
                 rowAdd = SearchLimitX0.shape[0] - MC2.shape[0]
@@ -726,7 +726,7 @@ class autoRIFT:
             DyFM = colfilt(DyF.copy(), (self.fillFiltWidth, self.fillFiltWidth), 3, self.colfiltChunkSize)
 
             # M0 is mask for original valid estimates, MF is mask for filled ones, MM is mask where filtered ones exist for filling
-            MF = np.zeros(M0.shape, dtype=np.bool)
+            MF = np.zeros(M0.shape, dtype=bool)
             MM = np.logical_not(np.isnan(DxFM))
 
             for j in range(3):
@@ -780,8 +780,8 @@ class autoRIFT:
                 dstShape = (Dx.shape[0], Dx.shape[1])
                 DxF = cv2.resize(DxF, dstShape[::-1], interpolation=cv2.INTER_CUBIC)
                 DyF = cv2.resize(DyF, dstShape[::-1], interpolation=cv2.INTER_CUBIC)
-                MF = cv2.resize(MF.astype(np.uint8), dstShape[::-1], interpolation=cv2.INTER_NEAREST).astype(np.bool)
-                M0 = cv2.resize(M0.astype(np.uint8), dstShape[::-1], interpolation=cv2.INTER_NEAREST).astype(np.bool)
+                MF = cv2.resize(MF.astype(np.uint8), dstShape[::-1], interpolation=cv2.INTER_NEAREST).astype(bool)
+                M0 = cv2.resize(M0.astype(np.uint8), dstShape[::-1], interpolation=cv2.INTER_NEAREST).astype(bool)
 
                 idxRaw = M0 & (ChipSizeX == 0)
                 idxFill = MF & (ChipSizeX == 0)
@@ -1203,9 +1203,9 @@ def arImgDisp_u(
     Dy0 = -Dy0
 
     SLx_max = np.max(SearchLimitX + np.abs(Dx0))
-    Px = np.int(np.max(ChipSizeX) / 2 + SLx_max + 2)
+    Px = int(np.max(ChipSizeX) / 2 + SLx_max + 2)
     SLy_max = np.max(SearchLimitY + np.abs(Dy0))
-    Py = np.int(np.max(ChipSizeY) / 2 + SLy_max + 2)
+    Py = int(np.max(ChipSizeY) / 2 + SLy_max + 2)
 
     I1 = np.lib.pad(I1, ((Py, Py), (Px, Px)), "constant")
     I2 = np.lib.pad(I2, ((Py, Py), (Px, Px)), "constant")
@@ -1481,9 +1481,9 @@ def arImgDisp_s(
     Dy0 = -Dy0
 
     SLx_max = np.max(SearchLimitX + np.abs(Dx0))
-    Px = np.int(np.max(ChipSizeX) / 2 + SLx_max + 2)
+    Px = int(np.max(ChipSizeX) / 2 + SLx_max + 2)
     SLy_max = np.max(SearchLimitY + np.abs(Dy0))
-    Py = np.int(np.max(ChipSizeY) / 2 + SLy_max + 2)
+    Py = int(np.max(ChipSizeY) / 2 + SLy_max + 2)
 
     I1 = np.lib.pad(I1, ((Py, Py), (Px, Px)), "constant")
     I2 = np.lib.pad(I2, ((Py, Py), (Px, Px)), "constant")
