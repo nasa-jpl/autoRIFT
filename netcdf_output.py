@@ -1103,7 +1103,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         var.setncattr('dr_to_vr_factor_description', 'multiplicative factor that converts slant range '
                                                      'pixel displacement dr to slant range velocity vr')
 
-        M11 = offset2vy_2 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1)
+        M11 = offset2vy_2 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) / scale_factor_1
 
         x1 = np.nanmin(M11[:])
         x2 = np.nanmax(M11[:])
@@ -1135,7 +1135,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         var.setncattr('dr_to_vr_factor_description', 'multiplicative factor that converts slant range '
                                                      'pixel displacement dr to slant range velocity vr')
 
-        M12 = -offset2vx_2 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1)
+        M12 = -offset2vx_2 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) / scale_factor_1
 
         x1 = np.nanmin(M12[:])
         x2 = np.nanmax(M12[:])
