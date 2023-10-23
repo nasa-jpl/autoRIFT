@@ -48,8 +48,9 @@ def _preprocess_filt_std(image, kernel):
     conv_squared_sum = cv2.filter2D(image**2, -1, kernel, borderType=cv2.BORDER_REFLECT)
 
     variance = conv_squared_sum - (conv_sum**2)
-    std = np.sqrt(variance) * np.sqrt(n / (n - 1))
+    variance = np.clip(variance, 0., None)
 
+    std = np.sqrt(variance) * np.sqrt(n / (n - 1))
     return std
 
 
@@ -87,6 +88,7 @@ def _wallis_filter_fill(image, filter_width, std_cutoff):
     low_std = cv2.distanceTransform((~low_std).astype(np.uint8), distanceType=cv2.DIST_L2, maskSize=cv2.DIST_MASK_PRECISE) <= buff
     missing_data = (missing_data | low_std) & valid_domain
 
+    std[missing_data] = np.nan
     image = shifted / std
 
     valid_data = valid_domain & ~missing_data
@@ -242,7 +244,7 @@ class autoRIFT:
         self.I1 = image_1
         self.I2 = image_2
 
-        self.zeroMask = zero_mask_1 & zero_mask_2
+        self.zeroMask = zero_mask_1 | zero_mask_2
 
     def preprocess_filt_wal(self):
         """
