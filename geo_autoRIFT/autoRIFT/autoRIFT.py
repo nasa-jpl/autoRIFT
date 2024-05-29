@@ -1294,16 +1294,16 @@ def arImgDisp_u(
         #   Preparation for parallel
         in_shape = xGrid.shape
         I_shape = I1.shape
-        shape_prod = np.asscalar(np.prod(in_shape))
+        shape_prod = np.prod(in_shape).item()
 
         #        import pdb
         #        pdb.set_trace()
-        XI1 = mp.RawArray("b", np.asscalar(np.prod(I_shape)))
+        XI1 = mp.RawArray("b", np.prod(I_shape).item())
         XI1_np = np.frombuffer(XI1, dtype=np.uint8).reshape(I_shape)
         np.copyto(XI1_np, I1)
         del I1
 
-        XI2 = mp.RawArray("b", np.asscalar(np.prod(I_shape)))
+        XI2 = mp.RawArray("b", np.prod(I_shape).item())
         XI2_np = np.frombuffer(XI2, dtype=np.uint8).reshape(I_shape)
         np.copyto(XI2_np, I2)
         del I2
@@ -1572,16 +1572,16 @@ def arImgDisp_s(
         #   Preparation for parallel
         in_shape = xGrid.shape
         I_shape = I1.shape
-        shape_prod = np.asscalar(np.prod(in_shape))
+        shape_prod = np.prod(in_shape).item()
 
         #        import pdb
         #        pdb.set_trace()
-        XI1 = mp.RawArray("f", np.asscalar(np.prod(I_shape)))
+        XI1 = mp.RawArray("f", np.prod(I_shape).item())
         XI1_np = np.frombuffer(XI1, dtype=np.float32).reshape(I_shape)
         np.copyto(XI1_np, I1)
         del I1
 
-        XI2 = mp.RawArray("f", np.asscalar(np.prod(I_shape)))
+        XI2 = mp.RawArray("f", np.prod(I_shape).item())
         XI2_np = np.frombuffer(XI2, dtype=np.float32).reshape(I_shape)
         np.copyto(XI2_np, I2)
         del I2
