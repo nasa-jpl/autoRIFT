@@ -5,10 +5,12 @@
 #    return PySplitRangeSpectrum()
 
 # should always work - standalone or with ISCE
-from .GeogridOptical import GeogridOptical
-from .GeogridRadar import GeogridRadar
+from .autoRIFT import autoRIFT
+
 try:
-    from .Geogrid import Geogrid
+    from .autoRIFT_ISCE import autoRIFT_ISCE
 except ImportError:
     # this means ISCE support not available. Don't raise error. Allow standalone use
     pass
+
+__version__ = '1.5.0'
