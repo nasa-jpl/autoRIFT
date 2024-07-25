@@ -372,6 +372,7 @@ class autoRIFT:
                 temp = self.I2
             S2 = np.std(temp) * np.sqrt(temp.size / (temp.size - 1.0))
             M2 = np.mean(temp)
+            temp = None
             self.I2 = (self.I2 - (M2 - 3 * S2)) / (6 * S2) * (2**8 - 0)
             del S2, M2, temp
 
