@@ -1092,7 +1092,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         # # var.setncattr('missing_value', np.int16(NoDataValue))
 
 
-        var = nc_outfile.createVariable('M11', np.dtype('int16'), ('y', 'x'), fill_value=NoDataValue,
+        var = nc_outfile.createVariable('M11', np.dtype('float32'), ('y', 'x'), fill_value=NoDataValue,
                                         zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
         var.setncattr('standard_name', 'conversion_matrix_element_11')
         var.setncattr('description', 'conversion matrix element (1st row, 1st column) that can be multiplied with vx '
@@ -1105,25 +1105,14 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
         M11 = offset2vy_2 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) / scale_factor_1
 
-        x1 = np.nanmin(M11[:])
-        x2 = np.nanmax(M11[:])
-        y1 = -50
-        y2 = 50
-
-        C = [(y2-y1)/(x2-x1), y1-x1*(y2-y1)/(x2-x1)]
-        # M11 = C[0]*M11+C[1]
-        var.setncattr('scale_factor', np.float32(1/C[0]))
-        var.setncattr('add_offset', np.float32(-C[1]/C[0]))
-
-        M11[noDataMask] = NoDataValue * np.float32(1/C[0]) + np.float32(-C[1]/C[0])
-        # M11[noDataMask] = NoDataValue
+        M11[noDataMask] = NoDataValue
         var[:] = M11
         # var[:] = np.round(np.clip(M11, -32768, 32767)).astype(np.int16)
         # var[:] = np.clip(M11, -3.4028235e+38, 3.4028235e+38).astype(np.float32)
         # var.setncattr('missing_value',np.int16(NoDataValue))
 
 
-        var = nc_outfile.createVariable('M12', np.dtype('int16'), ('y', 'x'), fill_value=NoDataValue,
+        var = nc_outfile.createVariable('M12', np.dtype('float32'), ('y', 'x'), fill_value=NoDataValue,
                                         zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
         var.setncattr('standard_name', 'conversion_matrix_element_12')
         var.setncattr('description', 'conversion matrix element (1st row, 2nd column) that can be multiplied with vy '
@@ -1137,18 +1126,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
         M12 = -offset2vx_2 / (offset2vx_1 * offset2vy_2 - offset2vx_2 * offset2vy_1) / scale_factor_1
 
-        x1 = np.nanmin(M12[:])
-        x2 = np.nanmax(M12[:])
-        y1 = -50
-        y2 = 50
-
-        C = [(y2 - y1) / (x2 - x1), y1 - x1 * (y2 - y1) / (x2 - x1)]
-        # M12 = C[0]*M12+C[1]
-        var.setncattr('scale_factor', np.float32(1/C[0]))
-        var.setncattr('add_offset', np.float32(-C[1]/C[0]))
-
-        M12[noDataMask] = NoDataValue * np.float32(1/C[0]) + np.float32(-C[1]/C[0])
-        # M12[noDataMask] = NoDataValue
+        M12[noDataMask] = NoDataValue
         var[:] = M12
         # var[:] = np.round(np.clip(M12, -32768, 32767)).astype(np.int16)
         # var[:] = np.clip(M12, -3.4028235e+38, 3.4028235e+38).astype(np.float32)
