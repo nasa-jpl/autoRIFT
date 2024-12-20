@@ -393,7 +393,7 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     import cv2
     kernel = np.ones((3,3),np.uint8)
     noDataMask = cv2.dilate(noDataMask.astype(np.uint8),kernel,iterations = 1)
-    noDataMask = noDataMask.astype(np.bool)
+    noDataMask = noDataMask.astype(np.bool_)
 
 
     return obj.Dx, obj.Dy, obj.InterpMask, obj.ChipSizeX, obj.GridSpacingX, obj.ScaleChipSizeY, obj.SearchLimitX, obj.SearchLimitY, obj.origSize, noDataMask
