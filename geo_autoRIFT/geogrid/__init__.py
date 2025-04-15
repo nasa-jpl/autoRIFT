@@ -6,7 +6,7 @@
 
 # should always work - standalone or with ISCE
 from .GeogridOptical import GeogridOptical
-
+from .GeogridRadar import GeogridRadar
 try:
     from .Geogrid import Geogrid
 except ImportError:

@@ -357,7 +357,9 @@ class autoRIFT:
                 temp = self.I1
             S1 = np.std(temp) * np.sqrt(temp.size / (temp.size - 1.0))
             M1 = np.mean(temp)
+            temp = None
             self.I1 = (self.I1 - (M1 - 3 * S1)) / (6 * S1) * (2**8 - 0)
+            del S1, M1, temp
 
             #            self.I1[np.logical_not(np.isfinite(self.I1))] = 0
             self.I1 = np.round(np.clip(self.I1, 0, 255)).astype(np.uint8)
@@ -370,7 +372,9 @@ class autoRIFT:
                 temp = self.I2
             S2 = np.std(temp) * np.sqrt(temp.size / (temp.size - 1.0))
             M2 = np.mean(temp)
+            temp = None
             self.I2 = (self.I2 - (M2 - 3 * S2)) / (6 * S2) * (2**8 - 0)
+            del S2, M2, temp
 
             #            self.I2[np.logical_not(np.isfinite(self.I2))] = 0
             self.I2 = np.round(np.clip(self.I2, 0, 255)).astype(np.uint8)
