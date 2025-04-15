@@ -617,7 +617,6 @@ class autoRIFT:
                     Dy0C.copy(),
                     SubPixFlag,
                     overSampleRatio,
-                    self.MultiThread,
                 )
             elif self.I1.dtype == np.float32:
                 DxC, DyC = arImgDisp_s(
@@ -633,7 +632,6 @@ class autoRIFT:
                     Dy0C.copy(),
                     SubPixFlag,
                     overSampleRatio,
-                    self.MultiThread,
                 )
             else:
                 sys.exit("invalid data type for the image pair which must be unsigned integer 8 or 32-bit float")
@@ -692,7 +690,6 @@ class autoRIFT:
                     Dy00.copy(),
                     SubPixFlag,
                     overSampleRatio,
-                    self.MultiThread,
                 )
             elif self.I1.dtype == np.float32:
                 DxF, DyF = arImgDisp_s(
@@ -708,7 +705,6 @@ class autoRIFT:
                     Dy00.copy(),
                     SubPixFlag,
                     overSampleRatio,
-                    self.MultiThread,
                 )
             else:
                 sys.exit("invalid data type for the image pair which must be unsigned integer 8 or 32-bit float")
@@ -939,13 +935,6 @@ def arImgDisp_u(
 
     core._autoriftcore = autoriftcore.createAutoRiftCore_Py()
 
-    #    if np.size(I1) == 1:
-    #        if np.logical_not(isinstance(I1,np.uint8) & isinstance(I2,np.uint8)):
-    #            sys.exit('input images must be uint8')
-    #    else:
-    #        if np.logical_not((I1.dtype == np.uint8) & (I2.dtype == np.uint8)):
-    #            sys.exit('input images must be uint8')
-
     if np.size(SearchLimitX) == 1:
         if np.logical_not(isinstance(SearchLimitX, np.float32) & isinstance(SearchLimitY, np.float32)):
             sys.exit("SearchLimit must be float")
@@ -968,11 +957,6 @@ def arImgDisp_u(
             sys.exit("ChipSize must be float")
 
     if np.any(np.mod(ChipSizeX, 2) != 0) | np.any(np.mod(ChipSizeY, 2) != 0):
-        #        if np.any(np.mod(xGrid-0.5,1) == 0) & np.any(np.mod(yGrid-0.5,1) == 0):
-        #            sys.exit('for an even chip size ImgDisp returns displacements centered at pixel boundaries so xGrid and yGrid must an inter - 1/2 [example: if you want the velocity centered between pixel (1,1) and (2,2) then specify a grid center of (1.5, 1.5)]')
-        #        else:
-        #            xGrid = np.ceil(xGrid)
-        #            yGrid = np.ceil(yGrid)
         sys.exit("it is better to have ChipSize = even number")
 
     if np.any(np.mod(SearchLimitX, 1) != 0) | np.any(np.mod(SearchLimitY, 1) != 0):
@@ -1115,13 +1099,6 @@ def arImgDisp_s(
 
     core._autoriftcore = autoriftcore.createAutoRiftCore_Py()
 
-    #    if np.size(I1) == 1:
-    #        if np.logical_not(isinstance(I1,np.uint8) & isinstance(I2,np.uint8)):
-    #            sys.exit('input images must be uint8')
-    #    else:
-    #        if np.logical_not((I1.dtype == np.uint8) & (I2.dtype == np.uint8)):
-    #            sys.exit('input images must be uint8')
-
     if np.size(SearchLimitX) == 1:
         if np.logical_not(isinstance(SearchLimitX, np.float32) & isinstance(SearchLimitY, np.float32)):
             sys.exit("SearchLimit must be float")
@@ -1144,11 +1121,6 @@ def arImgDisp_s(
             sys.exit("ChipSize must be float")
 
     if np.any(np.mod(ChipSizeX, 2) != 0) | np.any(np.mod(ChipSizeY, 2) != 0):
-        #        if np.any(np.mod(xGrid-0.5,1) == 0) & np.any(np.mod(yGrid-0.5,1) == 0):
-        #            sys.exit('for an even chip size ImgDisp returns displacements centered at pixel boundaries so xGrid and yGrid must an inter - 1/2 [example: if you want the velocity centered between pixel (1,1) and (2,2) then specify a grid center of (1.5, 1.5)]')
-        #        else:
-        #            xGrid = np.ceil(xGrid)
-        #            yGrid = np.ceil(yGrid)
         sys.exit("it is better to have ChipSize = even number")
 
     if np.any(np.mod(SearchLimitX, 1) != 0) | np.any(np.mod(SearchLimitY, 1) != 0):
