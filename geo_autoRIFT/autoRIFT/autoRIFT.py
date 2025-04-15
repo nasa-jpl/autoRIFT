@@ -915,208 +915,6 @@ def initializer(I1, I2, xGrid, yGrid, SearchLimitX, SearchLimitY, ChipSizeX, Chi
     var_dict["Dy0"] = Dy0
 
 
-def unpacking_loop_u(tup):
-    import numpy as np
-    from . import autoriftcore
-
-    core = AUTO_RIFT_CORE()
-    if core._autoriftcore is not None:
-        autoriftcore.destroyAutoRiftCore_Py(core._autoriftcore)
-
-    core._autoriftcore = autoriftcore.createAutoRiftCore_Py()
-
-    k, chunkInds, SubPixFlag, oversample, in_shape, I_shape = tup
-
-    I1 = np.frombuffer(var_dict["I1"], dtype=np.uint8).reshape(I_shape)
-    I2 = np.frombuffer(var_dict["I2"], dtype=np.uint8).reshape(I_shape)
-    xGrid = np.frombuffer(var_dict["xGrid"], dtype=np.float32).reshape(in_shape)
-    yGrid = np.frombuffer(var_dict["yGrid"], dtype=np.float32).reshape(in_shape)
-    SearchLimitX = np.frombuffer(var_dict["SearchLimitX"], dtype=np.float32).reshape(in_shape)
-    SearchLimitY = np.frombuffer(var_dict["SearchLimitY"], dtype=np.float32).reshape(in_shape)
-    ChipSizeX = np.frombuffer(var_dict["ChipSizeX"], dtype=np.float32).reshape(in_shape)
-    ChipSizeY = np.frombuffer(var_dict["ChipSizeY"], dtype=np.float32).reshape(in_shape)
-    Dx0 = np.frombuffer(var_dict["Dx0"], dtype=np.float32).reshape(in_shape)
-    Dy0 = np.frombuffer(var_dict["Dy0"], dtype=np.float32).reshape(in_shape)
-
-    Dx = np.empty(chunkInds.shape, dtype=np.float32)
-    Dx.fill(np.nan)
-    Dy = Dx.copy()
-
-    #    print(k)
-    #    print(np.min(chunkInds),np.max(chunkInds))
-    #    print(chunkInds.shape)
-
-    for ind in chunkInds:
-
-        ind1 = np.where(chunkInds == ind)[0][0]
-
-        ii, jj = [v[0] for v in np.unravel_index([ind], in_shape)]
-
-        if (SearchLimitX[ii, jj] == 0) & (SearchLimitY[ii, jj] == 0):
-            continue
-
-        # remember motion terms Dx and Dy correspond to I1 relative to I2 (reference)
-        clx = np.floor(ChipSizeX[ii, jj] / 2)
-        ChipRangeX = slice(int(-clx - Dx0[ii, jj] + xGrid[ii, jj]), int(clx - Dx0[ii, jj] + xGrid[ii, jj]))
-        cly = np.floor(ChipSizeY[ii, jj] / 2)
-        ChipRangeY = slice(int(-cly - Dy0[ii, jj] + yGrid[ii, jj]), int(cly - Dy0[ii, jj] + yGrid[ii, jj]))
-        ChipI = I2[ChipRangeY, ChipRangeX]
-
-        SearchRangeX = slice(
-            int(-clx - SearchLimitX[ii, jj] + xGrid[ii, jj]), int(clx + SearchLimitX[ii, jj] - 1 + xGrid[ii, jj])
-        )
-        SearchRangeY = slice(
-            int(-cly - SearchLimitY[ii, jj] + yGrid[ii, jj]), int(cly + SearchLimitY[ii, jj] - 1 + yGrid[ii, jj])
-        )
-        RefI = I1[SearchRangeY, SearchRangeX]
-
-        minChipI = np.min(ChipI)
-        if minChipI < 0:
-            ChipI = ChipI - minChipI
-        if np.all(ChipI == ChipI[0, 0]):
-            continue
-
-        minRefI = np.min(RefI)
-        if minRefI < 0:
-            RefI = RefI - minRefI
-        if np.all(RefI == RefI[0, 0]):
-            continue
-
-        if SubPixFlag:
-            # call C++
-            Dx[ind1], Dy[ind1] = np.float32(
-                autoriftcore.arSubPixDisp_u_Py(
-                    core._autoriftcore,
-                    ChipI.shape[1],
-                    ChipI.shape[0],
-                    ChipI.ravel(),
-                    RefI.shape[1],
-                    RefI.shape[0],
-                    RefI.ravel(),
-                    oversample,
-                )
-            )
-        #                   # call Python
-        #                   Dx1[ii], Dy1[ii] = arSubPixDisp(ChipI,RefI)
-        else:
-            # call C++
-            Dx[ind1], Dy[ind1] = np.float32(
-                autoriftcore.arPixDisp_u_Py(
-                    core._autoriftcore,
-                    ChipI.shape[1],
-                    ChipI.shape[0],
-                    ChipI.ravel(),
-                    RefI.shape[1],
-                    RefI.shape[0],
-                    RefI.ravel(),
-                )
-            )
-    #                   # call Python
-    #                   Dx1[ii], Dy1[ii] = arPixDisp(ChipI,RefI)
-    return Dx, Dy
-
-
-def unpacking_loop_s(tup):
-    import numpy as np
-    from . import autoriftcore
-
-    core = AUTO_RIFT_CORE()
-    if core._autoriftcore is not None:
-        autoriftcore.destroyAutoRiftCore_Py(core._autoriftcore)
-
-    core._autoriftcore = autoriftcore.createAutoRiftCore_Py()
-
-    k, chunkInds, SubPixFlag, oversample, in_shape, I_shape = tup
-
-    I1 = np.frombuffer(var_dict["I1"], dtype=np.float32).reshape(I_shape)
-    I2 = np.frombuffer(var_dict["I2"], dtype=np.float32).reshape(I_shape)
-    xGrid = np.frombuffer(var_dict["xGrid"], dtype=np.float32).reshape(in_shape)
-    yGrid = np.frombuffer(var_dict["yGrid"], dtype=np.float32).reshape(in_shape)
-    SearchLimitX = np.frombuffer(var_dict["SearchLimitX"], dtype=np.float32).reshape(in_shape)
-    SearchLimitY = np.frombuffer(var_dict["SearchLimitY"], dtype=np.float32).reshape(in_shape)
-    ChipSizeX = np.frombuffer(var_dict["ChipSizeX"], dtype=np.float32).reshape(in_shape)
-    ChipSizeY = np.frombuffer(var_dict["ChipSizeY"], dtype=np.float32).reshape(in_shape)
-    Dx0 = np.frombuffer(var_dict["Dx0"], dtype=np.float32).reshape(in_shape)
-    Dy0 = np.frombuffer(var_dict["Dy0"], dtype=np.float32).reshape(in_shape)
-
-    Dx = np.empty(chunkInds.shape, dtype=np.float32)
-    Dx.fill(np.nan)
-    Dy = Dx.copy()
-
-    #    print(k)
-    #    print(np.min(chunkInds),np.max(chunkInds))
-    #    print(chunkInds.shape)
-
-    for ind in chunkInds:
-
-        ind1 = np.where(chunkInds == ind)[0][0]
-
-        ii, jj = [v[0] for v in np.unravel_index([ind], in_shape)]
-
-        if (SearchLimitX[ii, jj] == 0) & (SearchLimitY[ii, jj] == 0):
-            continue
-
-        # remember motion terms Dx and Dy correspond to I1 relative to I2 (reference)
-        clx = np.floor(ChipSizeX[ii, jj] / 2)
-        ChipRangeX = slice(int(-clx - Dx0[ii, jj] + xGrid[ii, jj]), int(clx - Dx0[ii, jj] + xGrid[ii, jj]))
-        cly = np.floor(ChipSizeY[ii, jj] / 2)
-        ChipRangeY = slice(int(-cly - Dy0[ii, jj] + yGrid[ii, jj]), int(cly - Dy0[ii, jj] + yGrid[ii, jj]))
-        ChipI = I2[ChipRangeY, ChipRangeX]
-
-        SearchRangeX = slice(
-            int(-clx - SearchLimitX[ii, jj] + xGrid[ii, jj]), int(clx + SearchLimitX[ii, jj] - 1 + xGrid[ii, jj])
-        )
-        SearchRangeY = slice(
-            int(-cly - SearchLimitY[ii, jj] + yGrid[ii, jj]), int(cly + SearchLimitY[ii, jj] - 1 + yGrid[ii, jj])
-        )
-        RefI = I1[SearchRangeY, SearchRangeX]
-
-        minChipI = np.min(ChipI)
-        if minChipI < 0:
-            ChipI = ChipI - minChipI
-        if np.all(ChipI == ChipI[0, 0]):
-            continue
-
-        minRefI = np.min(RefI)
-        if minRefI < 0:
-            RefI = RefI - minRefI
-        if np.all(RefI == RefI[0, 0]):
-            continue
-
-        if SubPixFlag:
-            # call C++
-            Dx[ind1], Dy[ind1] = np.float32(
-                autoriftcore.arSubPixDisp_s_Py(
-                    core._autoriftcore,
-                    ChipI.shape[1],
-                    ChipI.shape[0],
-                    ChipI.ravel(),
-                    RefI.shape[1],
-                    RefI.shape[0],
-                    RefI.ravel(),
-                    oversample,
-                )
-            )
-        #                   # call Python
-        #                   Dx1[ii], Dy1[ii] = arSubPixDisp(ChipI,RefI)
-        else:
-            # call C++
-            Dx[ind1], Dy[ind1] = np.float32(
-                autoriftcore.arPixDisp_s_Py(
-                    core._autoriftcore,
-                    ChipI.shape[1],
-                    ChipI.shape[0],
-                    ChipI.ravel(),
-                    RefI.shape[1],
-                    RefI.shape[0],
-                    RefI.ravel(),
-                )
-            )
-    #                   # call Python
-    #                   Dx1[ii], Dy1[ii] = arPixDisp(ChipI,RefI)
-    return Dx, Dy
-
-
 def arImgDisp_u(
     I1,
     I2,
@@ -1130,7 +928,6 @@ def arImgDisp_u(
     Dy0,
     SubPixFlag,
     oversample,
-    MultiThread,
 ):
     import numpy as np
     from . import autoriftcore
@@ -1224,161 +1021,60 @@ def arImgDisp_u(
     Dx.fill(np.nan)
     Dy = Dx.copy()
 
-    if MultiThread == 0:
-        for jj in range(xGrid.shape[1]):
-            if np.all(SearchLimitX[:, jj] == 0) & np.all(SearchLimitY[:, jj] == 0):
-                continue
-            Dx1 = Dx[:, jj]
-            Dy1 = Dy[:, jj]
-            for ii in range(xGrid.shape[0]):
-                if (SearchLimitX[ii, jj] == 0) & (SearchLimitY[ii, jj] == 0):
-                    continue
-
-                # remember motion terms Dx and Dy correspond to I1 relative to I2 (reference)
-                clx = np.floor(ChipSizeX[ii, jj] / 2)
-                ChipRangeX = slice(int(-clx - Dx0[ii, jj] + xGrid[ii, jj]), int(clx - Dx0[ii, jj] + xGrid[ii, jj]))
-                cly = np.floor(ChipSizeY[ii, jj] / 2)
-                ChipRangeY = slice(int(-cly - Dy0[ii, jj] + yGrid[ii, jj]), int(cly - Dy0[ii, jj] + yGrid[ii, jj]))
-                ChipI = I2[ChipRangeY, ChipRangeX]
-
-                SearchRangeX = slice(
-                    int(-clx - SearchLimitX[ii, jj] + xGrid[ii, jj]),
-                    int(clx + SearchLimitX[ii, jj] - 1 + xGrid[ii, jj]),
-                )
-                SearchRangeY = slice(
-                    int(-cly - SearchLimitY[ii, jj] + yGrid[ii, jj]),
-                    int(cly + SearchLimitY[ii, jj] - 1 + yGrid[ii, jj]),
-                )
-                RefI = I1[SearchRangeY, SearchRangeX]
-
-                minChipI = np.min(ChipI)
-                if minChipI < 0:
-                    ChipI = ChipI - minChipI
-                if np.all(ChipI == ChipI[0, 0]):
-                    continue
-
-                minRefI = np.min(RefI)
-                if minRefI < 0:
-                    RefI = RefI - minRefI
-                if np.all(RefI == RefI[0, 0]):
-                    continue
-
-                if SubPixFlag:
-                    # call C++
-                    Dx1[ii], Dy1[ii] = np.float32(
-                        autoriftcore.arSubPixDisp_u_Py(
-                            core._autoriftcore,
-                            ChipI.shape[1],
-                            ChipI.shape[0],
-                            ChipI.ravel(),
-                            RefI.shape[1],
-                            RefI.shape[0],
-                            RefI.ravel(),
-                            oversample,
-                        )
-                    )
-                #                   # call Python
-                #                   Dx1[ii], Dy1[ii] = arSubPixDisp(ChipI,RefI)
-                else:
-                    # call C++
-                    Dx1[ii], Dy1[ii] = np.float32(
-                        autoriftcore.arPixDisp_u_Py(
-                            core._autoriftcore,
-                            ChipI.shape[1],
-                            ChipI.shape[0],
-                            ChipI.ravel(),
-                            RefI.shape[1],
-                            RefI.shape[0],
-                            RefI.ravel(),
-                        )
-                    )
-    #                   # call Python
-    #                   Dx1[ii], Dy1[ii] = arPixDisp(ChipI,RefI)
+    # Call C++
+    if not SubPixFlag:
+        Dx, Dy = np.float32(
+            autoriftcore.arPixDisp_s_Py(
+                core._autoriftcore,
+                I1.shape[1],
+                I1.shape[0],
+                I1.ravel(),
+                I2.shape[1],
+                I2.shape[0],
+                I2.ravel(),
+                xGrid.shape[1],
+                xGrid.shape[0],
+                xGrid.ravel(),
+                yGrid.shape[1],
+                yGrid.shape[0],
+                yGrid.ravel(),
+                SearchLimitX.ravel(),
+                SearchLimitY.ravel(),
+                ChipSizeX.ravel(),
+                ChipSizeY.ravel(),
+                Dx.ravel(),
+                Dy.ravel(),
+                Dx0.ravel(),
+                Dy0.ravel()
+            )
+        )
     else:
-        #   Preparation for parallel
-        in_shape = xGrid.shape
-        I_shape = I1.shape
-        shape_prod = np.prod(in_shape).item()
-
-        #        import pdb
-        #        pdb.set_trace()
-        XI1 = mp.RawArray("b", np.prod(I_shape).item())
-        XI1_np = np.frombuffer(XI1, dtype=np.uint8).reshape(I_shape)
-        np.copyto(XI1_np, I1)
-        del I1
-
-        XI2 = mp.RawArray("b", np.prod(I_shape).item())
-        XI2_np = np.frombuffer(XI2, dtype=np.uint8).reshape(I_shape)
-        np.copyto(XI2_np, I2)
-        del I2
-
-        XxGrid = mp.RawArray("f", shape_prod)
-        XxGrid_np = np.frombuffer(XxGrid, dtype=np.float32).reshape(in_shape)
-        np.copyto(XxGrid_np, xGrid)
-        del xGrid
-
-        XyGrid = mp.RawArray("f", shape_prod)
-        XyGrid_np = np.frombuffer(XyGrid, dtype=np.float32).reshape(in_shape)
-        np.copyto(XyGrid_np, yGrid)
-        del yGrid
-
-        XSearchLimitX = mp.RawArray("f", shape_prod)
-        XSearchLimitX_np = np.frombuffer(XSearchLimitX, dtype=np.float32).reshape(in_shape)
-        np.copyto(XSearchLimitX_np, SearchLimitX)
-
-        XSearchLimitY = mp.RawArray("f", shape_prod)
-        XSearchLimitY_np = np.frombuffer(XSearchLimitY, dtype=np.float32).reshape(in_shape)
-        np.copyto(XSearchLimitY_np, SearchLimitY)
-
-        XChipSizeX = mp.RawArray("f", shape_prod)
-        XChipSizeX_np = np.frombuffer(XChipSizeX, dtype=np.float32).reshape(in_shape)
-        np.copyto(XChipSizeX_np, ChipSizeX)
-        del ChipSizeX
-
-        XChipSizeY = mp.RawArray("f", shape_prod)
-        XChipSizeY_np = np.frombuffer(XChipSizeY, dtype=np.float32).reshape(in_shape)
-        np.copyto(XChipSizeY_np, ChipSizeY)
-        del ChipSizeY
-
-        XDx0 = mp.RawArray("f", shape_prod)
-        XDx0_np = np.frombuffer(XDx0, dtype=np.float32).reshape(in_shape)
-        np.copyto(XDx0_np, Dx0)
-
-        XDy0 = mp.RawArray("f", shape_prod)
-        XDy0_np = np.frombuffer(XDy0, dtype=np.float32).reshape(in_shape)
-        np.copyto(XDy0_np, Dy0)
-        #        import pdb
-        #        pdb.set_trace()
-
-        #        Nchunks = mp.cpu_count() // 8 * MultiThread
-        Nchunks = MultiThread
-        chunkSize = int(np.floor(shape_prod / Nchunks))
-        chunkRem = shape_prod - chunkSize * Nchunks
-
-        CHUNKS = []
-
-        for k in range(Nchunks):
-            #            print(k)
-            if k == (Nchunks - 1):
-                chunkInds = np.arange(k * chunkSize, (k + 1) * chunkSize + chunkRem)
-            else:
-                chunkInds = np.arange(k * chunkSize, (k + 1) * chunkSize)
-            CHUNKS.append(chunkInds)
-        #            print(CHUNKS)
-
-        chunk_inputs = [(kk, CHUNKS[kk], SubPixFlag, oversample, in_shape, I_shape) for kk in range(Nchunks)]
-
-        with mp.Pool(
-            initializer=initializer,
-            initargs=(XI1, XI2, XxGrid, XyGrid, XSearchLimitX, XSearchLimitY, XChipSizeX, XChipSizeY, XDx0, XDy0),
-        ) as pool:
-            Dx, Dy = zip(*pool.map(unpacking_loop_u, chunk_inputs))
-
-        Dx = np.concatenate(Dx)
-        Dy = np.concatenate(Dy)
-
-        Dx = np.reshape(Dx, in_shape)
-        Dy = np.reshape(Dy, in_shape)
+        Dx, Dy = np.float32(
+            autoriftcore.arSubPixDisp_s_Py(
+                core._autoriftcore,
+                I1.shape[1],
+                I1.shape[0],
+                I1.ravel(),
+                I2.shape[1],
+                I2.shape[0],
+                I2.ravel(),
+                xGrid.shape[1],
+                xGrid.shape[0],
+                xGrid.ravel(),
+                yGrid.shape[1],
+                yGrid.shape[0],
+                yGrid.ravel(),
+                SearchLimitX.ravel(),
+                SearchLimitY.ravel(),
+                ChipSizeX.ravel(),
+                ChipSizeY.ravel(),
+                Dx.ravel(),
+                Dy.ravel(),
+                Dx0.ravel(),
+                Dy0.ravel(),
+                oversample
+            )
+        )
 
     # add back 1) I1 (RefI) relative to I2 (ChipI) initial offset Dx0 and Dy0, and
     #          2) RefI relative to ChipI has a left/top boundary offset of -SearchLimitX and -SearchLimitY
@@ -1408,7 +1104,6 @@ def arImgDisp_s(
     Dy0,
     SubPixFlag,
     oversample,
-    MultiThread,
 ):
     import numpy as np
     from . import autoriftcore
@@ -1502,164 +1197,64 @@ def arImgDisp_s(
     Dx.fill(np.nan)
     Dy = Dx.copy()
 
-    if MultiThread == 0:
-        for jj in range(xGrid.shape[1]):
-            if np.all(SearchLimitX[:, jj] == 0) & np.all(SearchLimitY[:, jj] == 0):
-                continue
-            Dx1 = Dx[:, jj]
-            Dy1 = Dy[:, jj]
-            for ii in range(xGrid.shape[0]):
-                if (SearchLimitX[ii, jj] == 0) & (SearchLimitY[ii, jj] == 0):
-                    continue
-
-                # remember motion terms Dx and Dy correspond to I1 relative to I2 (reference)
-                clx = np.floor(ChipSizeX[ii, jj] / 2)
-                ChipRangeX = slice(int(-clx - Dx0[ii, jj] + xGrid[ii, jj]), int(clx - Dx0[ii, jj] + xGrid[ii, jj]))
-                cly = np.floor(ChipSizeY[ii, jj] / 2)
-                ChipRangeY = slice(int(-cly - Dy0[ii, jj] + yGrid[ii, jj]), int(cly - Dy0[ii, jj] + yGrid[ii, jj]))
-                ChipI = I2[ChipRangeY, ChipRangeX]
-
-                SearchRangeX = slice(
-                    int(-clx - SearchLimitX[ii, jj] + xGrid[ii, jj]),
-                    int(clx + SearchLimitX[ii, jj] - 1 + xGrid[ii, jj]),
-                )
-                SearchRangeY = slice(
-                    int(-cly - SearchLimitY[ii, jj] + yGrid[ii, jj]),
-                    int(cly + SearchLimitY[ii, jj] - 1 + yGrid[ii, jj]),
-                )
-                RefI = I1[SearchRangeY, SearchRangeX]
-
-                minChipI = np.min(ChipI)
-                if minChipI < 0:
-                    ChipI = ChipI - minChipI
-                if np.all(ChipI == ChipI[0, 0]):
-                    continue
-
-                minRefI = np.min(RefI)
-                if minRefI < 0:
-                    RefI = RefI - minRefI
-                if np.all(RefI == RefI[0, 0]):
-                    continue
-
-                if SubPixFlag:
-                    # call C++
-                    Dx1[ii], Dy1[ii] = np.float32(
-                        autoriftcore.arSubPixDisp_s_Py(
-                            core._autoriftcore,
-                            ChipI.shape[1],
-                            ChipI.shape[0],
-                            ChipI.ravel(),
-                            RefI.shape[1],
-                            RefI.shape[0],
-                            RefI.ravel(),
-                            oversample,
-                        )
-                    )
-                #                   # call Python
-                #                   Dx1[ii], Dy1[ii] = arSubPixDisp(ChipI,RefI)
-                else:
-                    # call C++
-                    Dx1[ii], Dy1[ii] = np.float32(
-                        autoriftcore.arPixDisp_s_Py(
-                            core._autoriftcore,
-                            ChipI.shape[1],
-                            ChipI.shape[0],
-                            ChipI.ravel(),
-                            RefI.shape[1],
-                            RefI.shape[0],
-                            RefI.ravel(),
-                        )
-                    )
-    #                   # call Python
-    #                   Dx1[ii], Dy1[ii] = arPixDisp(ChipI,RefI)
+    # Call C++
+    if not SubPixFlag:
+        Dx, Dy = np.float32(
+            autoriftcore.arPixDisp_s_Py(
+                core._autoriftcore,
+                I1.shape[1],
+                I1.shape[0],
+                I1.ravel(),
+                I2.shape[1],
+                I2.shape[0],
+                I2.ravel(),
+                xGrid.shape[1],
+                xGrid.shape[0],
+                xGrid.ravel(),
+                yGrid.shape[1],
+                yGrid.shape[0],
+                yGrid.ravel(),
+                SearchLimitX.ravel(),
+                SearchLimitY.ravel(),
+                ChipSizeX.ravel(),
+                ChipSizeY.ravel(),
+                Dx.ravel(),
+                Dy.ravel(),
+                Dx0.ravel(),
+                Dy0.ravel()
+            )
+        )
     else:
-        #   Preparation for parallel
-        in_shape = xGrid.shape
-        I_shape = I1.shape
-        shape_prod = np.prod(in_shape).item()
+        Dx, Dy = np.float32(
+            autoriftcore.arSubPixDisp_s_Py(
+                core._autoriftcore,
+                I1.shape[1],
+                I1.shape[0],
+                I1.ravel(),
+                I2.shape[1],
+                I2.shape[0],
+                I2.ravel(),
+                xGrid.shape[1],
+                xGrid.shape[0],
+                xGrid.ravel(),
+                yGrid.shape[1],
+                yGrid.shape[0],
+                yGrid.ravel(),
+                SearchLimitX.ravel(),
+                SearchLimitY.ravel(),
+                ChipSizeX.ravel(),
+                ChipSizeY.ravel(),
+                Dx.ravel(),
+                Dy.ravel(),
+                Dx0.ravel(),
+                Dy0.ravel(),
+                oversample
+            )
+        )
 
-        #        import pdb
-        #        pdb.set_trace()
-        XI1 = mp.RawArray("f", np.prod(I_shape).item())
-        XI1_np = np.frombuffer(XI1, dtype=np.float32).reshape(I_shape)
-        np.copyto(XI1_np, I1)
-        del I1
+    Dx = Dx.reshape(xGrid.shape)
+    Dy = Dy.reshape(xGrid.shape)
 
-        XI2 = mp.RawArray("f", np.prod(I_shape).item())
-        XI2_np = np.frombuffer(XI2, dtype=np.float32).reshape(I_shape)
-        np.copyto(XI2_np, I2)
-        del I2
-
-        XxGrid = mp.RawArray("f", shape_prod)
-        XxGrid_np = np.frombuffer(XxGrid, dtype=np.float32).reshape(in_shape)
-        np.copyto(XxGrid_np, xGrid)
-        del xGrid
-
-        XyGrid = mp.RawArray("f", shape_prod)
-        XyGrid_np = np.frombuffer(XyGrid, dtype=np.float32).reshape(in_shape)
-        np.copyto(XyGrid_np, yGrid)
-        del yGrid
-
-        XSearchLimitX = mp.RawArray("f", shape_prod)
-        XSearchLimitX_np = np.frombuffer(XSearchLimitX, dtype=np.float32).reshape(in_shape)
-        np.copyto(XSearchLimitX_np, SearchLimitX)
-
-        XSearchLimitY = mp.RawArray("f", shape_prod)
-        XSearchLimitY_np = np.frombuffer(XSearchLimitY, dtype=np.float32).reshape(in_shape)
-        np.copyto(XSearchLimitY_np, SearchLimitY)
-
-        XChipSizeX = mp.RawArray("f", shape_prod)
-        XChipSizeX_np = np.frombuffer(XChipSizeX, dtype=np.float32).reshape(in_shape)
-        np.copyto(XChipSizeX_np, ChipSizeX)
-        del ChipSizeX
-
-        XChipSizeY = mp.RawArray("f", shape_prod)
-        XChipSizeY_np = np.frombuffer(XChipSizeY, dtype=np.float32).reshape(in_shape)
-        np.copyto(XChipSizeY_np, ChipSizeY)
-        del ChipSizeY
-
-        XDx0 = mp.RawArray("f", shape_prod)
-        XDx0_np = np.frombuffer(XDx0, dtype=np.float32).reshape(in_shape)
-        np.copyto(XDx0_np, Dx0)
-
-        XDy0 = mp.RawArray("f", shape_prod)
-        XDy0_np = np.frombuffer(XDy0, dtype=np.float32).reshape(in_shape)
-        np.copyto(XDy0_np, Dy0)
-        #        import pdb
-        #        pdb.set_trace()
-
-        #        Nchunks = mp.cpu_count() // 8 * MultiThread
-        Nchunks = MultiThread
-        chunkSize = int(np.floor(shape_prod / Nchunks))
-        chunkRem = shape_prod - chunkSize * Nchunks
-
-        CHUNKS = []
-
-        for k in range(Nchunks):
-            #            print(k)
-            if k == (Nchunks - 1):
-                chunkInds = np.arange(k * chunkSize, (k + 1) * chunkSize + chunkRem)
-            else:
-                chunkInds = np.arange(k * chunkSize, (k + 1) * chunkSize)
-            CHUNKS.append(chunkInds)
-        #            print(CHUNKS)
-
-        chunk_inputs = [(kk, CHUNKS[kk], SubPixFlag, oversample, in_shape, I_shape) for kk in range(Nchunks)]
-
-        with mp.Pool(
-            initializer=initializer,
-            initargs=(XI1, XI2, XxGrid, XyGrid, XSearchLimitX, XSearchLimitY, XChipSizeX, XChipSizeY, XDx0, XDy0),
-        ) as pool:
-            Dx, Dy = zip(*pool.map(unpacking_loop_s, chunk_inputs))
-
-        Dx = np.concatenate(Dx)
-        Dy = np.concatenate(Dy)
-
-        Dx = np.reshape(Dx, in_shape)
-        Dy = np.reshape(Dy, in_shape)
-
-    # add back 1) I1 (RefI) relative to I2 (ChipI) initial offset Dx0 and Dy0, and
-    #          2) RefI relative to ChipI has a left/top boundary offset of -SearchLimitX and -SearchLimitY
     idx = np.logical_not(np.isnan(Dx))
     Dx[idx] += Dx0[idx] - SearchLimitX[idx]
     Dy[idx] += Dy0[idx] - SearchLimitY[idx]

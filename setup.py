@@ -34,7 +34,7 @@ extensions = [
                      os.path.join(path, 'include/opencv4/')],
         library_dirs = [os.path.join(path, 'lib')],
         libraries=['opencv_core', 'opencv_imgproc'],
-        extra_compile_args=['-std=c++11'],
+        extra_compile_args=['-std=c++11', '-fopenmp', '-O4'],
         language="c++"
      ),
      Extension(
@@ -45,7 +45,7 @@ extensions = [
                      os.path.join(path, 'include')],
         library_dirs = [os.path.join(path, 'lib')],
         libraries=['gomp','gdal'],
-        extra_compile_args=['-std=c++11'],
+        extra_compile_args=['-std=c++11', '-O4'],
         language="c++"
      ),
      Extension(
@@ -56,7 +56,7 @@ extensions = [
                      os.path.join(path, 'include'),os.path.join(path, 'include/eigen3')],
         library_dirs = [os.path.join(path, 'lib')],
         libraries=['gomp','gdal','isce3'],
-        extra_compile_args=['-std=c++17'],
+        extra_compile_args=['-std=c++17', '-O4'],
         language="c++"
      )
 ]

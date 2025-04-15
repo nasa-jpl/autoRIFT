@@ -104,266 +104,470 @@ PyObject* destroyAutoRiftCore(PyObject *self, PyObject *args)
     return Py_BuildValue("i", 0);
 }
 
-
-
 PyObject* arPixDisp_u(PyObject *self, PyObject *args)
 {
     uint64_t ptr;
-    PyArrayObject *ChipI, *RefI;
+    PyArrayObject *I1, *I2, *Dx, *Dy, *Dx0, *Dy0, *xGrid, *yGrid, *SearchLimitX, *SearchLimitY, *ChipSizeX, *ChipSizeY;
+    int widX, lenX;
+    int widY, lenY;
     int widC, lenC;
     int widR, lenR;
-    if (!PyArg_ParseTuple(args, "KiiOiiO", &ptr, &widC, &lenC, &ChipI, &widR, &lenR, &RefI))
+
+    if (!PyArg_ParseTuple(args, "KiiOiiOiiOiiOOOOOOOOO", &ptr, &widC, &lenC, &I1, &widR, &lenR, &I2, &widX, &lenX, &xGrid, &widY, &lenY, &yGrid, &SearchLimitX, &SearchLimitY, &ChipSizeX, &ChipSizeY, &Dx, &Dy, &Dx0, &Dy0))
     {
         return NULL;
     }
 
-    uint8_t my_arrC[widC * lenC];
-    
-    for(int i=0; i<(widC*lenC); i++){
-        my_arrC[i] = (*(uint8_t *)PyArray_GETPTR1(ChipI,i));
-    }
-    
-    uint8_t my_arrR[widR * lenR];
-    
-    for(int i=0; i<(widR*lenR); i++){
-        my_arrR[i] = (*(uint8_t *)PyArray_GETPTR1(RefI,i));
-    }
-    
+    cv::Mat sec_img = cv::Mat(cv::Size(widC, lenC), CV_8UC1, reinterpret_cast<uint8_t*>(PyArray_DATA(I1)));
+    cv::Mat ref_img = cv::Mat(cv::Size(widR, lenR), CV_8UC1, reinterpret_cast<uint8_t*>(PyArray_DATA(I2)));
+    cv::Mat x_grid = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(xGrid)));
+    cv::Mat y_grid = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(yGrid)));
+    cv::Mat dx = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dx)));
+    cv::Mat dy = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dy)));
+    cv::Mat dx0 = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dx0)));
+    cv::Mat dy0 = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dy0)));
+    cv::Mat search_limit_x = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(SearchLimitX)));
+    cv::Mat search_limit_y = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(SearchLimitY)));
+    cv::Mat chip_size_x = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(ChipSizeX)));
+    cv::Mat chip_size_y = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(ChipSizeY)));
 
-    cv::Mat my_imgC = cv::Mat(cv::Size(widC, lenC), CV_8UC1, &my_arrC);
-    cv::Mat my_imgR = cv::Mat(cv::Size(widR, lenR), CV_8UC1, &my_arrR);
-    
-    int result_cols =  widR - widC + 1;
-    int result_rows = lenR - lenC + 1;
-    
-    cv::Mat result;
-    result.create( result_rows, result_cols, CV_32FC1 );
-    
-    cv::matchTemplate( my_imgR, my_imgC, result, CV_TM_CCOEFF_NORMED );
-    
-    cv::Point maxLoc;
-    cv::minMaxLoc(result, NULL, NULL, NULL, &maxLoc);
-    
-    double x = maxLoc.x;
-    double y = maxLoc.y;
-    
-    
-    return Py_BuildValue("dd", x, y);
+    #pragma omp parallel for collapse(2)
+    for(int j = 0; j < widX; j++)
+    {
+        for(int i = 0; i < lenX; i++)
+        {
+            if(search_limit_x.at<float>(i, j) == 0 and search_limit_y.at<float>(i, j) == 0)
+            {
+                continue;
+            }
+
+            float chip_limit_x = floor(chip_size_x.at<float>(i, j) / 2.0);
+            float chip_limit_y = floor(chip_size_y.at<float>(i, j) / 2.0);
+
+            int chip_x_start = int(-chip_limit_x - dx0.at<float>(i, j) + x_grid.at<float>(i, j));
+            int chip_x_end = int(chip_limit_x - dx0.at<float>(i, j) + x_grid.at<float>(i, j));
+            int chip_y_start = int(-chip_limit_y - dy0.at<float>(i, j) + y_grid.at<float>(i, j));
+            int chip_y_end = int(chip_limit_y - dy0.at<float>(i, j) + y_grid.at<float>(i, j));
+            int search_x_start = int(-chip_limit_x - search_limit_x.at<float>(i, j) + x_grid.at<float>(i, j));
+            int search_x_end = int(chip_limit_x + search_limit_x.at<float>(i, j) - 1 + x_grid.at<float>(i, j));
+            int search_y_start = int(-chip_limit_y - search_limit_y.at<float>(i, j) + y_grid.at<float>(i, j));
+            int search_y_end = int(chip_limit_y + search_limit_y.at<float>(i, j) - 1 + y_grid.at<float>(i, j));
+
+            cv::Range chip_x_range = cv::Range(chip_x_start, chip_x_end);
+            cv::Range chip_y_range = cv::Range(chip_y_start, chip_y_end);
+            cv::Range search_x_range = cv::Range(search_x_start, search_x_end);
+            cv::Range search_y_range = cv::Range(search_y_start, search_y_end);
+
+            cv::Mat chip = sec_img(chip_y_range, chip_x_range);
+            cv::Mat ref = ref_img(search_y_range, search_x_range);
+
+            cv::Point chip_min_loc;
+            cv::minMaxLoc(chip, NULL, NULL, &chip_min_loc, NULL);
+            
+            float chip_min = chip.at<uint8_t>(chip_min_loc.y, chip_min_loc.x);
+            
+            if (chip_min < 0)
+            {
+                chip = chip - chip_min;
+            }
+
+            cv::Point ref_min_loc;
+            cv::minMaxLoc(ref, NULL, NULL, &ref_min_loc, NULL);
+            
+            float ref_min = ref.at<float>(ref_min_loc.y, ref_min_loc.x);
+            
+            if (ref_min < 0)
+            {
+                ref = ref - ref_min;
+            }
+
+            int chip_width = chip_x_end - chip_x_start;
+            int chip_length = chip_y_end - chip_y_start;
+            int search_width = search_x_end - search_x_start;
+            int search_length = search_y_end - search_y_start;
+
+            int result_cols =  search_width - chip_width + 1;
+            int result_rows = search_length - chip_length + 1;
+
+            cv::Mat result;
+            result.create( result_rows, result_cols, CV_32FC1 );
+
+            cv::matchTemplate( ref, chip, result, CV_TM_CCORR_NORMED );
+
+            cv::Point maxLoc;
+            cv::minMaxLoc(result, NULL, NULL, NULL, &maxLoc);
+
+            dx.col(j).at<float>(i) = maxLoc.x;
+            dy.col(j).at<float>(i) = maxLoc.y;
+        }
+    }
+
+    return Py_BuildValue("OO", Dx, Dy);
 }
-
-
-
-
 
 PyObject* arSubPixDisp_u(PyObject *self, PyObject *args)
 {
     uint64_t ptr;
-    PyArrayObject *ChipI, *RefI;
+    PyArrayObject *I1, *I2, *Dx, *Dy, *Dx0, *Dy0, *xGrid, *yGrid, *SearchLimitX, *SearchLimitY, *ChipSizeX, *ChipSizeY;
+    int widX, lenX;
+    int widY, lenY;
     int widC, lenC;
     int widR, lenR;
     int overSampleNC;
-    if (!PyArg_ParseTuple(args, "KiiOiiOi", &ptr, &widC, &lenC, &ChipI, &widR, &lenR, &RefI, &overSampleNC))
+
+    if (!PyArg_ParseTuple(args, "KiiOiiOiiOiiOOOOOOOOOi", &ptr, &widC, &lenC, &I1, &widR, &lenR, &I2, &widX, &lenX, &xGrid, &widY, &lenY, &yGrid, &SearchLimitX, &SearchLimitY, &ChipSizeX, &ChipSizeY, &Dx, &Dy, &Dx0, &Dy0, &overSampleNC))
     {
         return NULL;
     }
-    
-    uint8_t my_arrC[widC * lenC];
-    
-    for(int i=0; i<(widC*lenC); i++){
-        my_arrC[i] = (*(uint8_t *)PyArray_GETPTR1(ChipI,i));
+
+    cv::Mat sec_img = cv::Mat(cv::Size(widC, lenC), CV_8UC1, reinterpret_cast<uint8_t*>(PyArray_DATA(I1)));
+    cv::Mat ref_img = cv::Mat(cv::Size(widR, lenR), CV_8UC1, reinterpret_cast<uint8_t*>(PyArray_DATA(I2)));
+    cv::Mat x_grid = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(xGrid)));
+    cv::Mat y_grid = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(yGrid)));
+    cv::Mat dx = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dx)));
+    cv::Mat dy = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dy)));
+    cv::Mat dx0 = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dx0)));
+    cv::Mat dy0 = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dy0)));
+    cv::Mat search_limit_x = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(SearchLimitX)));
+    cv::Mat search_limit_y = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(SearchLimitY)));
+    cv::Mat chip_size_x = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(ChipSizeX)));
+    cv::Mat chip_size_y = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(ChipSizeY)));
+
+    #pragma omp parallel for collapse(2)
+    for(int j = 0; j < widX; j++)
+    {
+        for(int i = 0; i < lenX; i++)
+        {
+            if(search_limit_x.at<float>(i, j) == 0 and search_limit_y.at<float>(i, j) == 0)
+            {
+                continue;
+            }
+
+            float chip_limit_x = floor(chip_size_x.at<float>(i, j) / 2.0);
+            float chip_limit_y = floor(chip_size_y.at<float>(i, j) / 2.0);
+
+            int chip_x_start = int(-chip_limit_x - dx0.at<float>(i, j) + x_grid.at<float>(i, j));
+            int chip_x_end = int(chip_limit_x - dx0.at<float>(i, j) + x_grid.at<float>(i, j));
+            int chip_y_start = int(-chip_limit_y - dy0.at<float>(i, j) + y_grid.at<float>(i, j));
+            int chip_y_end = int(chip_limit_y - dy0.at<float>(i, j) + y_grid.at<float>(i, j));
+            int search_x_start = int(-chip_limit_x - search_limit_x.at<float>(i, j) + x_grid.at<float>(i, j));
+            int search_x_end = int(chip_limit_x + search_limit_x.at<float>(i, j) - 1 + x_grid.at<float>(i, j));
+            int search_y_start = int(-chip_limit_y - search_limit_y.at<float>(i, j) + y_grid.at<float>(i, j));
+            int search_y_end = int(chip_limit_y + search_limit_y.at<float>(i, j) - 1 + y_grid.at<float>(i, j));
+
+            cv::Range chip_x_range = cv::Range(chip_x_start, chip_x_end);
+            cv::Range chip_y_range = cv::Range(chip_y_start, chip_y_end);
+            cv::Range search_x_range = cv::Range(search_x_start, search_x_end);
+            cv::Range search_y_range = cv::Range(search_y_start, search_y_end);
+
+            cv::Mat chip = sec_img(chip_y_range, chip_x_range);
+            cv::Mat ref = ref_img(search_y_range, search_x_range);
+
+            cv::Point chip_min_loc;
+            cv::minMaxLoc(chip, NULL, NULL, &chip_min_loc, NULL);
+
+            float chip_min = chip.at<uint8_t>(chip_min_loc.y, chip_min_loc.x);
+
+            if (chip_min < 0)
+            {
+                chip = chip - chip_min;
+            }
+
+            cv::Point ref_min_loc;
+            cv::minMaxLoc(ref, NULL, NULL, &ref_min_loc, NULL);
+
+            float ref_min = ref.at<float>(ref_min_loc.y, ref_min_loc.x);
+
+            if (ref_min < 0)
+            {
+                ref = ref - ref_min;
+            }
+
+            int chip_width = chip_x_end - chip_x_start;
+            int chip_length = chip_y_end - chip_y_start;
+            int search_width = search_x_end - search_x_start;
+            int search_length = search_y_end - search_y_start;
+
+            int result_cols =  search_width - chip_width + 1;
+            int result_rows = search_length - chip_length + 1;
+
+            cv::Mat result;
+            result.create( result_rows, result_cols, CV_32FC1 );
+
+            cv::matchTemplate( ref, chip, result, CV_TM_CCORR_NORMED );
+
+            cv::Point maxLoc;
+            cv::minMaxLoc(result, NULL, NULL, NULL, &maxLoc);
+
+            int x_start, y_start, x_count, y_count;
+
+            x_start = cv::max(maxLoc.x-2, 0);
+            x_start = cv::min(x_start, result_cols-5);
+            x_count = 5;
+
+            y_start = cv::max(maxLoc.y-2, 0);
+            y_start = cv::min(y_start, result_rows-5);
+            y_count = 5;
+
+            cv::Mat result_small (result, cv::Rect(x_start, y_start, x_count, y_count));
+
+            int cols = result_small.cols;
+            int rows = result_small.rows;
+            int overSampleFlag = 1;
+
+            cv::Mat predecessor_small = result_small;
+            cv::Mat foo;
+
+            while (overSampleFlag < overSampleNC){
+                cols *= 2;
+                rows *= 2;
+                overSampleFlag *= 2;
+                foo.create(cols, rows, CV_32FC1);
+                cv::pyrUp(predecessor_small, foo, cv::Size(cols, rows));
+                predecessor_small = foo;
+            }
+
+            cv::Point maxLoc_small;
+            cv::minMaxLoc(foo, NULL, NULL, NULL, &maxLoc_small);
+
+            dx.col(j).at<float>(i) = ((maxLoc_small.x + 0.0)/overSampleNC + x_start);
+            dy.col(j).at<float>(i) = ((maxLoc_small.y + 0.0)/overSampleNC + y_start);
+        }
     }
-    
-    uint8_t my_arrR[widR * lenR];
-    
-    for(int i=0; i<(widR*lenR); i++){
-        my_arrR[i] = (*(uint8_t *)PyArray_GETPTR1(RefI,i));
-    }
-    
-    
-    cv::Mat my_imgC = cv::Mat(cv::Size(widC, lenC), CV_8UC1, &my_arrC);
-    cv::Mat my_imgR = cv::Mat(cv::Size(widR, lenR), CV_8UC1, &my_arrR);
-    
-    int result_cols =  widR - widC + 1;
-    int result_rows = lenR - lenC + 1;
-    
-    cv::Mat result;
-    result.create( result_rows, result_cols, CV_32FC1 );
-    
-    cv::matchTemplate( my_imgR, my_imgC, result, CV_TM_CCOEFF_NORMED );
-    
-    cv::Point maxLoc;
-    cv::minMaxLoc(result, NULL, NULL, NULL, &maxLoc);
-    
-    
-    // refine the offset at the sub-pixel level using image upsampling (pyramid algorithm): extract 5x5 small image at the coarse offset location
-    int x_start, y_start, x_count, y_count;
-    
-    x_start = cv::max(maxLoc.x-2, 0);
-    x_start = cv::min(x_start, result_cols-5);
-    x_count = 5;
-    
-    y_start = cv::max(maxLoc.y-2, 0);
-    y_start = cv::min(y_start, result_rows-5);
-    y_count = 5;
-    
-    
-    cv::Mat result_small (result, cv::Rect(x_start, y_start, x_count, y_count));
-    
-    int cols = result_small.cols;
-    int rows = result_small.rows;
-    int overSampleFlag = 1;
-    cv::Mat predecessor_small = result_small;
-    cv::Mat foo;
-    
-    while (overSampleFlag < overSampleNC){
-        cols *= 2;
-        rows *= 2;
-        overSampleFlag *= 2;
-        foo.create(cols, rows, CV_32FC1);
-        cv::pyrUp(predecessor_small, foo, cv::Size(cols, rows));
-        predecessor_small = foo;
-    }
-    
-    cv::Point maxLoc_small;
-    cv::minMaxLoc(foo, NULL, NULL, NULL, &maxLoc_small);
-    
-    
-    double x = ((maxLoc_small.x + 0.0)/overSampleNC + x_start);
-    double y = ((maxLoc_small.y + 0.0)/overSampleNC + y_start);
-    
-    
-    return Py_BuildValue("dd", x, y);
+
+    return Py_BuildValue("OO", Dx, Dy);
 }
-
-
-
 
 PyObject* arPixDisp_s(PyObject *self, PyObject *args)
 {
     uint64_t ptr;
-    PyArrayObject *ChipI, *RefI;
+    PyArrayObject *I1, *I2, *Dx, *Dy, *Dx0, *Dy0, *xGrid, *yGrid, *SearchLimitX, *SearchLimitY, *ChipSizeX, *ChipSizeY;
+    int widX, lenX;
+    int widY, lenY;
     int widC, lenC;
     int widR, lenR;
-    if (!PyArg_ParseTuple(args, "KiiOiiO", &ptr, &widC, &lenC, &ChipI, &widR, &lenR, &RefI))
+
+    if (!PyArg_ParseTuple(args, "KiiOiiOiiOiiOOOOOOOOO", &ptr, &widC, &lenC, &I1, &widR, &lenR, &I2, &widX, &lenX, &xGrid, &widY, &lenY, &yGrid, &SearchLimitX, &SearchLimitY, &ChipSizeX, &ChipSizeY, &Dx, &Dy, &Dx0, &Dy0))
     {
         return NULL;
     }
-    
-    float my_arrC[widC * lenC];
-    
-    for(int i=0; i<(widC*lenC); i++){
-        my_arrC[i] = (*(float *)PyArray_GETPTR1(ChipI,i));
+
+    cv::Mat sec_img = cv::Mat(cv::Size(widC, lenC), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(I1)));
+    cv::Mat ref_img = cv::Mat(cv::Size(widR, lenR), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(I2)));
+    cv::Mat x_grid = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(xGrid)));
+    cv::Mat y_grid = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(yGrid)));
+    cv::Mat dx = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dx)));
+    cv::Mat dy = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dy)));
+    cv::Mat dx0 = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dx0)));
+    cv::Mat dy0 = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dy0)));
+    cv::Mat search_limit_x = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(SearchLimitX)));
+    cv::Mat search_limit_y = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(SearchLimitY)));
+    cv::Mat chip_size_x = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(ChipSizeX)));
+    cv::Mat chip_size_y = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(ChipSizeY)));
+
+    #pragma omp parallel for collapse(2)
+    for(int j = 0; j < widX; j++)
+    {
+        for(int i = 0; i < lenX; i++)
+        {
+            if(search_limit_x.at<float>(i, j) == 0 and search_limit_y.at<float>(i, j) == 0)
+            {
+                continue;
+            }
+
+            float chip_limit_x = floor(chip_size_x.at<float>(i, j) / 2.0);
+            float chip_limit_y = floor(chip_size_y.at<float>(i, j) / 2.0);
+
+            int chip_x_start = int(-chip_limit_x - dx0.at<float>(i, j) + x_grid.at<float>(i, j));
+            int chip_x_end = int(chip_limit_x - dx0.at<float>(i, j) + x_grid.at<float>(i, j));
+            int chip_y_start = int(-chip_limit_y - dy0.at<float>(i, j) + y_grid.at<float>(i, j));
+            int chip_y_end = int(chip_limit_y - dy0.at<float>(i, j) + y_grid.at<float>(i, j));
+            int search_x_start = int(-chip_limit_x - search_limit_x.at<float>(i, j) + x_grid.at<float>(i, j));
+            int search_x_end = int(chip_limit_x + search_limit_x.at<float>(i, j) - 1 + x_grid.at<float>(i, j));
+            int search_y_start = int(-chip_limit_y - search_limit_y.at<float>(i, j) + y_grid.at<float>(i, j));
+            int search_y_end = int(chip_limit_y + search_limit_y.at<float>(i, j) - 1 + y_grid.at<float>(i, j));
+
+            cv::Range chip_x_range = cv::Range(chip_x_start, chip_x_end);
+            cv::Range chip_y_range = cv::Range(chip_y_start, chip_y_end);
+            cv::Range search_x_range = cv::Range(search_x_start, search_x_end);
+            cv::Range search_y_range = cv::Range(search_y_start, search_y_end);
+
+            cv::Mat chip = sec_img(chip_y_range, chip_x_range);
+            cv::Mat ref = ref_img(search_y_range, search_x_range);
+
+            cv::Point chip_min_loc;
+            cv::minMaxLoc(chip, NULL, NULL, &chip_min_loc, NULL);
+            
+            float chip_min = chip.at<float>(chip_min_loc.y, chip_min_loc.x);
+            
+            if (chip_min < 0)
+            {
+                chip = chip - chip_min;
+            }
+
+            cv::Point ref_min_loc;
+            cv::minMaxLoc(ref, NULL, NULL, &ref_min_loc, NULL);
+            
+            float ref_min = ref.at<float>(ref_min_loc.y, ref_min_loc.x);
+            
+            if (ref_min < 0)
+            {
+                ref = ref - ref_min;
+            }
+
+            int chip_width = chip_x_end - chip_x_start;
+            int chip_length = chip_y_end - chip_y_start;
+            int search_width = search_x_end - search_x_start;
+            int search_length = search_y_end - search_y_start;
+
+            int result_cols =  search_width - chip_width + 1;
+            int result_rows = search_length - chip_length + 1;
+
+            cv::Mat result;
+            result.create( result_rows, result_cols, CV_32FC1 );
+
+            cv::matchTemplate( ref, chip, result, CV_TM_CCORR_NORMED );
+
+            cv::Point maxLoc;
+            cv::minMaxLoc(result, NULL, NULL, NULL, &maxLoc);
+
+            dx.col(j).at<float>(i) = maxLoc.x;
+            dy.col(j).at<float>(i) = maxLoc.y;
+        }
     }
-    
-    float my_arrR[widR * lenR];
-    
-    for(int i=0; i<(widR*lenR); i++){
-        my_arrR[i] = (*(float *)PyArray_GETPTR1(RefI,i));
-    }
-    
-    
-    cv::Mat my_imgC = cv::Mat(cv::Size(widC, lenC), CV_32FC1, &my_arrC);
-    cv::Mat my_imgR = cv::Mat(cv::Size(widR, lenR), CV_32FC1, &my_arrR);
-    
-    int result_cols =  widR - widC + 1;
-    int result_rows = lenR - lenC + 1;
-    
-    cv::Mat result;
-    result.create( result_rows, result_cols, CV_32FC1 );
-    
-    cv::matchTemplate( my_imgR, my_imgC, result, CV_TM_CCORR_NORMED );
-    
-    cv::Point maxLoc;
-    cv::minMaxLoc(result, NULL, NULL, NULL, &maxLoc);
-    
-    double x = maxLoc.x;
-    double y = maxLoc.y;
-    
-    
-    return Py_BuildValue("dd", x, y);
+
+    return Py_BuildValue("OO", Dx, Dy);
 }
-
-
-
-
 
 PyObject* arSubPixDisp_s(PyObject *self, PyObject *args)
 {
     uint64_t ptr;
-    PyArrayObject *ChipI, *RefI;
+    PyArrayObject *I1, *I2, *Dx, *Dy, *Dx0, *Dy0, *xGrid, *yGrid, *SearchLimitX, *SearchLimitY, *ChipSizeX, *ChipSizeY;
+    int widX, lenX;
+    int widY, lenY;
     int widC, lenC;
     int widR, lenR;
     int overSampleNC;
-    if (!PyArg_ParseTuple(args, "KiiOiiOi", &ptr, &widC, &lenC, &ChipI, &widR, &lenR, &RefI, &overSampleNC))
+
+    if (!PyArg_ParseTuple(args, "KiiOiiOiiOiiOOOOOOOOOi", &ptr, &widC, &lenC, &I1, &widR, &lenR, &I2, &widX, &lenX, &xGrid, &widY, &lenY, &yGrid, &SearchLimitX, &SearchLimitY, &ChipSizeX, &ChipSizeY, &Dx, &Dy, &Dx0, &Dy0, &overSampleNC))
     {
         return NULL;
     }
-    
-    float my_arrC[widC * lenC];
-    
-    for(int i=0; i<(widC*lenC); i++){
-        my_arrC[i] = (*(float *)PyArray_GETPTR1(ChipI,i));
+
+    cv::Mat sec_img = cv::Mat(cv::Size(widC, lenC), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(I1)));
+    cv::Mat ref_img = cv::Mat(cv::Size(widR, lenR), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(I2)));
+    cv::Mat x_grid = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(xGrid)));
+    cv::Mat y_grid = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(yGrid)));
+    cv::Mat dx = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dx)));
+    cv::Mat dy = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dy)));
+    cv::Mat dx0 = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dx0)));
+    cv::Mat dy0 = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(Dy0)));
+    cv::Mat search_limit_x = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(SearchLimitX)));
+    cv::Mat search_limit_y = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(SearchLimitY)));
+    cv::Mat chip_size_x = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(ChipSizeX)));
+    cv::Mat chip_size_y = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float*>(PyArray_DATA(ChipSizeY)));
+
+    #pragma omp parallel for collapse(2)
+    for(int j = 0; j < widX; j++)
+    {
+        for(int i = 0; i < lenX; i++)
+        {
+            if(search_limit_x.at<float>(i, j) == 0 and search_limit_y.at<float>(i, j) == 0)
+            {
+                continue;
+            }
+
+            float chip_limit_x = floor(chip_size_x.at<float>(i, j) / 2.0);
+            float chip_limit_y = floor(chip_size_y.at<float>(i, j) / 2.0);
+
+            int chip_x_start = int(-chip_limit_x - dx0.at<float>(i, j) + x_grid.at<float>(i, j));
+            int chip_x_end = int(chip_limit_x - dx0.at<float>(i, j) + x_grid.at<float>(i, j));
+            int chip_y_start = int(-chip_limit_y - dy0.at<float>(i, j) + y_grid.at<float>(i, j));
+            int chip_y_end = int(chip_limit_y - dy0.at<float>(i, j) + y_grid.at<float>(i, j));
+            int search_x_start = int(-chip_limit_x - search_limit_x.at<float>(i, j) + x_grid.at<float>(i, j));
+            int search_x_end = int(chip_limit_x + search_limit_x.at<float>(i, j) - 1 + x_grid.at<float>(i, j));
+            int search_y_start = int(-chip_limit_y - search_limit_y.at<float>(i, j) + y_grid.at<float>(i, j));
+            int search_y_end = int(chip_limit_y + search_limit_y.at<float>(i, j) - 1 + y_grid.at<float>(i, j));
+
+            cv::Range chip_x_range = cv::Range(chip_x_start, chip_x_end);
+            cv::Range chip_y_range = cv::Range(chip_y_start, chip_y_end);
+            cv::Range search_x_range = cv::Range(search_x_start, search_x_end);
+            cv::Range search_y_range = cv::Range(search_y_start, search_y_end);
+
+            cv::Mat chip = sec_img(chip_y_range, chip_x_range);
+            cv::Mat ref = ref_img(search_y_range, search_x_range);
+
+            cv::Point chip_min_loc;
+            cv::minMaxLoc(chip, NULL, NULL, &chip_min_loc, NULL);
+
+            float chip_min = chip.at<float>(chip_min_loc.y, chip_min_loc.x);
+
+            if (chip_min < 0)
+            {
+                chip = chip - chip_min;
+            }
+
+            cv::Point ref_min_loc;
+            cv::minMaxLoc(ref, NULL, NULL, &ref_min_loc, NULL);
+
+            float ref_min = ref.at<float>(ref_min_loc.y, ref_min_loc.x);
+
+            if (ref_min < 0)
+            {
+                ref = ref - ref_min;
+            }
+
+            int chip_width = chip_x_end - chip_x_start;
+            int chip_length = chip_y_end - chip_y_start;
+            int search_width = search_x_end - search_x_start;
+            int search_length = search_y_end - search_y_start;
+
+            int result_cols =  search_width - chip_width + 1;
+            int result_rows = search_length - chip_length + 1;
+
+            cv::Mat result;
+            result.create( result_rows, result_cols, CV_32FC1 );
+
+            cv::matchTemplate( ref, chip, result, CV_TM_CCORR_NORMED );
+
+            cv::Point maxLoc;
+            cv::minMaxLoc(result, NULL, NULL, NULL, &maxLoc);
+
+            int x_start, y_start, x_count, y_count;
+
+            x_start = cv::max(maxLoc.x-2, 0);
+            x_start = cv::min(x_start, result_cols-5);
+            x_count = 5;
+
+            y_start = cv::max(maxLoc.y-2, 0);
+            y_start = cv::min(y_start, result_rows-5);
+            y_count = 5;
+
+            cv::Mat result_small (result, cv::Rect(x_start, y_start, x_count, y_count));
+
+            int cols = result_small.cols;
+            int rows = result_small.rows;
+            int overSampleFlag = 1;
+
+            cv::Mat predecessor_small = result_small;
+            cv::Mat foo;
+
+            while (overSampleFlag < overSampleNC){
+                cols *= 2;
+                rows *= 2;
+                overSampleFlag *= 2;
+                foo.create(cols, rows, CV_32FC1);
+                cv::pyrUp(predecessor_small, foo, cv::Size(cols, rows));
+                predecessor_small = foo;
+            }
+
+            cv::Point maxLoc_small;
+            cv::minMaxLoc(foo, NULL, NULL, NULL, &maxLoc_small);
+
+            dx.col(j).at<float>(i) = ((maxLoc_small.x + 0.0)/overSampleNC + x_start);
+            dy.col(j).at<float>(i) = ((maxLoc_small.y + 0.0)/overSampleNC + y_start);
+        }
     }
-    
-    float my_arrR[widR * lenR];
-    
-    for(int i=0; i<(widR*lenR); i++){
-        my_arrR[i] = (*(float *)PyArray_GETPTR1(RefI,i));
-    }
-    
-    
-    cv::Mat my_imgC = cv::Mat(cv::Size(widC, lenC), CV_32FC1, &my_arrC);
-    cv::Mat my_imgR = cv::Mat(cv::Size(widR, lenR), CV_32FC1, &my_arrR);
-    
-    int result_cols =  widR - widC + 1;
-    int result_rows = lenR - lenC + 1;
-    
-    cv::Mat result;
-    result.create( result_rows, result_cols, CV_32FC1 );
-    
-    cv::matchTemplate( my_imgR, my_imgC, result, CV_TM_CCORR_NORMED );
-    
-    cv::Point maxLoc;
-    cv::minMaxLoc(result, NULL, NULL, NULL, &maxLoc);
-    
-    
-    // refine the offset at the sub-pixel level using image upsampling (pyramid algorithm): extract 5x5 small image at the coarse offset location
-    int x_start, y_start, x_count, y_count;
-    
-    x_start = cv::max(maxLoc.x-2, 0);
-    x_start = cv::min(x_start, result_cols-5);
-    x_count = 5;
-    
-    y_start = cv::max(maxLoc.y-2, 0);
-    y_start = cv::min(y_start, result_rows-5);
-    y_count = 5;
-    
-    
-    cv::Mat result_small (result, cv::Rect(x_start, y_start, x_count, y_count));
-    
-    int cols = result_small.cols;
-    int rows = result_small.rows;
-    int overSampleFlag = 1;
-    cv::Mat predecessor_small = result_small;
-    cv::Mat foo;
-    
-    while (overSampleFlag < overSampleNC){
-        cols *= 2;
-        rows *= 2;
-        overSampleFlag *= 2;
-        foo.create(cols, rows, CV_32FC1);
-        cv::pyrUp(predecessor_small, foo, cv::Size(cols, rows));
-        predecessor_small = foo;
-    }
-    
-    cv::Point maxLoc_small;
-    cv::minMaxLoc(foo, NULL, NULL, NULL, &maxLoc_small);
-    
-    
-    double x = ((maxLoc_small.x + 0.0)/overSampleNC + x_start);
-    double y = ((maxLoc_small.y + 0.0)/overSampleNC + y_start);
-    
-    
-    
-    return Py_BuildValue("dd", x, y);
+
+    return Py_BuildValue("OO", Dx, Dy);
 }
