@@ -393,7 +393,7 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     import cv2
     kernel = np.ones((3,3),np.uint8)
     noDataMask = cv2.dilate(noDataMask.astype(np.uint8),kernel,iterations = 1)
-    noDataMask = noDataMask.astype(np.bool)
+    noDataMask = noDataMask.astype(bool)
 
 
     return obj.Dx, obj.Dy, obj.InterpMask, obj.ChipSizeX, obj.GridSpacingX, obj.ScaleChipSizeY, obj.SearchLimitX, obj.SearchLimitY, obj.origSize, noDataMask
@@ -965,8 +965,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         out_nc_filename = f"{ncname}_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
-                    d0 = datetime(np.int(master_split[3][0:4]),np.int(master_split[3][4:6]),np.int(master_split[3][6:8]))
-                    d1 = datetime(np.int(slave_split[3][0:4]),np.int(slave_split[3][4:6]),np.int(slave_split[3][6:8]))
+                    d0 = datetime(int(master_split[3][0:4]),int(master_split[3][4:6]),int(master_split[3][6:8]))
+                    d1 = datetime(int(slave_split[3][0:4]),int(slave_split[3][4:6]),int(slave_split[3][6:8]))
                     date_dt_base = (d1 - d0).total_seconds() / timedelta(days=1).total_seconds()
                     date_dt = np.float64(date_dt_base)
                     if date_dt < 0:
@@ -1073,8 +1073,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         out_nc_filename = f"{ncname}_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
-                    d0 = datetime(np.int(master_split[2][0:4]),np.int(master_split[2][4:6]),np.int(master_split[2][6:8]))
-                    d1 = datetime(np.int(slave_split[2][0:4]),np.int(slave_split[2][4:6]),np.int(slave_split[2][6:8]))
+                    d0 = datetime(int(master_split[2][0:4]),int(master_split[2][4:6]),int(master_split[2][6:8]))
+                    d1 = datetime(int(slave_split[2][0:4]),int(slave_split[2][4:6]),int(slave_split[2][6:8]))
                     date_dt_base = (d1 - d0).total_seconds() / timedelta(days=1).total_seconds()
                     date_dt = np.float64(date_dt_base)
                     if date_dt < 0:
