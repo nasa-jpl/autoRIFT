@@ -26,6 +26,8 @@
 #
 # Authors: Piyush Agram, Yang Lei
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+from typing import Tuple
+from pathlib import Path
 
 
 def cmdLineParse():
@@ -71,6 +73,8 @@ def cmdLineParse():
             help='buffer to add to the starting/end range accounting for all passes from the same relative orbit')
     parser.add_argument('-p', '--parse', dest='parse', action='store_true',
             default=False, help='Parse the SAFE zip file to get radar image and orbit metadata; no need to run ISCE')
+    parser.add_argument('--orbit-dir', hep='Directory of Sentinel-1 orbit files')
+    parser.add_argument('--aux-dir', hep='Directory of Sentinel-1 aux files')
 
     return parser.parse_args()
 
@@ -139,17 +143,29 @@ def loadMetadata(indir,buffer=0):
     info.prf = 1.0 / frames[0].bursts[0].azimuthTimeInterval
     info.rangePixelSize = frames[0].bursts[0].rangePixelSize
     info.lookSide = -1
-        
+
     info.startingRange -= buffer * info.rangePixelSize
     info.farRange += buffer * info.rangePixelSize
-    
+
     info.numberOfLines = int( np.round( (info.sensingStop - info.sensingStart).total_seconds() * info.prf)) + 1
     info.numberOfSamples = int( np.round( (info.farRange - info.startingRange)/info.rangePixelSize)) + 1  + 2 * buffer
     info.orbit = getMergedOrbit(frames)
 
     return info
 
-def loadParsedata(indir,buffer=0):
+
+def get_polarizations(s1_safe: str) -> Tuple[str]:
+    mapping = {
+        'SH': ('hh',),
+        'SV': ('vv',),
+        'DH': ('hh', 'hv'),
+        'DV': ('vv', 'vh'),
+    }
+    key = Path(s1_safe).name[14:16]
+    return mapping[key]
+
+
+def loadParsedata(indir, orbit_dir, aux_dir, buffer=0):
     '''
     Input file.
     '''
@@ -157,7 +173,7 @@ def loadParsedata(indir,buffer=0):
     import numpy as np
     import isce
     from isceobj.Sensor.TOPS.Sentinel1 import Sentinel1
-    
+
 
     frames = []
     for swath in range(1,4):
@@ -166,13 +182,13 @@ def loadParsedata(indir,buffer=0):
 #        rdr.safe=['./S1A_IW_SLC__1SDH_20180401T100057_20180401T100124_021272_024972_8CAF.zip']
         rdr.safe=[indir]
         rdr.output='reference'
-        rdr.orbitDir='/Users/yanglei/orbit/S1A/precise'
-        rdr.auxDir='/Users/yanglei/orbit/S1A/aux'
+        rdr.orbitDir=orbit_dir
+        rdr.auxDir=aux_dir
         rdr.swathNumber=swath
-        rdr.polarization='hh'
+        rdr.polarization=get_polarizations(indir)[0]
         rdr.parse()
         frames.append(rdr.product)
-    
+
     info = Dummy()
     info.sensingStart = min([x.sensingStart for x in frames])
     info.sensingStop = max([x.sensingStop for x in frames])
@@ -181,14 +197,14 @@ def loadParsedata(indir,buffer=0):
     info.prf = 1.0 / frames[0].bursts[0].azimuthTimeInterval
     info.rangePixelSize = frames[0].bursts[0].rangePixelSize
     info.lookSide = -1
-    
+
     info.startingRange -= buffer * info.rangePixelSize
     info.farRange += buffer * info.rangePixelSize
-    
+
     info.numberOfLines = int( np.round( (info.sensingStop - info.sensingStart).total_seconds() * info.prf)) + 1
     info.numberOfSamples = int( np.round( (info.farRange - info.startingRange)/info.rangePixelSize)) + 1 + 2 * buffer
     info.orbit = getMergedOrbit(frames)
-    
+
     return info
 
 def coregisterLoadMetadataOptical(indir_m, indir_s):
@@ -433,8 +449,8 @@ def main():
         runGeogridOptical(metadata_m, metadata_s, inps.demfile, inps.dhdxfile, inps.dhdyfile, inps.vxfile, inps.vyfile, inps.srxfile, inps.sryfile, inps.csminxfile, inps.csminyfile, inps.csmaxxfile, inps.csmaxyfile, inps.ssmfile)
     else:
         if inps.parse:
-            metadata_m = loadParsedata(inps.indir_m,inps.buffer)
-            metadata_s = loadParsedata(inps.indir_s,inps.buffer)
+            metadata_m = loadParsedata(inps.indir_m, inps.orbit_dir, inputs.aux_dir, inps.buffer)
+            metadata_s = loadParsedata(inps.indir_s, inps.orbit_dir, inputs.aux_dir, inps.buffer)
         else:
             metadata_m = loadMetadata(inps.indir_m,inps.buffer)
             metadata_s = loadMetadata(inps.indir_s,inps.buffer)
