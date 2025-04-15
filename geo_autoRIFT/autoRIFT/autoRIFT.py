@@ -97,7 +97,8 @@ def _wallis_filter_fill(image, filter_width, std_cutoff):
     # wallis filter normalizes the imagery to have a mean=0 and std=1;
     # fill with random values from a normal distribution with same mean and std
     fill_data = valid_domain & missing_data
-    random_fill = np.random.normal(size=(fill_data.sum(),))
+    rng = np.random.default_rng()
+    random_fill = rng.normal(size=(fill_data.sum(),))
     image[fill_data] = random_fill
 
     return image, zero_mask

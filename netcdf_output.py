@@ -26,8 +26,9 @@ def get_satellite_attribute(info):
 
 
 def v_error_cal(vx_error, vy_error):
-    vx = np.random.normal(0, vx_error, 1000000)
-    vy = np.random.normal(0, vy_error, 1000000)
+    rng = np.random.default_rng()
+    vx = rng.normal(0, vx_error, 1000000)
+    vy = rng.normal(0, vy_error, 1000000)
     v = np.sqrt(vx**2 + vy**2)
     return np.std(v)
 
