@@ -32,10 +32,12 @@
 import cv2
 import sys
 import numpy as np
-from scipy.ndimage import distance_transform_edt
+from scipy.ndimage import distance_transform_edt, generic_filter
 from scipy.spatial import distance as dist
 import numpy.fft as fft
-
+from numba import cfunc, carray, jit
+from numba.types import intc, CPointer, float64, intp, voidptr
+from scipy import LowLevelCallable
 
 def _remove_local_mean(image, kernel):
     mean = cv2.filter2D(image, -1, kernel, borderType=cv2.BORDER_CONSTANT)
@@ -1241,133 +1243,222 @@ def arImgDisp_s(
 
 
 ################## Chunked version of column filter
-def colfilt(A, kernelSize, option, chunkSize=4):
-    from skimage.util import view_as_windows as viewW
-    import numpy as np
+def jit_filter_function(filter_function):
+    """Decorator for use with scipy.ndimage.generic_filter."""
+    jitted_function = jit(filter_function, nopython=True)
 
-    chunkInds = int(A.shape[1] / chunkSize)
-    chunkRem = A.shape[1] - chunkSize * chunkInds
+    @cfunc(intc(CPointer(float64), intp, CPointer(float64), voidptr))
+    def wrapped(values_ptr, len_values, result, data):
+        values = carray(values_ptr, (len_values,), dtype=float64)
+        result[0] = jitted_function(values)
+        return 1
+    return LowLevelCallable(wrapped.ctypes, signature="int (double *, npy_intp, double *, void *)")
 
-    O = 0
+@jit_filter_function
+def fmax(values):
+    result = -np.inf
+    for v in values:
+        if v > result:
+            result = v
+    return result
 
-    for ii in range(chunkSize):
-        startInds = ii * chunkInds
-        if ii == chunkSize - 1:
-            endInds = (ii + 1) * chunkInds + chunkRem
+@jit_filter_function
+def fmin(values):
+    result = np.inf
+    for v in values:
+        if v < result:
+            result = v
+    return result
+
+@jit_filter_function
+def fmean(values):
+    result = 0
+    count = 0
+    for v in values:
+        if v==v:            # if not a nan
+            result += v
+            count += 1
         else:
-            endInds = (ii + 1) * chunkInds
+            pass
+    if count == 0:
+        return np.nan
+    return result/count
 
-        if (ii == 0) & (ii == chunkSize - 1):
-            A1 = np.lib.pad(
-                A[:, startInds:endInds],
-                (
-                    (int((kernelSize[0] - 1) / 2), int((kernelSize[0] - 1) / 2)),
-                    (int((kernelSize[1] - 1) / 2), int((kernelSize[1] - 1) / 2)),
-                ),
-                mode="constant",
-                constant_values=np.nan,
-            )
-        else:
-            if ii == 0:
-                A1 = np.lib.pad(
-                    A[:, startInds : np.min((endInds + int((kernelSize[1] - 1) / 2), A.shape[1] - 1))],
-                    (
-                        (int((kernelSize[0] - 1) / 2), int((kernelSize[0] - 1) / 2)),
-                        (
-                            int((kernelSize[1] - 1) / 2),
-                            np.max((0, endInds + int((kernelSize[1] - 1) / 2) - A.shape[1] + 1)),
-                        ),
-                    ),
-                    mode="constant",
-                    constant_values=np.nan,
-                )
-            elif ii == chunkSize - 1:
-                A1 = np.lib.pad(
-                    A[:, np.max((0, startInds - int((kernelSize[1] - 1) / 2))) : endInds],
-                    (
-                        (int((kernelSize[0] - 1) / 2), int((kernelSize[0] - 1) / 2)),
-                        (np.max((0, 0 - startInds + int((kernelSize[1] - 1) / 2))), int((kernelSize[1] - 1) / 2)),
-                    ),
-                    mode="constant",
-                    constant_values=np.nan,
-                )
+@jit
+def partition(values, low, high):
+    pivot = values[high]
+    i = low - 1
+    for j in range(low, high):
+        if values[j] <= pivot:
+            i += 1
+            values[i], values[j] = values[j], values[i]
+            
+    values[i + 1], values[high] = values[high], values[i + 1]
+    return i + 1
+
+@jit
+def quickselect_non_recursive(values, k):
+        low = 0
+        high = len(values) - 1
+        while low <= high:
+            pivot_index = partition(values, low, high)
+            if pivot_index < k:
+                low = pivot_index + 1
+            elif pivot_index > k:
+                high = pivot_index - 1
             else:
-                A1 = np.lib.pad(
-                    A[
-                        :,
-                        np.max((0, startInds - int((kernelSize[1] - 1) / 2))) : np.min(
-                            (endInds + int((kernelSize[1] - 1) / 2), A.shape[1] - 1)
-                        ),
-                    ],
-                    (
-                        (int((kernelSize[0] - 1) / 2), int((kernelSize[0] - 1) / 2)),
-                        (
-                            np.max((0, 0 - startInds + int((kernelSize[1] - 1) / 2))),
-                            np.max((0, endInds + int((kernelSize[1] - 1) / 2) - A.shape[1] + 1)),
-                        ),
-                    ),
-                    mode="constant",
-                    constant_values=np.nan,
-                )
+                return values[pivot_index]
+        return None
 
-        B = viewW(A1, kernelSize).reshape(-1, kernelSize[0] * kernelSize[1]).T[:, ::1]
+@jit
+def quickselect_non_recursive_duo(values, k):
+        # this function returns (values[k-1]+values[k])/2
+        low = 0
+        high = len(values) - 1
+        while low <= high:
+            pivot_index = partition(values, low, high)
+            if pivot_index < k-1:
+                low = pivot_index + 1
+            elif pivot_index > k:
+                high = pivot_index - 1
+            elif pivot_index == k:
+                temp_max = values[0]
+                for v in values[1:k]:
+                    if v > temp_max:
+                        temp_max = v
+                return (values[pivot_index]+temp_max)/2
+            else:                               # pivot_index == k-1:
+                temp_min = values[k]
+                for v in values[k+1:]:
+                    if v < temp_min:
+                        temp_min = v
+                return (values[pivot_index]+temp_min)/2
+        return None
 
-        Adtype = A1.dtype
-        Ashape = A1.shape
-        del A1
-
-        output_size = (Ashape[0] - kernelSize[0] + 1, Ashape[1] - kernelSize[1] + 1)
-        C = np.zeros((B.shape[1],), dtype=Adtype)
-
-        if option == 0:  # max
-            C = np.nanmax(B, axis=0)
-            del B
-            C = C.reshape(output_size)
-        elif option == 1:  # min
-            C = np.nanmin(B, axis=0)
-            del B
-            C = C.reshape(output_size)
-        elif option == 2:  # mean
-            C = np.nanmean(B, axis=0)
-            del B
-            C = C.reshape(output_size)
-        elif option == 3:  # median
-            C = np.nanmedian(B, axis=0, overwrite_input=True)
-            del B
-            C = C.reshape(output_size)
-        elif option == 4:  # range
-            C = np.nanmax(B, axis=0) - np.nanmin(B, axis=0)
-            del B
-            C = C.reshape(output_size)
-        elif option == 6:  # MAD (Median Absolute Deviation)
-            m = B.shape[0]
-            D = np.zeros((B.shape[1],), dtype=Adtype)
-            D = np.nanmedian(B, axis=0)
-            D = np.abs(B - np.dot(np.ones((m, 1), dtype=Adtype), np.array([D])))
-            del B
-            C = np.nanmedian(D, axis=0, overwrite_input=True)
-            del D
-            C = C.reshape(output_size)
-        elif option[0] == 5:  # displacement distance count with option[1] being the threshold
-            m = B.shape[0]
-            c = int(np.round((m + 1) / 2) - 1)
-            #        c = 0
-            D = np.abs(B - np.dot(np.ones((m, 1), dtype=Adtype), np.array([B[c, :]])))
-            del B
-            C = np.sum(D < option[1], axis=0)
-            del D
-            C = C.reshape(output_size)
+@jit_filter_function
+def fmedian_quickSelect(values):
+    values = [v for v in values if v==v]  # remove nans
+    if len(values) < 3:
+        if len(values) == 1:
+            return values[0]
+        elif len(values) == 2:
+            return (values[0] + values[1]) / 2
         else:
-            sys.exit("invalid option for columnwise neighborhood filtering")
-
-        C = C.astype(Adtype)
-
-        if np.isscalar(O):
-            O = C.copy()
+            return np.nan
+    else:
+        if len(values)%2:
+            return quickselect_non_recursive(values, len(values)//2)
         else:
-            O = np.append(O, C, axis=1)
+            return quickselect_non_recursive_duo(values, len(values)//2)
 
-    return O
+@jit_filter_function
+def frange(values):
+    result_max = -np.inf
+    result_min = np.inf
+    for v in values:
+        if v < result_min:
+            result_min = v
+        if v > result_max:
+            result_max = v
+    return result_max-result_min
+
+@jit
+def median_quickSelect(values):
+    if len(values) < 3:
+        if len(values) == 1:
+            return values[0]
+        elif len(values) == 2:
+            return (values[0]+values[1])/2
+        else:
+            return np.nan
+    else:
+        if len(values)%2:
+            return quickselect_non_recursive(values, len(values)//2)
+        else:
+            return quickselect_non_recursive_duo(values, len(values)//2)
+
+@jit_filter_function
+def fMAD(values):
+    values = [v for v in values if v==v]  # remove nans
+    if len(values):
+        med = median_quickSelect(values)
+        values = [abs(v-med) for v in values]
+        return median_quickSelect(values)
+    else:
+        return np.nan
+
+
+def colfilt(A, kernelSize, option, chunkSize=4):
+    kernelSize = (min(kernelSize[0],A.shape[0]), min(kernelSize[1],A.shape[1]))
+    N_winsInCols = A.shape[1] - kernelSize[1] + 1
+    N_chunks = min(chunkSize,N_winsInCols)
+    N_winsInChunk_vec = np.full(N_chunks,N_winsInCols//N_chunks)
+    N_winsInChunk_vec[:(N_winsInCols % N_chunks)] += 1
+    cs = np.cumsum(N_winsInChunk_vec)
+    ind_startCols_chunks = cs - N_winsInChunk_vec
+    ind_stopCols_chunks = cs + kernelSize[1] - 1
+    m = (kernelSize[1]-1)//2    # margin due to kernel size (left)
+    m2 = kernelSize[1] - m - 1  # margin due to kernel size (right)
+    ind_out_start = ind_startCols_chunks + m
+    ind_out_start[0] = 0
+    ind_out_stop = ind_stopCols_chunks - m2
+    ind_out_stop[-1] = A.shape[1]
+    relInd_start = np.full(N_chunks,m)
+    relInd_stop = relInd_start + N_winsInChunk_vec
+    relInd_start[0] = 0
+    relInd_stop[-1] = N_winsInChunk_vec[-1] + kernelSize[1] - 1
+    out = np.full(A.shape,np.float32(np.nan))   # pre-allocate output
+
+    if option == 0:  # max
+        for ii in np.arange(N_chunks):
+            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
+                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fmax,size=kernelSize)[:,relInd_start[ii]:relInd_stop[ii]]
+        out[np.isneginf(out)] = np.nan
+
+    elif option == 1:  # min
+        for ii in np.arange(N_chunks):
+            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
+                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fmin,size=kernelSize)[:,relInd_start[ii]:relInd_stop[ii]]
+        out[np.isposinf(out)] = np.nan
+
+    elif option == 2:  # mean
+        for ii in np.arange(N_chunks):
+            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
+                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fmean,size=kernelSize,mode='constant',cval=np.nan)[:,relInd_start[ii]:relInd_stop[ii]]
+
+    elif option == 3:  # median
+        for ii in np.arange(N_chunks):
+            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
+                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fmedian_quickSelect,size=kernelSize,mode='constant',cval=np.nan)[:,relInd_start[ii]:relInd_stop[ii]]
+
+    elif option == 4:  # range
+        for ii in np.arange(N_chunks):
+            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
+                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],frange,size=kernelSize)[:,relInd_start[ii]:relInd_stop[ii]]
+
+    elif option == 6:  # MAD (Median Absolute Deviation)
+        for ii in np.arange(N_chunks):
+            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
+                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fMAD,size=kernelSize,mode='constant',cval=np.nan)[:,relInd_start[ii]:relInd_stop[ii]]
+
+    elif option[0] == 5:  # displacement distance count with option[1] being the threshold
+        center_ind = int(round((kernelSize[0]*kernelSize[1] + 1) / 2) - 1)
+
+        @jit_filter_function
+        def fDDC(values):
+            count = 0
+            for v in values:
+                count += abs(v - values[center_ind]) < option[1]
+            return count
+    
+        for ii in np.arange(N_chunks):
+            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
+                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fDDC,size=kernelSize,mode='constant',cval=np.nan)[:,relInd_start[ii]:relInd_stop[ii]]
+    else:
+        sys.exit("invalid option for columnwise neighborhood filtering")
+        pass
+    
+    return out
 
 
 class DISP_FILT:
