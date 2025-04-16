@@ -32,12 +32,11 @@
 import cv2
 import sys
 import numpy as np
-from scipy.ndimage import distance_transform_edt, generic_filter
-from scipy.spatial import distance as dist
 import numpy.fft as fft
 from numba import cfunc, carray, jit
 from numba.types import intc, CPointer, float64, intp, voidptr
 from scipy import LowLevelCallable
+from scipy.ndimage import generic_filter
 
 def _remove_local_mean(image, kernel):
     mean = cv2.filter2D(image, -1, kernel, borderType=cv2.BORDER_CONSTANT)
@@ -1242,7 +1241,6 @@ def arImgDisp_s(
     return Dx, Dy
 
 
-################## Chunked version of column filter
 def jit_filter_function(filter_function):
     """Decorator for use with scipy.ndimage.generic_filter."""
     jitted_function = jit(filter_function, nopython=True)
@@ -1254,24 +1252,30 @@ def jit_filter_function(filter_function):
         return 1
     return LowLevelCallable(wrapped.ctypes, signature="int (double *, npy_intp, double *, void *)")
 
+
 @jit_filter_function
 def fmax(values):
+    """colfilt max function"""
     result = -np.inf
     for v in values:
         if v > result:
             result = v
     return result
 
+
 @jit_filter_function
 def fmin(values):
+    """colfilt min function"""
     result = np.inf
     for v in values:
         if v < result:
             result = v
     return result
 
+
 @jit_filter_function
 def fmean(values):
+    """colfilt mean function"""
     result = 0
     count = 0
     for v in values:
@@ -1284,6 +1288,7 @@ def fmean(values):
         return np.nan
     return result/count
 
+
 @jit
 def partition(values, low, high):
     pivot = values[high]
@@ -1295,6 +1300,7 @@ def partition(values, low, high):
             
     values[i + 1], values[high] = values[high], values[i + 1]
     return i + 1
+
 
 @jit
 def quickselect_non_recursive(values, k):
@@ -1309,6 +1315,7 @@ def quickselect_non_recursive(values, k):
             else:
                 return values[pivot_index]
         return None
+
 
 @jit
 def quickselect_non_recursive_duo(values, k):
@@ -1335,8 +1342,10 @@ def quickselect_non_recursive_duo(values, k):
                 return (values[pivot_index]+temp_min)/2
         return None
 
+
 @jit_filter_function
 def fmedian_quickSelect(values):
+    """colfilt median function that propagates nans"""
     values = [v for v in values if v==v]  # remove nans
     if len(values) < 3:
         if len(values) == 1:
@@ -1351,8 +1360,10 @@ def fmedian_quickSelect(values):
         else:
             return quickselect_non_recursive_duo(values, len(values)//2)
 
+
 @jit_filter_function
 def frange(values):
+    """colfilt range function"""
     result_max = -np.inf
     result_min = np.inf
     for v in values:
@@ -1362,8 +1373,10 @@ def frange(values):
             result_max = v
     return result_max-result_min
 
+
 @jit
 def median_quickSelect(values):
+    """MAD median function that does not support nans"""
     if len(values) < 3:
         if len(values) == 1:
             return values[0]
@@ -1377,8 +1390,10 @@ def median_quickSelect(values):
         else:
             return quickselect_non_recursive_duo(values, len(values)//2)
 
+
 @jit_filter_function
 def fMAD(values):
+    """colfilt mean absolute deviation function"""
     values = [v for v in values if v==v]  # remove nans
     if len(values):
         med = median_quickSelect(values)
