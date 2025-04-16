@@ -464,8 +464,6 @@ class autoRIFT:
         Dy = np.empty(self.xGrid.shape, dtype=np.float32)
         Dy.fill(np.nan)
 
-        Flag = 3
-
         if self.ChipSize0X > self.GridSpacingX:
             if np.mod(self.ChipSize0X, self.GridSpacingX) != 0:
                 sys.exit(
@@ -551,12 +549,6 @@ class autoRIFT:
             SearchLimitY0[idxZero] = 0
             SearchLimitX0[(np.logical_not(idxZero)) & (SearchLimitX0 < self.minSearch)] = self.minSearch
             SearchLimitY0[(np.logical_not(idxZero)) & (SearchLimitY0 < self.minSearch)] = self.minSearch
-
-            if ((xGrid0.shape[0] - 2) / (self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio) < 5) | (
-                (xGrid0.shape[1] - 2) / (self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio) < 5
-            ):
-                Flag = 2
-                return Flag
 
             # Setup for coarse search: sparse sampling / resize
             rIdxC = slice(
@@ -792,12 +784,10 @@ class autoRIFT:
                 Dx[idxRaw | idxFill] = DxF[idxRaw | idxFill]
                 Dy[idxRaw | idxFill] = DyF[idxRaw | idxFill]
 
-        Flag = 1
         ChipSizeY = np.round(ChipSizeX * self.ScaleChipSizeY / 2) * 2
         self.Dx = Dx
         self.Dy = Dy
         self.InterpMask = InterpMask
-        self.Flag = Flag
         self.ChipSizeX = ChipSizeX
         self.ChipSizeY = ChipSizeY
 
@@ -857,7 +847,6 @@ class autoRIFT:
         self.Dx = None
         self.Dy = None
         self.InterpMask = None
-        self.Flag = None
         self.ChipSizeX = None
         self.ChipSizeY = None
 
