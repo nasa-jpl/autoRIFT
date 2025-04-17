@@ -557,12 +557,6 @@ class autoRIFT:
             SearchLimitX0[(np.logical_not(idxZero)) & (SearchLimitX0 < self.minSearch)] = self.minSearch
             SearchLimitY0[(np.logical_not(idxZero)) & (SearchLimitY0 < self.minSearch)] = self.minSearch
 
-            if ((xGrid0.shape[0] - 2) / (self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio) < 5) | (
-                (xGrid0.shape[1] - 2) / (self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio) < 5
-            ):
-                Flag = 2
-                return Flag
-
             # Setup for coarse search: sparse sampling / resize
             rIdxC = slice(
                 (self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio) - 1,
@@ -1241,6 +1235,7 @@ def arImgDisp_s(
     return Dx, Dy
 
 
+################## Chunked version of column filter
 def jit_filter_function(filter_function):
     """Decorator for use with scipy.ndimage.generic_filter."""
     jitted_function = jit(filter_function, nopython=True)
