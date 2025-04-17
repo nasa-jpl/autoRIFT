@@ -158,28 +158,19 @@ PyObject* arPixDisp_u(PyObject *self, PyObject *args)
             cv::Range search_x_range = cv::Range(search_x_start, search_x_end);
             cv::Range search_y_range = cv::Range(search_y_start, search_y_end);
 
-            cv::Mat chip = sec_img(chip_y_range, chip_x_range);
-            cv::Mat ref = ref_img(search_y_range, search_x_range);
-
-            cv::Point chip_min_loc;
-            cv::minMaxLoc(chip, NULL, NULL, &chip_min_loc, NULL);
-            
-            float chip_min = chip.at<uint8_t>(chip_min_loc.y, chip_min_loc.x);
-            
-            if (chip_min < 0)
-            {
-                chip = chip - chip_min;
-            }
+            cv::Mat chip = sec_img(chip_y_range, chip_x_range).clone();
+            cv::Mat ref = ref_img(search_y_range, search_x_range).clone();
 
             cv::Point ref_min_loc;
+            cv::Point chip_min_loc;
             cv::minMaxLoc(ref, NULL, NULL, &ref_min_loc, NULL);
-            
-            float ref_min = ref.at<float>(ref_min_loc.y, ref_min_loc.x);
-            
-            if (ref_min < 0)
-            {
-                ref = ref - ref_min;
-            }
+            cv::minMaxLoc(chip, NULL, NULL, &chip_min_loc, NULL);
+
+            uint8_t ref_min = ref.at<uint8_t>(ref_min_loc.y, ref_min_loc.x);
+            uint8_t chip_min = chip.at<uint8_t>(chip_min_loc.y, chip_min_loc.x);
+
+            if (ref_min < 0) ref = ref - ref_min;
+            if (chip_min < 0) chip = chip - chip_min;
 
             int chip_width = chip_x_end - chip_x_start;
             int chip_length = chip_y_end - chip_y_start;
@@ -260,28 +251,19 @@ PyObject* arSubPixDisp_u(PyObject *self, PyObject *args)
             cv::Range search_x_range = cv::Range(search_x_start, search_x_end);
             cv::Range search_y_range = cv::Range(search_y_start, search_y_end);
 
-            cv::Mat chip = sec_img(chip_y_range, chip_x_range);
-            cv::Mat ref = ref_img(search_y_range, search_x_range);
-
-            cv::Point chip_min_loc;
-            cv::minMaxLoc(chip, NULL, NULL, &chip_min_loc, NULL);
-
-            float chip_min = chip.at<uint8_t>(chip_min_loc.y, chip_min_loc.x);
-
-            if (chip_min < 0)
-            {
-                chip = chip - chip_min;
-            }
+            cv::Mat chip = sec_img(chip_y_range, chip_x_range).clone();
+            cv::Mat ref = ref_img(search_y_range, search_x_range).clone();
 
             cv::Point ref_min_loc;
+            cv::Point chip_min_loc;
             cv::minMaxLoc(ref, NULL, NULL, &ref_min_loc, NULL);
+            cv::minMaxLoc(chip, NULL, NULL, &chip_min_loc, NULL);
 
-            float ref_min = ref.at<float>(ref_min_loc.y, ref_min_loc.x);
+            uint8_t ref_min = ref.at<uint8_t>(ref_min_loc.y, ref_min_loc.x);
+            uint8_t chip_min = chip.at<uint8_t>(chip_min_loc.y, chip_min_loc.x);
 
-            if (ref_min < 0)
-            {
-                ref = ref - ref_min;
-            }
+            if (ref_min < 0) ref = ref - ref_min;
+            if (chip_min < 0) chip = chip - chip_min;
 
             int chip_width = chip_x_end - chip_x_start;
             int chip_length = chip_y_end - chip_y_start;
@@ -392,28 +374,19 @@ PyObject* arPixDisp_s(PyObject *self, PyObject *args)
             cv::Range search_x_range = cv::Range(search_x_start, search_x_end);
             cv::Range search_y_range = cv::Range(search_y_start, search_y_end);
 
-            cv::Mat chip = sec_img(chip_y_range, chip_x_range);
-            cv::Mat ref = ref_img(search_y_range, search_x_range);
-
-            cv::Point chip_min_loc;
-            cv::minMaxLoc(chip, NULL, NULL, &chip_min_loc, NULL);
-            
-            float chip_min = chip.at<float>(chip_min_loc.y, chip_min_loc.x);
-            
-            if (chip_min < 0)
-            {
-                chip = chip - chip_min;
-            }
+            cv::Mat chip = sec_img(chip_y_range, chip_x_range).clone();
+            cv::Mat ref = ref_img(search_y_range, search_x_range).clone();
 
             cv::Point ref_min_loc;
+            cv::Point chip_min_loc;
             cv::minMaxLoc(ref, NULL, NULL, &ref_min_loc, NULL);
-            
+            cv::minMaxLoc(chip, NULL, NULL, &chip_min_loc, NULL);
+
             float ref_min = ref.at<float>(ref_min_loc.y, ref_min_loc.x);
-            
-            if (ref_min < 0)
-            {
-                ref = ref - ref_min;
-            }
+            float chip_min = chip.at<float>(chip_min_loc.y, chip_min_loc.x);
+
+            if (ref_min < 0) ref = ref - ref_min;
+            if (chip_min < 0) chip = chip - chip_min;
 
             int chip_width = chip_x_end - chip_x_start;
             int chip_length = chip_y_end - chip_y_start;
@@ -494,28 +467,19 @@ PyObject* arSubPixDisp_s(PyObject *self, PyObject *args)
             cv::Range search_x_range = cv::Range(search_x_start, search_x_end);
             cv::Range search_y_range = cv::Range(search_y_start, search_y_end);
 
-            cv::Mat chip = sec_img(chip_y_range, chip_x_range);
-            cv::Mat ref = ref_img(search_y_range, search_x_range);
-
-            cv::Point chip_min_loc;
-            cv::minMaxLoc(chip, NULL, NULL, &chip_min_loc, NULL);
-
-            float chip_min = chip.at<float>(chip_min_loc.y, chip_min_loc.x);
-
-            if (chip_min < 0)
-            {
-                chip = chip - chip_min;
-            }
+            cv::Mat chip = sec_img(chip_y_range, chip_x_range).clone();
+            cv::Mat ref = ref_img(search_y_range, search_x_range).clone();
 
             cv::Point ref_min_loc;
+            cv::Point chip_min_loc;
             cv::minMaxLoc(ref, NULL, NULL, &ref_min_loc, NULL);
+            cv::minMaxLoc(chip, NULL, NULL, &chip_min_loc, NULL);
 
             float ref_min = ref.at<float>(ref_min_loc.y, ref_min_loc.x);
+            float chip_min = chip.at<float>(chip_min_loc.y, chip_min_loc.x);
 
-            if (ref_min < 0)
-            {
-                ref = ref - ref_min;
-            }
+            if (ref_min < 0) ref = ref - ref_min;
+            if (chip_min < 0) chip = chip - chip_min;
 
             int chip_width = chip_x_end - chip_x_start;
             int chip_length = chip_y_end - chip_y_start;
