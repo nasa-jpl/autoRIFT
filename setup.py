@@ -20,6 +20,7 @@ for line in bldInfo:
         path = line.split()[-1]
         break
 
+path=os.environ['CONDA_PREFIX']
 print('Open CV path: ', path)
 
 
@@ -45,6 +46,17 @@ extensions = [
         library_dirs = [os.path.join(path, 'lib')],
         libraries=['gomp','gdal'],
         extra_compile_args=['-std=c++11'],
+        language="c++"
+     ),
+     Extension(
+        name="geogrid/geogridRadar",
+        sources= ['geo_autoRIFT/geogrid/bindings/geogridRadarmodule.cpp','geo_autoRIFT/geogrid/src/geogridRadar.cpp'],
+        include_dirs=[np.get_include()] +
+                    ['geo_autoRIFT/geogrid/include',
+                     os.path.join(path, 'include'),os.path.join(path, 'include/eigen3')],
+        library_dirs = [os.path.join(path, 'lib')],
+        libraries=['gomp','gdal','isce3'],
+        extra_compile_args=['-std=c++17'],
         language="c++"
      )
 ]

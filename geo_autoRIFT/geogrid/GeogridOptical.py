@@ -101,7 +101,7 @@ class GeogridOptical():
         ds = gdal.Open(filename, gdal.GA_ReadOnly)
         srs = osr.SpatialReference()
         srs.ImportFromWkt(ds.GetProjection())
-        srs.AutoIdentifyEPSG()
+        #srs.AutoIdentifyEPSG()
         ds = None
 #        pdb.set_trace()
 
