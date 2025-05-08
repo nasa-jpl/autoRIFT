@@ -158,8 +158,8 @@ PyObject* arPixDisp_u(PyObject *self, PyObject *args)
             cv::Range search_x_range = cv::Range(search_x_start, search_x_end);
             cv::Range search_y_range = cv::Range(search_y_start, search_y_end);
 
-            cv::Mat chip = sec_img(chip_y_range, chip_x_range).clone();
-            cv::Mat ref = ref_img(search_y_range, search_x_range).clone();
+            cv::Mat chip = sec_img(chip_y_range, chip_x_range);
+            cv::Mat ref = ref_img(search_y_range, search_x_range);
 
             cv::Point ref_min_loc;
             cv::Point chip_min_loc;
@@ -169,8 +169,8 @@ PyObject* arPixDisp_u(PyObject *self, PyObject *args)
             uint8_t ref_min = ref.at<uint8_t>(ref_min_loc.y, ref_min_loc.x);
             uint8_t chip_min = chip.at<uint8_t>(chip_min_loc.y, chip_min_loc.x);
 
-            if (ref_min < 0) ref = ref - ref_min;
-            if (chip_min < 0) chip = chip - chip_min;
+            ref =  ref_min < 0 ? ref.clone() - ref_min : ref;
+            chip =  chip_min < 0 ? chip.clone() - chip_min : chip;
 
             int chip_width = chip_x_end - chip_x_start;
             int chip_length = chip_y_end - chip_y_start;
@@ -183,7 +183,7 @@ PyObject* arPixDisp_u(PyObject *self, PyObject *args)
             cv::Mat result;
             result.create( result_rows, result_cols, CV_32FC1 );
 
-            cv::matchTemplate( ref, chip, result, CV_TM_CCORR_NORMED );
+            cv::matchTemplate( ref, chip, result, CV_TM_CCOEFF_NORMED );
 
             cv::Point maxLoc;
             cv::minMaxLoc(result, NULL, NULL, NULL, &maxLoc);
@@ -262,8 +262,8 @@ PyObject* arSubPixDisp_u(PyObject *self, PyObject *args)
             uint8_t ref_min = ref.at<uint8_t>(ref_min_loc.y, ref_min_loc.x);
             uint8_t chip_min = chip.at<uint8_t>(chip_min_loc.y, chip_min_loc.x);
 
-            if (ref_min < 0) ref = ref - ref_min;
-            if (chip_min < 0) chip = chip - chip_min;
+            ref =  ref_min < 0 ? ref.clone() - ref_min : ref;
+            chip =  chip_min < 0 ? chip.clone() - chip_min : chip;
 
             int chip_width = chip_x_end - chip_x_start;
             int chip_length = chip_y_end - chip_y_start;
@@ -276,7 +276,7 @@ PyObject* arSubPixDisp_u(PyObject *self, PyObject *args)
             cv::Mat result;
             result.create( result_rows, result_cols, CV_32FC1 );
 
-            cv::matchTemplate( ref, chip, result, CV_TM_CCORR_NORMED );
+            cv::matchTemplate( ref, chip, result, CV_TM_CCOEFF_NORMED);
 
             cv::Point maxLoc;
             cv::minMaxLoc(result, NULL, NULL, NULL, &maxLoc);
@@ -385,8 +385,8 @@ PyObject* arPixDisp_s(PyObject *self, PyObject *args)
             float ref_min = ref.at<float>(ref_min_loc.y, ref_min_loc.x);
             float chip_min = chip.at<float>(chip_min_loc.y, chip_min_loc.x);
 
-            if (ref_min < 0) ref = ref - ref_min;
-            if (chip_min < 0) chip = chip - chip_min;
+            ref =  ref_min < 0 ? ref.clone() - ref_min : ref;
+            chip =  chip_min < 0 ? chip.clone() - chip_min : chip;
 
             int chip_width = chip_x_end - chip_x_start;
             int chip_length = chip_y_end - chip_y_start;
@@ -399,7 +399,7 @@ PyObject* arPixDisp_s(PyObject *self, PyObject *args)
             cv::Mat result;
             result.create( result_rows, result_cols, CV_32FC1 );
 
-            cv::matchTemplate( ref, chip, result, CV_TM_CCORR_NORMED );
+            cv::matchTemplate( ref, chip, result, CV_TM_CCOEFF_NORMED );
 
             cv::Point maxLoc;
             cv::minMaxLoc(result, NULL, NULL, NULL, &maxLoc);
@@ -478,8 +478,8 @@ PyObject* arSubPixDisp_s(PyObject *self, PyObject *args)
             float ref_min = ref.at<float>(ref_min_loc.y, ref_min_loc.x);
             float chip_min = chip.at<float>(chip_min_loc.y, chip_min_loc.x);
 
-            if (ref_min < 0) ref = ref - ref_min;
-            if (chip_min < 0) chip = chip - chip_min;
+            ref =  ref_min < 0 ? ref.clone() - ref_min : ref;
+            chip =  chip_min < 0 ? chip.clone() - chip_min : chip;
 
             int chip_width = chip_x_end - chip_x_start;
             int chip_length = chip_y_end - chip_y_start;
@@ -492,7 +492,7 @@ PyObject* arSubPixDisp_s(PyObject *self, PyObject *args)
             cv::Mat result;
             result.create( result_rows, result_cols, CV_32FC1 );
 
-            cv::matchTemplate( ref, chip, result, CV_TM_CCORR_NORMED );
+            cv::matchTemplate( ref, chip, result, CV_TM_CCOEFF_NORMED );
 
             cv::Point maxLoc;
             cv::minMaxLoc(result, NULL, NULL, NULL, &maxLoc);

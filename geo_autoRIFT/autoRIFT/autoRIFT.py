@@ -1003,14 +1003,14 @@ def arImgDisp_u(
     # Call C++
     if not SubPixFlag:
         Dx, Dy = np.float32(
-            autoriftcore.arPixDisp_s_Py(
+            autoriftcore.arPixDisp_u_Py(
                 core._autoriftcore,
-                I1.shape[1],
-                I1.shape[0],
-                I1.ravel(),
                 I2.shape[1],
                 I2.shape[0],
                 I2.ravel(),
+                I1.shape[1],
+                I1.shape[0],
+                I1.ravel(),
                 xGrid.shape[1],
                 xGrid.shape[0],
                 xGrid.ravel(),
@@ -1029,14 +1029,14 @@ def arImgDisp_u(
         )
     else:
         Dx, Dy = np.float32(
-            autoriftcore.arSubPixDisp_s_Py(
+            autoriftcore.arSubPixDisp_u_Py(
                 core._autoriftcore,
-                I1.shape[1],
-                I1.shape[0],
-                I1.ravel(),
                 I2.shape[1],
                 I2.shape[0],
                 I2.ravel(),
+                I1.shape[1],
+                I1.shape[0],
+                I1.ravel(),
                 xGrid.shape[1],
                 xGrid.shape[0],
                 xGrid.ravel(),
@@ -1054,6 +1054,9 @@ def arImgDisp_u(
                 oversample
             )
         )
+
+    Dx = Dx.reshape(xGrid.shape)
+    Dy = Dy.reshape(yGrid.shape)
 
     # add back 1) I1 (RefI) relative to I2 (ChipI) initial offset Dx0 and Dy0, and
     #          2) RefI relative to ChipI has a left/top boundary offset of -SearchLimitX and -SearchLimitY
@@ -1169,12 +1172,12 @@ def arImgDisp_s(
         Dx, Dy = np.float32(
             autoriftcore.arPixDisp_s_Py(
                 core._autoriftcore,
-                I1.shape[1],
-                I1.shape[0],
-                I1.ravel(),
                 I2.shape[1],
                 I2.shape[0],
                 I2.ravel(),
+                I1.shape[1],
+                I1.shape[0],
+                I1.ravel(),
                 xGrid.shape[1],
                 xGrid.shape[0],
                 xGrid.ravel(),
@@ -1195,12 +1198,12 @@ def arImgDisp_s(
         Dx, Dy = np.float32(
             autoriftcore.arSubPixDisp_s_Py(
                 core._autoriftcore,
-                I1.shape[1],
-                I1.shape[0],
-                I1.ravel(),
                 I2.shape[1],
                 I2.shape[0],
                 I2.ravel(),
+                I1.shape[1],
+                I1.shape[0],
+                I1.ravel(),
                 xGrid.shape[1],
                 xGrid.shape[0],
                 xGrid.ravel(),
@@ -1220,7 +1223,7 @@ def arImgDisp_s(
         )
 
     Dx = Dx.reshape(xGrid.shape)
-    Dy = Dy.reshape(xGrid.shape)
+    Dy = Dy.reshape(yGrid.shape)
 
     idx = np.logical_not(np.isnan(Dx))
     Dx[idx] += Dx0[idx] - SearchLimitX[idx]
