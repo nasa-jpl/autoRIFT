@@ -98,7 +98,8 @@ def _wallis_filter_fill(image, filter_width, std_cutoff):
     # wallis filter normalizes the imagery to have a mean=0 and std=1;
     # fill with random values from a normal distribution with same mean and std
     fill_data = valid_domain & missing_data
-    random_fill = np.random.normal(size=(fill_data.sum(),))
+    rng = np.random.default_rng()
+    random_fill = rng.normal(size=(fill_data.sum(),))
     image[fill_data] = random_fill
 
     return image, zero_mask
@@ -469,8 +470,6 @@ class autoRIFT:
         Dy = np.empty(self.xGrid.shape, dtype=np.float32)
         Dy.fill(np.nan)
 
-        Flag = 3
-
         if self.ChipSize0X > self.GridSpacingX:
             if np.mod(self.ChipSize0X, self.GridSpacingX) != 0:
                 sys.exit(
@@ -787,12 +786,10 @@ class autoRIFT:
                 Dx[idxRaw | idxFill] = DxF[idxRaw | idxFill]
                 Dy[idxRaw | idxFill] = DyF[idxRaw | idxFill]
 
-        Flag = 1
         ChipSizeY = np.round(ChipSizeX * self.ScaleChipSizeY / 2) * 2
         self.Dx = Dx
         self.Dy = Dy
         self.InterpMask = InterpMask
-        self.Flag = Flag
         self.ChipSizeX = ChipSizeX
         self.ChipSizeY = ChipSizeY
 
@@ -852,7 +849,6 @@ class autoRIFT:
         self.Dx = None
         self.Dy = None
         self.InterpMask = None
-        self.Flag = None
         self.ChipSizeX = None
         self.ChipSizeY = None
 
