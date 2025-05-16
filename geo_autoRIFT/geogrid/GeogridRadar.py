@@ -27,8 +27,6 @@
 # Authors: Piyush Agram, Yang Lei
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#import isce
-#from iscesys.Component.Component import Component
 import pdb
 import subprocess
 import re
@@ -46,14 +44,12 @@ class GeogridRadar():
         '''
         Do the actual processing.
         '''
-        #import isce
-        #from geo_autoRIFT.geogrid import geogrid
         from . import geogridRadar
 
         ##Determine appropriate EPSG system
         #print('PROJECTION SYSTEM', self.getProjectionSystem())
         self.epsg = self.getProjectionSystem()
-        
+
         ###Determine extent of data needed
         bbox = self.determineBbox()
 
@@ -64,13 +60,13 @@ class GeogridRadar():
 
         ##Create and set parameters
         self.setState()
-        
+
         ##check parameters
         self.checkState()
-        
+
         ##Run
         geogridRadar.geogridRadar_Py(self._geogrid)
-        
+
         #deg2rad = np.pi/180.0
         #params=[];
         #params.append(self.startingRange)
@@ -105,16 +101,16 @@ class GeogridRadar():
         #params.append((midsensing-datetime.timedelta(seconds = 600)).strftime("%Y-%m-%dT%H:%M:%S.%f"))
         #params.append((midsensing+datetime.timedelta(seconds = 600)).strftime("%Y-%m-%dT%H:%M:%S.%f"))
         #params.append(self.orbitname)
-        
+
         #params=[str(param) for param in params]
-        
+
         #cmdline = os.path.dirname(__file__)+"/geogrid "+" ".join(params)
         #print(cmdline)
-        
+
         #subprocess.call(cmdline,shell=True)
-        
+
         self.get_center_latlon()
-        
+
         ##Get parameters
         self.getState()
         #print('XOFF',geogridRadar.getXOff_Py(self._geogrid))
@@ -147,7 +143,7 @@ class GeogridRadar():
         self.cen_lat = (self._ylim[0] + self._ylim[1]) / 2
         self.cen_lon = (self._xlim[0] + self._xlim[1]) / 2
         print("Scene-center lat/lon: " + str(self.cen_lat) + "  " + str(self.cen_lon))
-    
+
 
     def getProjectionSystem(self):
         '''
@@ -196,9 +192,9 @@ class GeogridRadar():
         from isce3.geometry import rdr2geo, DEMInterpolator
         from isce3.core import Ellipsoid
         import copy
-        
+
         refElp = Ellipsoid(a=6378137.0, e2=0.0066943799901)
-        
+
 #        import pdb
 #        pdb.set_trace()
 
@@ -212,13 +208,13 @@ class GeogridRadar():
         coord = osr.SpatialReference()
         coord.ImportFromEPSG(self.epsg)
         #print('EPSG',self.epsg)
-        
+
         trans = osr.CoordinateTransformation(lonlat, coord)
         inv = osr.CoordinateTransformation(coord, lonlat)
 
         llhs = []
         xyzs = []
-        
+
         deg2rad = np.pi/180.0
 
         ###First range line
@@ -293,7 +289,7 @@ class GeogridRadar():
         else:
             self._xlim = [np.min(xyzs[:,0]), np.max(xyzs[:,0])]
             self._ylim = [np.min(xyzs[:,1]), np.max(xyzs[:,1])]
-        
+
     def getIncidenceAngle(self, zrange=[-200,4000]):
         '''
         Dummy.
@@ -304,19 +300,19 @@ class GeogridRadar():
         from isce3.core import Ellipsoid
         from isce3.geometry import rdr2geo, DEMInterpolator
         #from isceobj.Util.geo.ellipsoid import Ellipsoid
-        
+
         refElp = Ellipsoid(a=6378137.0, e2=0.0066943799901)
-        
+
         deg2rad = np.pi/180.0
-        
+
         thetas = []
-        
+
         midrng = self.startingRange + (np.floor(self.numberOfSamples/2)-1) * self.rangePixelSize
         midsensing = self.aztime + (np.floor(self.numberOfLines/2)-1) / self.prf
         master_pos, master_vel= self.orbit.interpolate(midsensing)
         mxyz = master_pos
         #print('MXYZ',mxyz)
-        
+
         for zz in zrange:
             llh = rdr2geo(midsensing, midrng, self.orbit, self.lookSide, 0.0, self.wavelength, DEMInterpolator(zz), refElp)
             #print('LLH',llh)
@@ -329,28 +325,28 @@ class GeogridRadar():
             theta = np.arccos(np.dot(los, n_vec))
             #print('THETA',theta)
             thetas.append([theta])
-        
+
         thetas = np.array(thetas)
         print('Incidence Angle',thetas)
         self.incidenceAngle = np.mean(thetas)
-        
+
     def getDEM(self, bbox):
         '''
         Look up database and return values.
         '''
-        
+
         return "", "", "", "", ""
 
     def getState(self):
         from geogrid import geogridRadar as geogrid
-        
+
         self.pOff = geogrid.getXOff_Py(self._geogrid)
         self.lOff = geogrid.getYOff_Py(self._geogrid)
         self.pCount = geogrid.getXCount_Py(self._geogrid)
         self.lCount = geogrid.getYCount_Py(self._geogrid)
         self.X_res = geogrid.getXPixelSize_Py(self._geogrid)
         self.Y_res = geogrid.getYPixelSize_Py(self._geogrid)
-    
+
     def setState(self):
         '''
         Create C object and populate.
@@ -366,7 +362,7 @@ class GeogridRadar():
         aztime = (self.sensingStart - self.sensingStart.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
         geogrid.setAzimuthParameters_Py( self._geogrid, aztime, self.prf)
         geogrid.setRepeatTime_Py(self._geogrid, self.repeatTime)
-        
+
         geogrid.setDtUnity_Py( self._geogrid, self.srs_dt_unity)
         geogrid.setMaxFactor_Py( self._geogrid, self.srs_max_scale)
         geogrid.setUpperThreshold_Py( self._geogrid, self.srs_max_search)
@@ -376,10 +372,10 @@ class GeogridRadar():
         geogrid.setIncidenceAngle_Py(self._geogrid, self.incidenceAngle)
         geogrid.setChipSizeX0_Py(self._geogrid, self.chipSizeX0)
         geogrid.setGridSpacingX_Py(self._geogrid, self.gridSpacingX)
-        
+
         geogrid.setXLimits_Py(self._geogrid, self._xlim[0], self._xlim[1])
         geogrid.setYLimits_Py(self._geogrid, self._ylim[0], self._ylim[1])
-        
+
         midsensing = self.sensingStart + datetime.timedelta(seconds = (np.floor(self.numberOfLines/2)-1) / self.prf)
         tmids = midsensing.strftime("%Y-%m-%dT%H:%M:%S.%f")
         itime = (midsensing-datetime.timedelta(seconds = 600)).strftime("%Y-%m-%dT%H:%M:%S.%f")
@@ -394,16 +390,16 @@ class GeogridRadar():
 
         if (self.vxname is not None) and (self.vyname is not None):
             geogrid.setVelocities_Py(self._geogrid, self.vxname, self.vyname)
-        
+
         if (self.srxname is not None) and (self.sryname is not None):
             geogrid.setSearchRange_Py(self._geogrid, self.srxname, self.sryname)
-        
+
         if (self.csminxname is not None) and (self.csminyname is not None):
             geogrid.setChipSizeMin_Py(self._geogrid, self.csminxname, self.csminyname)
-        
+
         if (self.csmaxxname is not None) and (self.csmaxyname is not None):
             geogrid.setChipSizeMax_Py(self._geogrid, self.csmaxxname, self.csmaxyname)
-        
+
         if (self.ssmname is not None):
             geogrid.setStableSurfaceMask_Py(self._geogrid, self.ssmname)
 
@@ -483,7 +479,7 @@ class GeogridRadar():
         self.winro2vxname = None
         self.winro2vyname = None
         self.winsfname = None
-        
+
         ##dt-varying search range scale (srs) rountine parameters
         self.srs_dt_unity = 182
         self.srs_max_scale = 5
@@ -496,7 +492,7 @@ class GeogridRadar():
         self._ylim = None
         self.nodata_out = None
 
-        ##Pointer to C 
+        ##Pointer to C
         self._geogrid = None
         self._orbit = None
 
