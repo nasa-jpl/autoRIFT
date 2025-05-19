@@ -32,10 +32,11 @@
 import cv2
 import sys
 import numpy as np
-from scipy.ndimage import distance_transform_edt
-from scipy.spatial import distance as dist
 import numpy.fft as fft
-
+from numba import cfunc, carray, jit
+from numba.types import intc, CPointer, float64, intp, voidptr
+from scipy import LowLevelCallable
+from scipy.ndimage import generic_filter
 
 def _remove_local_mean(image, kernel):
     mean = cv2.filter2D(image, -1, kernel, borderType=cv2.BORDER_CONSTANT)
@@ -358,7 +359,9 @@ class autoRIFT:
                 temp = self.I1
             S1 = np.std(temp) * np.sqrt(temp.size / (temp.size - 1.0))
             M1 = np.mean(temp)
+            temp = None
             self.I1 = (self.I1 - (M1 - 3 * S1)) / (6 * S1) * (2**8 - 0)
+            del S1, M1, temp
 
             #            self.I1[np.logical_not(np.isfinite(self.I1))] = 0
             self.I1 = np.round(np.clip(self.I1, 0, 255)).astype(np.uint8)
@@ -371,7 +374,9 @@ class autoRIFT:
                 temp = self.I2
             S2 = np.std(temp) * np.sqrt(temp.size / (temp.size - 1.0))
             M2 = np.mean(temp)
+            temp = None
             self.I2 = (self.I2 - (M2 - 3 * S2)) / (6 * S2) * (2**8 - 0)
+            del S2, M2, temp
 
             #            self.I2[np.logical_not(np.isfinite(self.I2))] = 0
             self.I2 = np.round(np.clip(self.I2, 0, 255)).astype(np.uint8)
@@ -606,7 +611,6 @@ class autoRIFT:
                     Dy0C.copy(),
                     SubPixFlag,
                     overSampleRatio,
-                    self.MultiThread,
                 )
             elif self.I1.dtype == np.float32:
                 DxC, DyC = arImgDisp_s(
@@ -622,7 +626,6 @@ class autoRIFT:
                     Dy0C.copy(),
                     SubPixFlag,
                     overSampleRatio,
-                    self.MultiThread,
                 )
             else:
                 sys.exit("invalid data type for the image pair which must be unsigned integer 8 or 32-bit float")
@@ -681,7 +684,6 @@ class autoRIFT:
                     Dy00.copy(),
                     SubPixFlag,
                     overSampleRatio,
-                    self.MultiThread,
                 )
             elif self.I1.dtype == np.float32:
                 DxF, DyF = arImgDisp_s(
@@ -697,7 +699,6 @@ class autoRIFT:
                     Dy00.copy(),
                     SubPixFlag,
                     overSampleRatio,
-                    self.MultiThread,
                 )
             else:
                 sys.exit("invalid data type for the image pair which must be unsigned integer 8 or 32-bit float")
@@ -901,208 +902,6 @@ def initializer(I1, I2, xGrid, yGrid, SearchLimitX, SearchLimitY, ChipSizeX, Chi
     var_dict["Dy0"] = Dy0
 
 
-def unpacking_loop_u(tup):
-    import numpy as np
-    from . import autoriftcore
-
-    core = AUTO_RIFT_CORE()
-    if core._autoriftcore is not None:
-        autoriftcore.destroyAutoRiftCore_Py(core._autoriftcore)
-
-    core._autoriftcore = autoriftcore.createAutoRiftCore_Py()
-
-    k, chunkInds, SubPixFlag, oversample, in_shape, I_shape = tup
-
-    I1 = np.frombuffer(var_dict["I1"], dtype=np.uint8).reshape(I_shape)
-    I2 = np.frombuffer(var_dict["I2"], dtype=np.uint8).reshape(I_shape)
-    xGrid = np.frombuffer(var_dict["xGrid"], dtype=np.float32).reshape(in_shape)
-    yGrid = np.frombuffer(var_dict["yGrid"], dtype=np.float32).reshape(in_shape)
-    SearchLimitX = np.frombuffer(var_dict["SearchLimitX"], dtype=np.float32).reshape(in_shape)
-    SearchLimitY = np.frombuffer(var_dict["SearchLimitY"], dtype=np.float32).reshape(in_shape)
-    ChipSizeX = np.frombuffer(var_dict["ChipSizeX"], dtype=np.float32).reshape(in_shape)
-    ChipSizeY = np.frombuffer(var_dict["ChipSizeY"], dtype=np.float32).reshape(in_shape)
-    Dx0 = np.frombuffer(var_dict["Dx0"], dtype=np.float32).reshape(in_shape)
-    Dy0 = np.frombuffer(var_dict["Dy0"], dtype=np.float32).reshape(in_shape)
-
-    Dx = np.empty(chunkInds.shape, dtype=np.float32)
-    Dx.fill(np.nan)
-    Dy = Dx.copy()
-
-    #    print(k)
-    #    print(np.min(chunkInds),np.max(chunkInds))
-    #    print(chunkInds.shape)
-
-    for ind in chunkInds:
-
-        ind1 = np.where(chunkInds == ind)[0][0]
-
-        ii, jj = [v[0] for v in np.unravel_index([ind], in_shape)]
-
-        if (SearchLimitX[ii, jj] == 0) & (SearchLimitY[ii, jj] == 0):
-            continue
-
-        # remember motion terms Dx and Dy correspond to I1 relative to I2 (reference)
-        clx = np.floor(ChipSizeX[ii, jj] / 2)
-        ChipRangeX = slice(int(-clx - Dx0[ii, jj] + xGrid[ii, jj]), int(clx - Dx0[ii, jj] + xGrid[ii, jj]))
-        cly = np.floor(ChipSizeY[ii, jj] / 2)
-        ChipRangeY = slice(int(-cly - Dy0[ii, jj] + yGrid[ii, jj]), int(cly - Dy0[ii, jj] + yGrid[ii, jj]))
-        ChipI = I2[ChipRangeY, ChipRangeX]
-
-        SearchRangeX = slice(
-            int(-clx - SearchLimitX[ii, jj] + xGrid[ii, jj]), int(clx + SearchLimitX[ii, jj] - 1 + xGrid[ii, jj])
-        )
-        SearchRangeY = slice(
-            int(-cly - SearchLimitY[ii, jj] + yGrid[ii, jj]), int(cly + SearchLimitY[ii, jj] - 1 + yGrid[ii, jj])
-        )
-        RefI = I1[SearchRangeY, SearchRangeX]
-
-        minChipI = np.min(ChipI)
-        if minChipI < 0:
-            ChipI = ChipI - minChipI
-        if np.all(ChipI == ChipI[0, 0]):
-            continue
-
-        minRefI = np.min(RefI)
-        if minRefI < 0:
-            RefI = RefI - minRefI
-        if np.all(RefI == RefI[0, 0]):
-            continue
-
-        if SubPixFlag:
-            # call C++
-            Dx[ind1], Dy[ind1] = np.float32(
-                autoriftcore.arSubPixDisp_u_Py(
-                    core._autoriftcore,
-                    ChipI.shape[1],
-                    ChipI.shape[0],
-                    ChipI.ravel(),
-                    RefI.shape[1],
-                    RefI.shape[0],
-                    RefI.ravel(),
-                    oversample,
-                )
-            )
-        #                   # call Python
-        #                   Dx1[ii], Dy1[ii] = arSubPixDisp(ChipI,RefI)
-        else:
-            # call C++
-            Dx[ind1], Dy[ind1] = np.float32(
-                autoriftcore.arPixDisp_u_Py(
-                    core._autoriftcore,
-                    ChipI.shape[1],
-                    ChipI.shape[0],
-                    ChipI.ravel(),
-                    RefI.shape[1],
-                    RefI.shape[0],
-                    RefI.ravel(),
-                )
-            )
-    #                   # call Python
-    #                   Dx1[ii], Dy1[ii] = arPixDisp(ChipI,RefI)
-    return Dx, Dy
-
-
-def unpacking_loop_s(tup):
-    import numpy as np
-    from . import autoriftcore
-
-    core = AUTO_RIFT_CORE()
-    if core._autoriftcore is not None:
-        autoriftcore.destroyAutoRiftCore_Py(core._autoriftcore)
-
-    core._autoriftcore = autoriftcore.createAutoRiftCore_Py()
-
-    k, chunkInds, SubPixFlag, oversample, in_shape, I_shape = tup
-
-    I1 = np.frombuffer(var_dict["I1"], dtype=np.float32).reshape(I_shape)
-    I2 = np.frombuffer(var_dict["I2"], dtype=np.float32).reshape(I_shape)
-    xGrid = np.frombuffer(var_dict["xGrid"], dtype=np.float32).reshape(in_shape)
-    yGrid = np.frombuffer(var_dict["yGrid"], dtype=np.float32).reshape(in_shape)
-    SearchLimitX = np.frombuffer(var_dict["SearchLimitX"], dtype=np.float32).reshape(in_shape)
-    SearchLimitY = np.frombuffer(var_dict["SearchLimitY"], dtype=np.float32).reshape(in_shape)
-    ChipSizeX = np.frombuffer(var_dict["ChipSizeX"], dtype=np.float32).reshape(in_shape)
-    ChipSizeY = np.frombuffer(var_dict["ChipSizeY"], dtype=np.float32).reshape(in_shape)
-    Dx0 = np.frombuffer(var_dict["Dx0"], dtype=np.float32).reshape(in_shape)
-    Dy0 = np.frombuffer(var_dict["Dy0"], dtype=np.float32).reshape(in_shape)
-
-    Dx = np.empty(chunkInds.shape, dtype=np.float32)
-    Dx.fill(np.nan)
-    Dy = Dx.copy()
-
-    #    print(k)
-    #    print(np.min(chunkInds),np.max(chunkInds))
-    #    print(chunkInds.shape)
-
-    for ind in chunkInds:
-
-        ind1 = np.where(chunkInds == ind)[0][0]
-
-        ii, jj = [v[0] for v in np.unravel_index([ind], in_shape)]
-
-        if (SearchLimitX[ii, jj] == 0) & (SearchLimitY[ii, jj] == 0):
-            continue
-
-        # remember motion terms Dx and Dy correspond to I1 relative to I2 (reference)
-        clx = np.floor(ChipSizeX[ii, jj] / 2)
-        ChipRangeX = slice(int(-clx - Dx0[ii, jj] + xGrid[ii, jj]), int(clx - Dx0[ii, jj] + xGrid[ii, jj]))
-        cly = np.floor(ChipSizeY[ii, jj] / 2)
-        ChipRangeY = slice(int(-cly - Dy0[ii, jj] + yGrid[ii, jj]), int(cly - Dy0[ii, jj] + yGrid[ii, jj]))
-        ChipI = I2[ChipRangeY, ChipRangeX]
-
-        SearchRangeX = slice(
-            int(-clx - SearchLimitX[ii, jj] + xGrid[ii, jj]), int(clx + SearchLimitX[ii, jj] - 1 + xGrid[ii, jj])
-        )
-        SearchRangeY = slice(
-            int(-cly - SearchLimitY[ii, jj] + yGrid[ii, jj]), int(cly + SearchLimitY[ii, jj] - 1 + yGrid[ii, jj])
-        )
-        RefI = I1[SearchRangeY, SearchRangeX]
-
-        minChipI = np.min(ChipI)
-        if minChipI < 0:
-            ChipI = ChipI - minChipI
-        if np.all(ChipI == ChipI[0, 0]):
-            continue
-
-        minRefI = np.min(RefI)
-        if minRefI < 0:
-            RefI = RefI - minRefI
-        if np.all(RefI == RefI[0, 0]):
-            continue
-
-        if SubPixFlag:
-            # call C++
-            Dx[ind1], Dy[ind1] = np.float32(
-                autoriftcore.arSubPixDisp_s_Py(
-                    core._autoriftcore,
-                    ChipI.shape[1],
-                    ChipI.shape[0],
-                    ChipI.ravel(),
-                    RefI.shape[1],
-                    RefI.shape[0],
-                    RefI.ravel(),
-                    oversample,
-                )
-            )
-        #                   # call Python
-        #                   Dx1[ii], Dy1[ii] = arSubPixDisp(ChipI,RefI)
-        else:
-            # call C++
-            Dx[ind1], Dy[ind1] = np.float32(
-                autoriftcore.arPixDisp_s_Py(
-                    core._autoriftcore,
-                    ChipI.shape[1],
-                    ChipI.shape[0],
-                    ChipI.ravel(),
-                    RefI.shape[1],
-                    RefI.shape[0],
-                    RefI.ravel(),
-                )
-            )
-    #                   # call Python
-    #                   Dx1[ii], Dy1[ii] = arPixDisp(ChipI,RefI)
-    return Dx, Dy
-
-
 def arImgDisp_u(
     I1,
     I2,
@@ -1116,7 +915,6 @@ def arImgDisp_u(
     Dy0,
     SubPixFlag,
     oversample,
-    MultiThread,
 ):
     import numpy as np
     from . import autoriftcore
@@ -1127,13 +925,6 @@ def arImgDisp_u(
         autoriftcore.destroyAutoRiftCore_Py(core._autoriftcore)
 
     core._autoriftcore = autoriftcore.createAutoRiftCore_Py()
-
-    #    if np.size(I1) == 1:
-    #        if np.logical_not(isinstance(I1,np.uint8) & isinstance(I2,np.uint8)):
-    #            sys.exit('input images must be uint8')
-    #    else:
-    #        if np.logical_not((I1.dtype == np.uint8) & (I2.dtype == np.uint8)):
-    #            sys.exit('input images must be uint8')
 
     if np.size(SearchLimitX) == 1:
         if np.logical_not(isinstance(SearchLimitX, np.float32) & isinstance(SearchLimitY, np.float32)):
@@ -1157,11 +948,6 @@ def arImgDisp_u(
             sys.exit("ChipSize must be float")
 
     if np.any(np.mod(ChipSizeX, 2) != 0) | np.any(np.mod(ChipSizeY, 2) != 0):
-        #        if np.any(np.mod(xGrid-0.5,1) == 0) & np.any(np.mod(yGrid-0.5,1) == 0):
-        #            sys.exit('for an even chip size ImgDisp returns displacements centered at pixel boundaries so xGrid and yGrid must an inter - 1/2 [example: if you want the velocity centered between pixel (1,1) and (2,2) then specify a grid center of (1.5, 1.5)]')
-        #        else:
-        #            xGrid = np.ceil(xGrid)
-        #            yGrid = np.ceil(yGrid)
         sys.exit("it is better to have ChipSize = even number")
 
     if np.any(np.mod(SearchLimitX, 1) != 0) | np.any(np.mod(SearchLimitY, 1) != 0):
@@ -1210,161 +996,63 @@ def arImgDisp_u(
     Dx.fill(np.nan)
     Dy = Dx.copy()
 
-    if MultiThread == 0:
-        for jj in range(xGrid.shape[1]):
-            if np.all(SearchLimitX[:, jj] == 0) & np.all(SearchLimitY[:, jj] == 0):
-                continue
-            Dx1 = Dx[:, jj]
-            Dy1 = Dy[:, jj]
-            for ii in range(xGrid.shape[0]):
-                if (SearchLimitX[ii, jj] == 0) & (SearchLimitY[ii, jj] == 0):
-                    continue
-
-                # remember motion terms Dx and Dy correspond to I1 relative to I2 (reference)
-                clx = np.floor(ChipSizeX[ii, jj] / 2)
-                ChipRangeX = slice(int(-clx - Dx0[ii, jj] + xGrid[ii, jj]), int(clx - Dx0[ii, jj] + xGrid[ii, jj]))
-                cly = np.floor(ChipSizeY[ii, jj] / 2)
-                ChipRangeY = slice(int(-cly - Dy0[ii, jj] + yGrid[ii, jj]), int(cly - Dy0[ii, jj] + yGrid[ii, jj]))
-                ChipI = I2[ChipRangeY, ChipRangeX]
-
-                SearchRangeX = slice(
-                    int(-clx - SearchLimitX[ii, jj] + xGrid[ii, jj]),
-                    int(clx + SearchLimitX[ii, jj] - 1 + xGrid[ii, jj]),
-                )
-                SearchRangeY = slice(
-                    int(-cly - SearchLimitY[ii, jj] + yGrid[ii, jj]),
-                    int(cly + SearchLimitY[ii, jj] - 1 + yGrid[ii, jj]),
-                )
-                RefI = I1[SearchRangeY, SearchRangeX]
-
-                minChipI = np.min(ChipI)
-                if minChipI < 0:
-                    ChipI = ChipI - minChipI
-                if np.all(ChipI == ChipI[0, 0]):
-                    continue
-
-                minRefI = np.min(RefI)
-                if minRefI < 0:
-                    RefI = RefI - minRefI
-                if np.all(RefI == RefI[0, 0]):
-                    continue
-
-                if SubPixFlag:
-                    # call C++
-                    Dx1[ii], Dy1[ii] = np.float32(
-                        autoriftcore.arSubPixDisp_u_Py(
-                            core._autoriftcore,
-                            ChipI.shape[1],
-                            ChipI.shape[0],
-                            ChipI.ravel(),
-                            RefI.shape[1],
-                            RefI.shape[0],
-                            RefI.ravel(),
-                            oversample,
-                        )
-                    )
-                #                   # call Python
-                #                   Dx1[ii], Dy1[ii] = arSubPixDisp(ChipI,RefI)
-                else:
-                    # call C++
-                    Dx1[ii], Dy1[ii] = np.float32(
-                        autoriftcore.arPixDisp_u_Py(
-                            core._autoriftcore,
-                            ChipI.shape[1],
-                            ChipI.shape[0],
-                            ChipI.ravel(),
-                            RefI.shape[1],
-                            RefI.shape[0],
-                            RefI.ravel(),
-                        )
-                    )
-    #                   # call Python
-    #                   Dx1[ii], Dy1[ii] = arPixDisp(ChipI,RefI)
+    # Call C++
+    if not SubPixFlag:
+        Dx, Dy = np.float32(
+            autoriftcore.arPixDisp_u_Py(
+                core._autoriftcore,
+                I2.shape[1],
+                I2.shape[0],
+                I2.ravel(),
+                I1.shape[1],
+                I1.shape[0],
+                I1.ravel(),
+                xGrid.shape[1],
+                xGrid.shape[0],
+                xGrid.ravel(),
+                yGrid.shape[1],
+                yGrid.shape[0],
+                yGrid.ravel(),
+                SearchLimitX.ravel(),
+                SearchLimitY.ravel(),
+                ChipSizeX.ravel(),
+                ChipSizeY.ravel(),
+                Dx.ravel(),
+                Dy.ravel(),
+                Dx0.ravel(),
+                Dy0.ravel()
+            )
+        )
     else:
-        #   Preparation for parallel
-        in_shape = xGrid.shape
-        I_shape = I1.shape
-        shape_prod = np.prod(in_shape).item()
+        Dx, Dy = np.float32(
+            autoriftcore.arSubPixDisp_u_Py(
+                core._autoriftcore,
+                I2.shape[1],
+                I2.shape[0],
+                I2.ravel(),
+                I1.shape[1],
+                I1.shape[0],
+                I1.ravel(),
+                xGrid.shape[1],
+                xGrid.shape[0],
+                xGrid.ravel(),
+                yGrid.shape[1],
+                yGrid.shape[0],
+                yGrid.ravel(),
+                SearchLimitX.ravel(),
+                SearchLimitY.ravel(),
+                ChipSizeX.ravel(),
+                ChipSizeY.ravel(),
+                Dx.ravel(),
+                Dy.ravel(),
+                Dx0.ravel(),
+                Dy0.ravel(),
+                oversample
+            )
+        )
 
-        #        import pdb
-        #        pdb.set_trace()
-        XI1 = mp.RawArray("b", np.prod(I_shape).item())
-        XI1_np = np.frombuffer(XI1, dtype=np.uint8).reshape(I_shape)
-        np.copyto(XI1_np, I1)
-        del I1
-
-        XI2 = mp.RawArray("b", np.prod(I_shape).item())
-        XI2_np = np.frombuffer(XI2, dtype=np.uint8).reshape(I_shape)
-        np.copyto(XI2_np, I2)
-        del I2
-
-        XxGrid = mp.RawArray("f", shape_prod)
-        XxGrid_np = np.frombuffer(XxGrid, dtype=np.float32).reshape(in_shape)
-        np.copyto(XxGrid_np, xGrid)
-        del xGrid
-
-        XyGrid = mp.RawArray("f", shape_prod)
-        XyGrid_np = np.frombuffer(XyGrid, dtype=np.float32).reshape(in_shape)
-        np.copyto(XyGrid_np, yGrid)
-        del yGrid
-
-        XSearchLimitX = mp.RawArray("f", shape_prod)
-        XSearchLimitX_np = np.frombuffer(XSearchLimitX, dtype=np.float32).reshape(in_shape)
-        np.copyto(XSearchLimitX_np, SearchLimitX)
-
-        XSearchLimitY = mp.RawArray("f", shape_prod)
-        XSearchLimitY_np = np.frombuffer(XSearchLimitY, dtype=np.float32).reshape(in_shape)
-        np.copyto(XSearchLimitY_np, SearchLimitY)
-
-        XChipSizeX = mp.RawArray("f", shape_prod)
-        XChipSizeX_np = np.frombuffer(XChipSizeX, dtype=np.float32).reshape(in_shape)
-        np.copyto(XChipSizeX_np, ChipSizeX)
-        del ChipSizeX
-
-        XChipSizeY = mp.RawArray("f", shape_prod)
-        XChipSizeY_np = np.frombuffer(XChipSizeY, dtype=np.float32).reshape(in_shape)
-        np.copyto(XChipSizeY_np, ChipSizeY)
-        del ChipSizeY
-
-        XDx0 = mp.RawArray("f", shape_prod)
-        XDx0_np = np.frombuffer(XDx0, dtype=np.float32).reshape(in_shape)
-        np.copyto(XDx0_np, Dx0)
-
-        XDy0 = mp.RawArray("f", shape_prod)
-        XDy0_np = np.frombuffer(XDy0, dtype=np.float32).reshape(in_shape)
-        np.copyto(XDy0_np, Dy0)
-        #        import pdb
-        #        pdb.set_trace()
-
-        #        Nchunks = mp.cpu_count() // 8 * MultiThread
-        Nchunks = MultiThread
-        chunkSize = int(np.floor(shape_prod / Nchunks))
-        chunkRem = shape_prod - chunkSize * Nchunks
-
-        CHUNKS = []
-
-        for k in range(Nchunks):
-            #            print(k)
-            if k == (Nchunks - 1):
-                chunkInds = np.arange(k * chunkSize, (k + 1) * chunkSize + chunkRem)
-            else:
-                chunkInds = np.arange(k * chunkSize, (k + 1) * chunkSize)
-            CHUNKS.append(chunkInds)
-        #            print(CHUNKS)
-
-        chunk_inputs = [(kk, CHUNKS[kk], SubPixFlag, oversample, in_shape, I_shape) for kk in range(Nchunks)]
-
-        with mp.Pool(
-            initializer=initializer,
-            initargs=(XI1, XI2, XxGrid, XyGrid, XSearchLimitX, XSearchLimitY, XChipSizeX, XChipSizeY, XDx0, XDy0),
-        ) as pool:
-            Dx, Dy = zip(*pool.map(unpacking_loop_u, chunk_inputs))
-
-        Dx = np.concatenate(Dx)
-        Dy = np.concatenate(Dy)
-
-        Dx = np.reshape(Dx, in_shape)
-        Dy = np.reshape(Dy, in_shape)
+    Dx = Dx.reshape(xGrid.shape)
+    Dy = Dy.reshape(yGrid.shape)
 
     # add back 1) I1 (RefI) relative to I2 (ChipI) initial offset Dx0 and Dy0, and
     #          2) RefI relative to ChipI has a left/top boundary offset of -SearchLimitX and -SearchLimitY
@@ -1394,7 +1082,6 @@ def arImgDisp_s(
     Dy0,
     SubPixFlag,
     oversample,
-    MultiThread,
 ):
     import numpy as np
     from . import autoriftcore
@@ -1405,13 +1092,6 @@ def arImgDisp_s(
         autoriftcore.destroyAutoRiftCore_Py(core._autoriftcore)
 
     core._autoriftcore = autoriftcore.createAutoRiftCore_Py()
-
-    #    if np.size(I1) == 1:
-    #        if np.logical_not(isinstance(I1,np.uint8) & isinstance(I2,np.uint8)):
-    #            sys.exit('input images must be uint8')
-    #    else:
-    #        if np.logical_not((I1.dtype == np.uint8) & (I2.dtype == np.uint8)):
-    #            sys.exit('input images must be uint8')
 
     if np.size(SearchLimitX) == 1:
         if np.logical_not(isinstance(SearchLimitX, np.float32) & isinstance(SearchLimitY, np.float32)):
@@ -1435,11 +1115,6 @@ def arImgDisp_s(
             sys.exit("ChipSize must be float")
 
     if np.any(np.mod(ChipSizeX, 2) != 0) | np.any(np.mod(ChipSizeY, 2) != 0):
-        #        if np.any(np.mod(xGrid-0.5,1) == 0) & np.any(np.mod(yGrid-0.5,1) == 0):
-        #            sys.exit('for an even chip size ImgDisp returns displacements centered at pixel boundaries so xGrid and yGrid must an inter - 1/2 [example: if you want the velocity centered between pixel (1,1) and (2,2) then specify a grid center of (1.5, 1.5)]')
-        #        else:
-        #            xGrid = np.ceil(xGrid)
-        #            yGrid = np.ceil(yGrid)
         sys.exit("it is better to have ChipSize = even number")
 
     if np.any(np.mod(SearchLimitX, 1) != 0) | np.any(np.mod(SearchLimitY, 1) != 0):
@@ -1488,164 +1163,64 @@ def arImgDisp_s(
     Dx.fill(np.nan)
     Dy = Dx.copy()
 
-    if MultiThread == 0:
-        for jj in range(xGrid.shape[1]):
-            if np.all(SearchLimitX[:, jj] == 0) & np.all(SearchLimitY[:, jj] == 0):
-                continue
-            Dx1 = Dx[:, jj]
-            Dy1 = Dy[:, jj]
-            for ii in range(xGrid.shape[0]):
-                if (SearchLimitX[ii, jj] == 0) & (SearchLimitY[ii, jj] == 0):
-                    continue
-
-                # remember motion terms Dx and Dy correspond to I1 relative to I2 (reference)
-                clx = np.floor(ChipSizeX[ii, jj] / 2)
-                ChipRangeX = slice(int(-clx - Dx0[ii, jj] + xGrid[ii, jj]), int(clx - Dx0[ii, jj] + xGrid[ii, jj]))
-                cly = np.floor(ChipSizeY[ii, jj] / 2)
-                ChipRangeY = slice(int(-cly - Dy0[ii, jj] + yGrid[ii, jj]), int(cly - Dy0[ii, jj] + yGrid[ii, jj]))
-                ChipI = I2[ChipRangeY, ChipRangeX]
-
-                SearchRangeX = slice(
-                    int(-clx - SearchLimitX[ii, jj] + xGrid[ii, jj]),
-                    int(clx + SearchLimitX[ii, jj] - 1 + xGrid[ii, jj]),
-                )
-                SearchRangeY = slice(
-                    int(-cly - SearchLimitY[ii, jj] + yGrid[ii, jj]),
-                    int(cly + SearchLimitY[ii, jj] - 1 + yGrid[ii, jj]),
-                )
-                RefI = I1[SearchRangeY, SearchRangeX]
-
-                minChipI = np.min(ChipI)
-                if minChipI < 0:
-                    ChipI = ChipI - minChipI
-                if np.all(ChipI == ChipI[0, 0]):
-                    continue
-
-                minRefI = np.min(RefI)
-                if minRefI < 0:
-                    RefI = RefI - minRefI
-                if np.all(RefI == RefI[0, 0]):
-                    continue
-
-                if SubPixFlag:
-                    # call C++
-                    Dx1[ii], Dy1[ii] = np.float32(
-                        autoriftcore.arSubPixDisp_s_Py(
-                            core._autoriftcore,
-                            ChipI.shape[1],
-                            ChipI.shape[0],
-                            ChipI.ravel(),
-                            RefI.shape[1],
-                            RefI.shape[0],
-                            RefI.ravel(),
-                            oversample,
-                        )
-                    )
-                #                   # call Python
-                #                   Dx1[ii], Dy1[ii] = arSubPixDisp(ChipI,RefI)
-                else:
-                    # call C++
-                    Dx1[ii], Dy1[ii] = np.float32(
-                        autoriftcore.arPixDisp_s_Py(
-                            core._autoriftcore,
-                            ChipI.shape[1],
-                            ChipI.shape[0],
-                            ChipI.ravel(),
-                            RefI.shape[1],
-                            RefI.shape[0],
-                            RefI.ravel(),
-                        )
-                    )
-    #                   # call Python
-    #                   Dx1[ii], Dy1[ii] = arPixDisp(ChipI,RefI)
+    # Call C++
+    if not SubPixFlag:
+        Dx, Dy = np.float32(
+            autoriftcore.arPixDisp_s_Py(
+                core._autoriftcore,
+                I2.shape[1],
+                I2.shape[0],
+                I2.ravel(),
+                I1.shape[1],
+                I1.shape[0],
+                I1.ravel(),
+                xGrid.shape[1],
+                xGrid.shape[0],
+                xGrid.ravel(),
+                yGrid.shape[1],
+                yGrid.shape[0],
+                yGrid.ravel(),
+                SearchLimitX.ravel(),
+                SearchLimitY.ravel(),
+                ChipSizeX.ravel(),
+                ChipSizeY.ravel(),
+                Dx.ravel(),
+                Dy.ravel(),
+                Dx0.ravel(),
+                Dy0.ravel()
+            )
+        )
     else:
-        #   Preparation for parallel
-        in_shape = xGrid.shape
-        I_shape = I1.shape
-        shape_prod = np.prod(in_shape).item()
+        Dx, Dy = np.float32(
+            autoriftcore.arSubPixDisp_s_Py(
+                core._autoriftcore,
+                I2.shape[1],
+                I2.shape[0],
+                I2.ravel(),
+                I1.shape[1],
+                I1.shape[0],
+                I1.ravel(),
+                xGrid.shape[1],
+                xGrid.shape[0],
+                xGrid.ravel(),
+                yGrid.shape[1],
+                yGrid.shape[0],
+                yGrid.ravel(),
+                SearchLimitX.ravel(),
+                SearchLimitY.ravel(),
+                ChipSizeX.ravel(),
+                ChipSizeY.ravel(),
+                Dx.ravel(),
+                Dy.ravel(),
+                Dx0.ravel(),
+                Dy0.ravel(),
+                oversample
+            )
+        )
 
-        #        import pdb
-        #        pdb.set_trace()
-        XI1 = mp.RawArray("f", np.prod(I_shape).item())
-        XI1_np = np.frombuffer(XI1, dtype=np.float32).reshape(I_shape)
-        np.copyto(XI1_np, I1)
-        del I1
+    Dx = Dx.reshape(xGrid.shape)
+    Dy = Dy.reshape(yGrid.shape)
 
-        XI2 = mp.RawArray("f", np.prod(I_shape).item())
-        XI2_np = np.frombuffer(XI2, dtype=np.float32).reshape(I_shape)
-        np.copyto(XI2_np, I2)
-        del I2
-
-        XxGrid = mp.RawArray("f", shape_prod)
-        XxGrid_np = np.frombuffer(XxGrid, dtype=np.float32).reshape(in_shape)
-        np.copyto(XxGrid_np, xGrid)
-        del xGrid
-
-        XyGrid = mp.RawArray("f", shape_prod)
-        XyGrid_np = np.frombuffer(XyGrid, dtype=np.float32).reshape(in_shape)
-        np.copyto(XyGrid_np, yGrid)
-        del yGrid
-
-        XSearchLimitX = mp.RawArray("f", shape_prod)
-        XSearchLimitX_np = np.frombuffer(XSearchLimitX, dtype=np.float32).reshape(in_shape)
-        np.copyto(XSearchLimitX_np, SearchLimitX)
-
-        XSearchLimitY = mp.RawArray("f", shape_prod)
-        XSearchLimitY_np = np.frombuffer(XSearchLimitY, dtype=np.float32).reshape(in_shape)
-        np.copyto(XSearchLimitY_np, SearchLimitY)
-
-        XChipSizeX = mp.RawArray("f", shape_prod)
-        XChipSizeX_np = np.frombuffer(XChipSizeX, dtype=np.float32).reshape(in_shape)
-        np.copyto(XChipSizeX_np, ChipSizeX)
-        del ChipSizeX
-
-        XChipSizeY = mp.RawArray("f", shape_prod)
-        XChipSizeY_np = np.frombuffer(XChipSizeY, dtype=np.float32).reshape(in_shape)
-        np.copyto(XChipSizeY_np, ChipSizeY)
-        del ChipSizeY
-
-        XDx0 = mp.RawArray("f", shape_prod)
-        XDx0_np = np.frombuffer(XDx0, dtype=np.float32).reshape(in_shape)
-        np.copyto(XDx0_np, Dx0)
-
-        XDy0 = mp.RawArray("f", shape_prod)
-        XDy0_np = np.frombuffer(XDy0, dtype=np.float32).reshape(in_shape)
-        np.copyto(XDy0_np, Dy0)
-        #        import pdb
-        #        pdb.set_trace()
-
-        #        Nchunks = mp.cpu_count() // 8 * MultiThread
-        Nchunks = MultiThread
-        chunkSize = int(np.floor(shape_prod / Nchunks))
-        chunkRem = shape_prod - chunkSize * Nchunks
-
-        CHUNKS = []
-
-        for k in range(Nchunks):
-            #            print(k)
-            if k == (Nchunks - 1):
-                chunkInds = np.arange(k * chunkSize, (k + 1) * chunkSize + chunkRem)
-            else:
-                chunkInds = np.arange(k * chunkSize, (k + 1) * chunkSize)
-            CHUNKS.append(chunkInds)
-        #            print(CHUNKS)
-
-        chunk_inputs = [(kk, CHUNKS[kk], SubPixFlag, oversample, in_shape, I_shape) for kk in range(Nchunks)]
-
-        with mp.Pool(
-            initializer=initializer,
-            initargs=(XI1, XI2, XxGrid, XyGrid, XSearchLimitX, XSearchLimitY, XChipSizeX, XChipSizeY, XDx0, XDy0),
-        ) as pool:
-            Dx, Dy = zip(*pool.map(unpacking_loop_s, chunk_inputs))
-
-        Dx = np.concatenate(Dx)
-        Dy = np.concatenate(Dy)
-
-        Dx = np.reshape(Dx, in_shape)
-        Dy = np.reshape(Dy, in_shape)
-
-    # add back 1) I1 (RefI) relative to I2 (ChipI) initial offset Dx0 and Dy0, and
-    #          2) RefI relative to ChipI has a left/top boundary offset of -SearchLimitX and -SearchLimitY
     idx = np.logical_not(np.isnan(Dx))
     Dx[idx] += Dx0[idx] - SearchLimitX[idx]
     Dy[idx] += Dy0[idx] - SearchLimitY[idx]
@@ -1660,133 +1235,239 @@ def arImgDisp_s(
 
 
 ################## Chunked version of column filter
-def colfilt(A, kernelSize, option, chunkSize=4):
-    from skimage.util import view_as_windows as viewW
-    import numpy as np
+def jit_filter_function(filter_function):
+    """Decorator for use with scipy.ndimage.generic_filter."""
+    jitted_function = jit(filter_function, nopython=True)
 
-    chunkInds = int(A.shape[1] / chunkSize)
-    chunkRem = A.shape[1] - chunkSize * chunkInds
+    @cfunc(intc(CPointer(float64), intp, CPointer(float64), voidptr))
+    def wrapped(values_ptr, len_values, result, data):
+        values = carray(values_ptr, (len_values,), dtype=float64)
+        result[0] = jitted_function(values)
+        return 1
+    return LowLevelCallable(wrapped.ctypes, signature="int (double *, npy_intp, double *, void *)")
 
-    O = 0
 
-    for ii in range(chunkSize):
-        startInds = ii * chunkInds
-        if ii == chunkSize - 1:
-            endInds = (ii + 1) * chunkInds + chunkRem
+@jit_filter_function
+def fmax(values):
+    """colfilt max function"""
+    result = -np.inf
+    for v in values:
+        if v > result:
+            result = v
+    return result
+
+
+@jit_filter_function
+def fmin(values):
+    """colfilt min function"""
+    result = np.inf
+    for v in values:
+        if v < result:
+            result = v
+    return result
+
+
+@jit_filter_function
+def fmean(values):
+    """colfilt mean function"""
+    result = 0
+    count = 0
+    for v in values:
+        if v==v:            # if not a nan
+            result += v
+            count += 1
         else:
-            endInds = (ii + 1) * chunkInds
+            pass
+    if count == 0:
+        return np.nan
+    return result/count
 
-        if (ii == 0) & (ii == chunkSize - 1):
-            A1 = np.lib.pad(
-                A[:, startInds:endInds],
-                (
-                    (int((kernelSize[0] - 1) / 2), int((kernelSize[0] - 1) / 2)),
-                    (int((kernelSize[1] - 1) / 2), int((kernelSize[1] - 1) / 2)),
-                ),
-                mode="constant",
-                constant_values=np.nan,
-            )
-        else:
-            if ii == 0:
-                A1 = np.lib.pad(
-                    A[:, startInds : np.min((endInds + int((kernelSize[1] - 1) / 2), A.shape[1] - 1))],
-                    (
-                        (int((kernelSize[0] - 1) / 2), int((kernelSize[0] - 1) / 2)),
-                        (
-                            int((kernelSize[1] - 1) / 2),
-                            np.max((0, endInds + int((kernelSize[1] - 1) / 2) - A.shape[1] + 1)),
-                        ),
-                    ),
-                    mode="constant",
-                    constant_values=np.nan,
-                )
-            elif ii == chunkSize - 1:
-                A1 = np.lib.pad(
-                    A[:, np.max((0, startInds - int((kernelSize[1] - 1) / 2))) : endInds],
-                    (
-                        (int((kernelSize[0] - 1) / 2), int((kernelSize[0] - 1) / 2)),
-                        (np.max((0, 0 - startInds + int((kernelSize[1] - 1) / 2))), int((kernelSize[1] - 1) / 2)),
-                    ),
-                    mode="constant",
-                    constant_values=np.nan,
-                )
+
+@jit
+def partition(values, low, high):
+    pivot = values[high]
+    i = low - 1
+    for j in range(low, high):
+        if values[j] <= pivot:
+            i += 1
+            values[i], values[j] = values[j], values[i]
+            
+    values[i + 1], values[high] = values[high], values[i + 1]
+    return i + 1
+
+
+@jit
+def quickselect_non_recursive(values, k):
+        low = 0
+        high = len(values) - 1
+        while low <= high:
+            pivot_index = partition(values, low, high)
+            if pivot_index < k:
+                low = pivot_index + 1
+            elif pivot_index > k:
+                high = pivot_index - 1
             else:
-                A1 = np.lib.pad(
-                    A[
-                        :,
-                        np.max((0, startInds - int((kernelSize[1] - 1) / 2))) : np.min(
-                            (endInds + int((kernelSize[1] - 1) / 2), A.shape[1] - 1)
-                        ),
-                    ],
-                    (
-                        (int((kernelSize[0] - 1) / 2), int((kernelSize[0] - 1) / 2)),
-                        (
-                            np.max((0, 0 - startInds + int((kernelSize[1] - 1) / 2))),
-                            np.max((0, endInds + int((kernelSize[1] - 1) / 2) - A.shape[1] + 1)),
-                        ),
-                    ),
-                    mode="constant",
-                    constant_values=np.nan,
-                )
+                return values[pivot_index]
+        return None
 
-        B = viewW(A1, kernelSize).reshape(-1, kernelSize[0] * kernelSize[1]).T[:, ::1]
 
-        Adtype = A1.dtype
-        Ashape = A1.shape
-        del A1
+@jit
+def quickselect_non_recursive_duo(values, k):
+        # this function returns (values[k-1]+values[k])/2
+        low = 0
+        high = len(values) - 1
+        while low <= high:
+            pivot_index = partition(values, low, high)
+            if pivot_index < k-1:
+                low = pivot_index + 1
+            elif pivot_index > k:
+                high = pivot_index - 1
+            elif pivot_index == k:
+                temp_max = values[0]
+                for v in values[1:k]:
+                    if v > temp_max:
+                        temp_max = v
+                return (values[pivot_index]+temp_max)/2
+            else:                               # pivot_index == k-1:
+                temp_min = values[k]
+                for v in values[k+1:]:
+                    if v < temp_min:
+                        temp_min = v
+                return (values[pivot_index]+temp_min)/2
+        return None
 
-        output_size = (Ashape[0] - kernelSize[0] + 1, Ashape[1] - kernelSize[1] + 1)
-        C = np.zeros((B.shape[1],), dtype=Adtype)
 
-        if option == 0:  # max
-            C = np.nanmax(B, axis=0)
-            del B
-            C = C.reshape(output_size)
-        elif option == 1:  # min
-            C = np.nanmin(B, axis=0)
-            del B
-            C = C.reshape(output_size)
-        elif option == 2:  # mean
-            C = np.nanmean(B, axis=0)
-            del B
-            C = C.reshape(output_size)
-        elif option == 3:  # median
-            C = np.nanmedian(B, axis=0, overwrite_input=True)
-            del B
-            C = C.reshape(output_size)
-        elif option == 4:  # range
-            C = np.nanmax(B, axis=0) - np.nanmin(B, axis=0)
-            del B
-            C = C.reshape(output_size)
-        elif option == 6:  # MAD (Median Absolute Deviation)
-            m = B.shape[0]
-            D = np.zeros((B.shape[1],), dtype=Adtype)
-            D = np.nanmedian(B, axis=0)
-            D = np.abs(B - np.dot(np.ones((m, 1), dtype=Adtype), np.array([D])))
-            del B
-            C = np.nanmedian(D, axis=0, overwrite_input=True)
-            del D
-            C = C.reshape(output_size)
-        elif option[0] == 5:  # displacement distance count with option[1] being the threshold
-            m = B.shape[0]
-            c = int(np.round((m + 1) / 2) - 1)
-            #        c = 0
-            D = np.abs(B - np.dot(np.ones((m, 1), dtype=Adtype), np.array([B[c, :]])))
-            del B
-            C = np.sum(D < option[1], axis=0)
-            del D
-            C = C.reshape(output_size)
+@jit_filter_function
+def fmedian_quickSelect(values):
+    """colfilt median function that propagates nans"""
+    values = [v for v in values if v==v]  # remove nans
+    if len(values) < 3:
+        if len(values) == 1:
+            return values[0]
+        elif len(values) == 2:
+            return (values[0] + values[1]) / 2
         else:
-            sys.exit("invalid option for columnwise neighborhood filtering")
-
-        C = C.astype(Adtype)
-
-        if np.isscalar(O):
-            O = C.copy()
+            return np.nan
+    else:
+        if len(values)%2:
+            return quickselect_non_recursive(values, len(values)//2)
         else:
-            O = np.append(O, C, axis=1)
+            return quickselect_non_recursive_duo(values, len(values)//2)
 
-    return O
+
+@jit_filter_function
+def frange(values):
+    """colfilt range function"""
+    result_max = -np.inf
+    result_min = np.inf
+    for v in values:
+        if v < result_min:
+            result_min = v
+        if v > result_max:
+            result_max = v
+    return result_max-result_min
+
+
+@jit
+def median_quickSelect(values):
+    """MAD median function that does not support nans"""
+    if len(values) < 3:
+        if len(values) == 1:
+            return values[0]
+        elif len(values) == 2:
+            return (values[0]+values[1])/2
+        else:
+            return np.nan
+    else:
+        if len(values)%2:
+            return quickselect_non_recursive(values, len(values)//2)
+        else:
+            return quickselect_non_recursive_duo(values, len(values)//2)
+
+
+@jit_filter_function
+def fMAD(values):
+    """colfilt mean absolute deviation function"""
+    values = [v for v in values if v==v]  # remove nans
+    if len(values):
+        med = median_quickSelect(values)
+        values = [abs(v-med) for v in values]
+        return median_quickSelect(values)
+    else:
+        return np.nan
+
+
+def colfilt(A, kernelSize, option, chunkSize=4):
+    kernelSize = (min(kernelSize[0],A.shape[0]), min(kernelSize[1],A.shape[1]))
+    N_winsInCols = A.shape[1] - kernelSize[1] + 1
+    N_chunks = min(chunkSize,N_winsInCols)
+    N_winsInChunk_vec = np.full(N_chunks,N_winsInCols//N_chunks)
+    N_winsInChunk_vec[:(N_winsInCols % N_chunks)] += 1
+    cs = np.cumsum(N_winsInChunk_vec)
+    ind_startCols_chunks = cs - N_winsInChunk_vec
+    ind_stopCols_chunks = cs + kernelSize[1] - 1
+    m = (kernelSize[1]-1)//2    # margin due to kernel size (left)
+    m2 = kernelSize[1] - m - 1  # margin due to kernel size (right)
+    ind_out_start = ind_startCols_chunks + m
+    ind_out_start[0] = 0
+    ind_out_stop = ind_stopCols_chunks - m2
+    ind_out_stop[-1] = A.shape[1]
+    relInd_start = np.full(N_chunks,m)
+    relInd_stop = relInd_start + N_winsInChunk_vec
+    relInd_start[0] = 0
+    relInd_stop[-1] = N_winsInChunk_vec[-1] + kernelSize[1] - 1
+    out = np.full(A.shape,np.float32(np.nan))   # pre-allocate output
+
+    if option == 0:  # max
+        for ii in np.arange(N_chunks):
+            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
+                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fmax,size=kernelSize)[:,relInd_start[ii]:relInd_stop[ii]]
+        out[np.isneginf(out)] = np.nan
+
+    elif option == 1:  # min
+        for ii in np.arange(N_chunks):
+            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
+                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fmin,size=kernelSize)[:,relInd_start[ii]:relInd_stop[ii]]
+        out[np.isposinf(out)] = np.nan
+
+    elif option == 2:  # mean
+        for ii in np.arange(N_chunks):
+            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
+                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fmean,size=kernelSize,mode='constant',cval=np.nan)[:,relInd_start[ii]:relInd_stop[ii]]
+
+    elif option == 3:  # median
+        for ii in np.arange(N_chunks):
+            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
+                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fmedian_quickSelect,size=kernelSize,mode='constant',cval=np.nan)[:,relInd_start[ii]:relInd_stop[ii]]
+
+    elif option == 4:  # range
+        for ii in np.arange(N_chunks):
+            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
+                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],frange,size=kernelSize)[:,relInd_start[ii]:relInd_stop[ii]]
+
+    elif option == 6:  # MAD (Median Absolute Deviation)
+        for ii in np.arange(N_chunks):
+            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
+                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fMAD,size=kernelSize,mode='constant',cval=np.nan)[:,relInd_start[ii]:relInd_stop[ii]]
+
+    elif option[0] == 5:  # displacement distance count with option[1] being the threshold
+        center_ind = int(round((kernelSize[0]*kernelSize[1] + 1) / 2) - 1)
+
+        @jit_filter_function
+        def fDDC(values):
+            count = 0
+            for v in values:
+                count += abs(v - values[center_ind]) < option[1]
+            return count
+    
+        for ii in np.arange(N_chunks):
+            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
+                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fDDC,size=kernelSize,mode='constant',cval=np.nan)[:,relInd_start[ii]:relInd_stop[ii]]
+    else:
+        sys.exit("invalid option for columnwise neighborhood filtering")
+        pass
+    
+    return out
 
 
 class DISP_FILT:

@@ -65,12 +65,153 @@ def cmdLineParse():
             help='Input chip size max in Y')
     parser.add_argument('-ssm', '--ssm', dest='ssmfile', type=str, default="",
             help='Input stable surface mask')
+    parser.add_argument('-fo', '--flag_optical', dest='optical_flag', type=bool, required=False, default=0,
+            help='flag for reading optical data (e.g. Landsat): use 1 for on and 0 (default) for off')
+    # FIXME: used?
+    parser.add_argument('-b', '--buffer', dest='buffer', type=bool, required=False, default=0,
+            help='buffer to add to the starting/end range accounting for all passes from the same relative orbit')
+    parser.add_argument('-p', '--parse', dest='parse', action='store_true',
+            default=False, help='Parse the SAFE zip file to get radar image and orbit metadata; no need to run ISCE')
 
     return parser.parse_args()
 
 class Dummy(object):
     pass
 
+
+def getPol(safe, orbit_path):
+    from s1reader import load_bursts
+
+    pols = ['vv', 'vh', 'hh', 'hv']
+    for pol in pols:
+        try:
+            bursts = load_bursts(safe,orbit_path,1,pol)
+            print('Polarization '+pol)
+            return pol
+        except:
+            pass
+    raise ValueError(f"No polarization information found for {safe}.")
+
+
+def getMergedOrbit(safe,orbit_path,swath):
+    from s1reader import load_bursts
+
+    pol = getPol(safe, orbit_path)
+
+    bursts = load_bursts(safe,orbit_path,swath,pol)
+    burst = bursts[0]
+
+    return burst.orbit
+
+
+def loadMetadata(safe,orbit_path,swath,buffer=0):
+    '''
+    Input file.
+    '''
+    import os
+    import numpy as np
+    from datetime import datetime, timedelta
+    from s1reader import load_bursts
+    import isce3
+
+    #frames = []
+    #for swath in range(2,3):
+    #    inxml = os.path.join(indir, 'IW{0}.xml'.format(swath))
+    #    if os.path.exists(inxml):
+    #        ifg = loadProduct(inxml)
+    #        frames.append(ifg)
+    pol = getPol(safe,orbit_path)
+    bursts = load_bursts(safe,orbit_path,swath,pol)
+
+    for bur in bursts:
+        if int(bur.burst_id.subswath[2])==swath:
+            burst = bur
+
+    info = Dummy()
+    #info.sensingStart = min([x.sensingStart for x in frames])
+
+    info.prf = 1 / burst.azimuth_time_interval
+    info.startingRange = burst.starting_range
+    info.rangePixelSize = burst.range_pixel_spacing
+    info.wavelength = burst.wavelength
+    length, width = burst.shape
+    info.sensingStart = burst.sensing_start
+    info.aztime = float((isce3.core.DateTime(burst.sensing_start)-burst.orbit.reference_epoch).total_seconds())
+    #print('aztime',float(info.aztime))
+    info.sensingStop = (info.sensingStart + timedelta(seconds=(length-1.0)/info.prf))
+    info.orbitname = orbit_path
+    info.farRange = info.startingRange + (width-1.0)*info.rangePixelSize
+
+    info.lookSide = isce3.core.LookSide.Right
+
+    info.startingRange -= buffer * info.rangePixelSize
+    info.farRange += buffer * info.rangePixelSize
+
+    info.numberOfLines = int( np.round( (info.sensingStop - info.sensingStart).total_seconds() * info.prf)) + 1
+    info.numberOfSamples = int( np.round( (info.farRange - info.startingRange)/info.rangePixelSize)) + 1  + 2 * buffer
+    #print(length,width)
+    #print(info.numberOfLines,info.numberOfSamples)
+
+    info.orbit = getMergedOrbit(safe,orbit_path,swath)
+
+    return info
+
+
+def loadMetadataSlc(safe,orbit_path,buffer=0,swaths=None):
+    '''
+    Input file.
+    '''
+    import os
+    import numpy as np
+    from datetime import datetime, timedelta
+    from s1reader import load_bursts
+    import isce3
+
+    if swaths is None:
+        swaths=[1,2,3]
+
+    pol = getPol(safe, orbit_path)
+
+    info = Dummy()
+
+    orbit_file=orbit_path
+    total_width = 0
+    bursts = []
+    for swath in swaths:
+        burstst = load_bursts(safe, orbit_file, swath, pol)
+        bursts += burstst
+        dt = bursts[0].azimuth_time_interval
+        sensingStopt = burstst[-1].sensing_start + timedelta(seconds=(burstst[-1].shape[0]-1) * dt)
+        sensingStartt = burstst[0].sensing_start
+        if swath==min(swaths):
+            info.prf = 1 / burstst[0].azimuth_time_interval
+            info.sensingStart = sensingStartt
+            info.startingRange = burstst[0].starting_range
+            info.rangePixelSize = burstst[0].range_pixel_spacing
+            info.wavelength = burstst[0].wavelength
+            info.sensingStop = sensingStopt
+        if info.sensingStart > sensingStartt:
+            info.sensingStart = sensingStartt
+        if info.sensingStop < sensingStopt:
+            info.sensingStop = sensingStopt
+
+    total_width = int(np.round((bursts[-1].starting_range-bursts[0].starting_range)/bursts[0].range_pixel_spacing))+bursts[-1].shape[1]
+    info.aztime = float((isce3.core.DateTime(info.sensingStart)-bursts[0].orbit.reference_epoch).total_seconds())
+    info.orbitname = orbit_path
+    info.farRange = info.startingRange + (total_width-1.0)*info.rangePixelSize
+
+    info.lookSide = isce3.core.LookSide.Right
+
+    info.startingRange -= buffer * info.rangePixelSize
+    info.farRange += buffer * info.rangePixelSize
+
+    info.numberOfLines = int( np.round( (info.sensingStop - info.sensingStart).total_seconds() * info.prf)) + 1
+    info.numberOfSamples = int( np.round( (info.farRange - info.startingRange)/info.rangePixelSize)) + 1  + 2 * buffer
+    print('SIZE',info.numberOfLines,info.numberOfSamples)
+
+    info.orbit = getMergedOrbit(safe, orbit_path, swaths[0])
+
+    return info
 
 def coregisterLoadMetadata(indir_m, indir_s):
     '''
@@ -84,8 +225,6 @@ def coregisterLoadMetadata(indir_m, indir_s):
     import re
 
     from geogrid import GeogridOptical
-#    import isce
-#    from components.contrib.geo_autoRIFT.geogrid import GeogridOptical
 
     obj = GeogridOptical()
 
@@ -139,86 +278,159 @@ def coregisterLoadMetadata(indir_m, indir_s):
     return info, info1
 
 
-def runGeogrid(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, csminy, csmaxx, csmaxy, ssm, **kwargs):
+def runGeogrid(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, csminy, csmaxx, csmaxy, ssm, optical_flag = 1, **kwargs):
     '''
     Wire and run geogrid.
     '''
 
-    from geogrid import GeogridOptical
-#    import isce
-#    from components.contrib.geo_autoRIFT.geogrid import GeogridOptical
+    if optical_flag:
+        from geogrid import GeogridOptical
+        from osgeo import gdal
 
-    from osgeo import gdal
-    dem_info = gdal.Info(dem, format='json')
+        dem_info = gdal.Info(dem, format='json')
 
-    obj = GeogridOptical()
+        obj = GeogridOptical()
 
-    obj.startingX = info.startingX
-    obj.startingY = info.startingY
-    obj.XSize = info.XSize
-    obj.YSize = info.YSize
-    from datetime import date
-    import numpy as np
-    d0 = date(int(info.time[0:4]),int(info.time[4:6]),int(info.time[6:8]))
-    d1 = date(int(info1.time[0:4]),int(info1.time[4:6]),int(info1.time[6:8]))
-    date_dt_base = d1 - d0
-    obj.repeatTime = date_dt_base.total_seconds()
-#    obj.repeatTime = (info1.time - info.time) * 24.0 * 3600.0
-    obj.numberOfLines = info.numberOfLines
-    obj.numberOfSamples = info.numberOfSamples
-    obj.nodata_out = -32767
-    obj.chipSizeX0 = 240
-    obj.gridSpacingX = dem_info['geoTransform'][1]
+        obj.startingX = info.startingX
+        obj.startingY = info.startingY
+        obj.XSize = info.XSize
+        obj.YSize = info.YSize
+        from datetime import date
+        import numpy as np
+        d0 = date(int(info.time[0:4]),int(info.time[4:6]),int(info.time[6:8]))
+        d1 = date(int(info1.time[0:4]),int(info1.time[4:6]),int(info1.time[6:8]))
+        date_dt_base = d1 - d0
+        obj.repeatTime = date_dt_base.total_seconds()
+    #    obj.repeatTime = (info1.time - info.time) * 24.0 * 3600.0
+        obj.numberOfLines = info.numberOfLines
+        obj.numberOfSamples = info.numberOfSamples
+        obj.nodata_out = -32767
+        obj.chipSizeX0 = 240
+        obj.gridSpacingX = dem_info['geoTransform'][1]
 
-    obj.dat1name = info.filename
-    obj.demname = dem
-    obj.dhdxname = dhdx
-    obj.dhdyname = dhdy
-    obj.vxname = vx
-    obj.vyname = vy
-    obj.srxname = srx
-    obj.sryname = sry
-    obj.csminxname = csminx
-    obj.csminyname = csminy
-    obj.csmaxxname = csmaxx
-    obj.csmaxyname = csmaxy
-    obj.ssmname = ssm
-    obj.winlocname = "window_location.tif"
-    obj.winoffname = "window_offset.tif"
-    obj.winsrname = "window_search_range.tif"
-    obj.wincsminname = "window_chip_size_min.tif"
-    obj.wincsmaxname = "window_chip_size_max.tif"
-    obj.winssmname = "window_stable_surface_mask.tif"
-    obj.winro2vxname = "window_rdr_off2vel_x_vec.tif"
-    obj.winro2vyname = "window_rdr_off2vel_y_vec.tif"
-    obj.winsfname = "window_scale_factor.tif"
-    ##dt-varying search range scale (srs) rountine parameters
-#    obj.srs_dt_unity = 32
-#    obj.srs_max_scale = 10
-#    obj.srs_max_search = 20000
-#    obj.srs_min_search = 0
+        obj.dat1name = info.filename
+        obj.demname = dem
+        obj.dhdxname = dhdx
+        obj.dhdyname = dhdy
+        obj.vxname = vx
+        obj.vyname = vy
+        obj.srxname = srx
+        obj.sryname = sry
+        obj.csminxname = csminx
+        obj.csminyname = csminy
+        obj.csmaxxname = csmaxx
+        obj.csmaxyname = csmaxy
+        obj.ssmname = ssm
+        obj.winlocname = "window_location.tif"
+        obj.winoffname = "window_offset.tif"
+        obj.winsrname = "window_search_range.tif"
+        obj.wincsminname = "window_chip_size_min.tif"
+        obj.wincsmaxname = "window_chip_size_max.tif"
+        obj.winssmname = "window_stable_surface_mask.tif"
+        obj.winro2vxname = "window_rdr_off2vel_x_vec.tif"
+        obj.winro2vyname = "window_rdr_off2vel_y_vec.tif"
+        obj.winsfname = "window_scale_factor.tif"
+        ##dt-varying search range scale (srs) rountine parameters
+    #    obj.srs_dt_unity = 32
+    #    obj.srs_max_scale = 10
+    #    obj.srs_max_search = 20000
+    #    obj.srs_min_search = 0
 
-    obj.runGeogrid()
+        obj.runGeogrid()
 
-    run_info = {
-        'chipsizex0': obj.chipSizeX0,
-        'gridspacingx': obj.gridSpacingX,
-        'vxname': vx,
-        'vyname': vy,
-        'sxname': kwargs.get('dhdxs'),
-        'syname': kwargs.get('dhdys'),
-        'maskname': kwargs.get('sp'),
-        'xoff': obj.pOff,
-        'yoff': obj.lOff,
-        'xcount': obj.pCount,
-        'ycount': obj.lCount,
-        'dt': obj.repeatTime,
-        'epsg': kwargs.get('epsg'),
-        'XPixelSize': obj.X_res,
-        'YPixelSize': obj.Y_res,
-        'cen_lat': obj.cen_lat,
-        'cen_lon': obj.cen_lon,
-    }
+        run_info = {
+            'chipsizex0': obj.chipSizeX0,
+            'gridspacingx': obj.gridSpacingX,
+            'vxname': vx,
+            'vyname': vy,
+            'sxname': kwargs.get('dhdxs'),
+            'syname': kwargs.get('dhdys'),
+            'maskname': kwargs.get('sp'),
+            'xoff': obj.pOff,
+            'yoff': obj.lOff,
+            'xcount': obj.pCount,
+            'ycount': obj.lCount,
+            'dt': obj.repeatTime,
+            'epsg': kwargs.get('epsg'),
+            'XPixelSize': obj.X_res,
+            'YPixelSize': obj.Y_res,
+            'cen_lat': obj.cen_lat,
+            'cen_lon': obj.cen_lon,
+        }
+
+    else:
+        from geogrid import GeogridRadar
+        from osgeo import gdal
+
+        dem_info = gdal.Info(dem, format='json')
+
+        obj = GeogridRadar()
+
+        obj.startingRange = info.startingRange
+        obj.rangePixelSize = info.rangePixelSize
+        obj.sensingStart = info.sensingStart
+        obj.sensingStop = info.sensingStop
+        obj.orbitname = info.orbitname
+        obj.prf = info.prf
+        obj.aztime = info.aztime
+        obj.wavelength = info.wavelength
+        obj.lookSide = info.lookSide
+        obj.repeatTime = (info1.sensingStart - info.sensingStart).total_seconds()
+        obj.numberOfLines = info.numberOfLines
+        obj.numberOfSamples = info.numberOfSamples
+        obj.nodata_out = -32767
+        obj.chipSizeX0 = 240
+        obj.gridSpacingX = dem_info['geoTransform'][1]
+        obj.orbit = info.orbit
+        obj.demname = dem
+        obj.dhdxname = dhdx
+        obj.dhdyname = dhdy
+        obj.vxname = vx
+        obj.vyname = vy
+        obj.srxname = srx
+        obj.sryname = sry
+        obj.csminxname = csminx
+        obj.csminyname = csminy
+        obj.csmaxxname = csmaxx
+        obj.csmaxyname = csmaxy
+        obj.ssmname = ssm
+        obj.winlocname = "window_location.tif"
+        obj.winoffname = "window_offset.tif"
+        obj.winsrname = "window_search_range.tif"
+        obj.wincsminname = "window_chip_size_min.tif"
+        obj.wincsmaxname = "window_chip_size_max.tif"
+        obj.winssmname = "window_stable_surface_mask.tif"
+        obj.winro2vxname = "window_rdr_off2vel_x_vec.tif"
+        obj.winro2vyname = "window_rdr_off2vel_y_vec.tif"
+        obj.winsfname = "window_scale_factor.tif"
+        ##dt-varying search range scale (srs) rountine parameters
+        #    obj.srs_dt_unity = 5
+        #    obj.srs_max_scale = 10
+        #    obj.srs_max_search = 20000
+        #    obj.srs_min_search = 0
+
+        obj.getIncidenceAngle()
+        obj.geogridRadar()
+
+        run_info = {
+            'chipsizex0': obj.chipSizeX0,
+            'gridspacingx': obj.gridSpacingX,
+            'vxname': vx,
+            'vyname': vy,
+            'sxname': kwargs.get('dhdxs'),
+            'syname': kwargs.get('dhdys'),
+            'maskname': kwargs.get('sp'),
+            'xoff': obj.pOff,
+            'yoff': obj.lOff,
+            'xcount': obj.pCount,
+            'ycount': obj.lCount,
+            'dt': obj.repeatTime,
+            'epsg': kwargs.get('epsg'),
+            'XPixelSize': obj.X_res,
+            'YPixelSize': obj.Y_res,
+            'cen_lat': obj.cen_lat,
+            'cen_lon': obj.cen_lon,
+        }
 
     return run_info
 

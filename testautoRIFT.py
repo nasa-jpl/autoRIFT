@@ -28,8 +28,9 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 import re
 import warnings
-from osgeo import gdal
 from datetime import datetime, timedelta
+
+from osgeo import gdal
 
 
 def runCmd(cmd):
@@ -88,16 +89,14 @@ class Dummy(object):
 
 
 def loadProduct(filename):
-    '''
-    Load the product using Product Manager.
-    '''
-    import isce
-    import logging
-    from imageMath import IML
+    import numpy as np
 
-    IMG = IML.mmapFromISCE(filename, logging)
-    img = IMG.bands[0]
-#    pdb.set_trace()
+    ds = gdal.Open(filename, gdal.GA_ReadOnly)
+    band = ds.GetRasterBand(1)
+    img = band.ReadAsArray().astype(np.float32)
+    del band
+    del ds
+
     return img
 
 
@@ -107,8 +106,6 @@ def loadProductOptical(file_m, file_s):
     Load the product using Product Manager.
     '''
     from geogrid import GeogridOptical
-#    import isce
-#    from components.contrib.geo_autoRIFT.geogrid import GeogridOptical
 
     obj = GeogridOptical()
 
@@ -135,12 +132,8 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     '''
     Wire and run geogrid.
     '''
-
-#    import isce
-#    from components.contrib.geo_autoRIFT.autoRIFT import autoRIFT_ISCE
     from autoRIFT import autoRIFT
     import numpy as np
-#    import isceobj
     import time
     import subprocess
 
@@ -424,8 +417,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
     import time
     import os
 
-#    import isce
-#    from components.contrib.geo_autoRIFT.autoRIFT import __version__ as version
     from autoRIFT import __version__ as version
 
     if optical_flag == 1:
