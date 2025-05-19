@@ -1,14 +1,21 @@
-#!/usr/bin/env python
+from importlib.metadata import PackageNotFoundError, version
 
-#def SplitRangeSpectrum():
-#    from .splitSpectrum import PySplitRangeSpectrum
-#    return PySplitRangeSpectrum()
-
-# should always work - standalone or with ISCE
 from .GeogridOptical import GeogridOptical
 from .GeogridRadar import GeogridRadar
+
+
+_pip_name = 'geo_autoRIFT'
 try:
-    from .Geogrid import Geogrid
-except ImportError:
-    # this means ISCE support not available. Don't raise error. Allow standalone use
-    pass
+    __version__ = version(_pip_name)
+except PackageNotFoundError:
+    print(f'geogrid package is not installed!\n'
+          f'From the top of this repository, install in editable/develop mode via:\n'
+          f'   python -m pip install -e .\n'
+          f'Or, to just get the version number use:\n'
+          f'   python setup.py --version')
+
+__all__ = [
+    '__version__',
+    'GeogridOptical',
+    'GeogridRadar',
+]

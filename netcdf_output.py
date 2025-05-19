@@ -345,6 +345,9 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
     source = f'NASA MEaSUREs ITS_LIVE project. Processed with autoRIFT version ' \
              f'{IMG_INFO_DICT["autoRIFT_software_version"]}'
+    if pair_type == 'radar':
+        import isce3
+        source += f' using ISCE3 version {isce3.__version__}'
     if IMG_INFO_DICT['mission_img1'].startswith('S'):
         source += f'. Contains modified Copernicus Sentinel data {IMG_INFO_DICT["date_center"][0:4]}, processed by ESA'
     if IMG_INFO_DICT['mission_img1'].startswith('L'):
@@ -1264,18 +1267,17 @@ def rotate_vel2radar(rngind, azmind, vel_x, vel_y, swath_border, swath_border_fu
     return output_vel_x1, output_vel_y1
 
 
-def loadProduct(xmlname):
-    """
-    Load the product using Product Manager.
-    """
-    from iscesys.Component.ProductManager import ProductManager as PM
+def getPol(safe, orbit_path):
+    from s1reader import load_bursts
 
-    pm = PM()
-    pm.configure()
-
-    obj = pm.loadProduct(xmlname)
-
-    return obj
+    pols = ['vv', 'vh', 'hh', 'hv']
+    for pol in pols:
+        try:
+            bursts = load_bursts(safe,orbit_path,1,pol)
+            print('Polarization '+pol)
+            return pol
+        except:
+            pass
 
 
 def loadMetadata(indir):
@@ -1283,42 +1285,61 @@ def loadMetadata(indir):
     Input file.
     """
     import os
+    import numpy as np
+    from datetime import datetime
+    from s1reader import load_bursts
+    import glob
+    orbits = glob.glob('*.EOF')
+    fechas_orbits = [datetime.strptime(os.path.basename(file).split('_')[6], 'V%Y%m%dT%H%M%S') for file in orbits]
+    safes = glob.glob('*.SAFE')
+    if len(safes)==0:
+        safes = glob.glob('*.zip')
+    fechas_safes = [datetime.strptime(os.path.basename(file).split('_')[5], '%Y%m%dT%H%M%S') for file in safes]
 
-    frames = []
-    for swath in range(1, 4):
-        inxml = os.path.join(indir, 'IW{0}.xml'.format(swath))
-        if os.path.exists(inxml):
-            ifg = loadProduct(inxml)
-            frames.append(ifg)
-    flight_direction = frames[0].bursts[0].passDirection[0]
-    return frames, flight_direction
+    if 'ref' in indir:
+        safe = safes[np.argmin(fechas_safes)]
+        orbit_path = orbits[np.argmin(fechas_orbits)]
+    else:
+        safe = safes[np.argmax(fechas_safes)]
+        orbit_path = orbits[np.argmax(fechas_orbits)]
+
+    pol = getPol(safe, orbit_path)
+
+    swaths = []
+
+    if '_' in indir:
+        swath = int(indir.split('_')[2][2])
+        bursts = load_bursts(safe, orbit_path, swath, pol)
+        for bur in bursts:
+            if int(bur.burst_id.subswath[2])==swath:
+                burst = bur
+    else:
+        # Find the first swath containing data
+        for swath in [1, 2, 3]:
+            try:
+                bursts = load_bursts(safe, orbit_path, swath, pol)
+                burst = bursts[0]
+                swaths.append(bursts[0])
+            except:
+                continue
+
+    return swaths, burst.orbit_direction
 
 
 def cal_swath_offset_bias(indir_m, rngind, azmind, VX, VY, DX, DY, nodata,
                           tran, proj, GridSpacingX, ScaleChipSizeY, output_ref=[0.0, 0.0, 0.0, 0.0]):
 
-    frames, flight_direction = loadMetadata(os.path.dirname(indir_m)[:-6]+'fine_coreg')
-    frames_s, flight_direction_s = loadMetadata(os.path.dirname(indir_m)[:-6]+'secondary')
+    swaths, flight_direction = loadMetadata(os.path.basename(indir_m))
+    swaths_s, flight_direction_s = loadMetadata(os.path.basename(indir_m.replace('reference','secondary')))
 
-    if flight_direction == 'D':
-        flight_direction = 'descending'
-    elif flight_direction == 'A':
-        flight_direction = 'ascending'
-    else:
-        flight_direction = 'N/A'
+    flight_direction = flight_direction.lower()
+    flight_direction_s = flight_direction_s.lower()
 
-    if flight_direction_s == 'D':
-        flight_direction_s = 'descending'
-    elif flight_direction_s == 'A':
-        flight_direction_s = 'ascending'
-    else:
-        flight_direction_s = 'N/A'
-
-    if frames[0].orbit.orbitSource[2] == frames_s[0].orbit.orbitSource[2]:
+    if swaths[0].platform_id == swaths_s[0].platform_id:
         print('subswath offset bias correction not performed for non-S1A/B combination')
         return DX, DY, flight_direction, flight_direction_s
     else:
-        if frames[0].orbit.orbitSource[2] == 'B':
+        if swaths[0].platform_id[2] == 'B':
             output_ref = [-output_ref[0], -output_ref[1], -output_ref[2], -output_ref[3]]
 
     output = []
@@ -1332,11 +1353,23 @@ def cal_swath_offset_bias(indir_m, rngind, azmind, VX, VY, DX, DY, nodata,
     rngind[rngind == nodata] = np.nan
     azmind[azmind == nodata] = np.nan
 
-    ncols = int(np.round((frames[2].farRange - frames[0].startingRange)/frames[0].bursts[0].rangePixelSize))
+    IW1_shape = swaths[0].shape
+    IW1_far_range = swaths[0].starting_range + (IW1_shape[1] - 1.0) * swaths[0].range_pixel_spacing
 
-    ind2 = int(np.round((frames[0].farRange - frames[0].startingRange)/frames[0].bursts[0].rangePixelSize))
+    IW2_shape = swaths[1].shape
+    IW2_far_range = swaths[1].starting_range + (IW2_shape[1] - 1.0) * swaths[1].range_pixel_spacing
 
-    ind1 = int(np.round((frames[1].startingRange - frames[0].startingRange)/frames[0].bursts[0].rangePixelSize))
+    IW3_shape = swaths[2].shape
+    IW3_far_range = swaths[2].starting_range + (IW3_shape[1] - 1.0) * swaths[2].range_pixel_spacing
+
+    if len(swaths) > 1:
+        ncols = int(np.round((IW3_far_range - swaths[0].starting_range) / swaths[0].range_pixel_spacing))
+        ind2 = int(np.round((IW1_far_range - swaths[0].starting_range) / swaths[0].range_pixel_spacing))
+        ind1 = int(np.round((swaths[1].starting_range - swaths[0].starting_range) / swaths[0].range_pixel_spacing))
+    else:
+        ncols = int(np.round((IW1_far_range - swaths[0].starting_range) / swaths[0].range_pixel_spacing))
+        ind2 = ncols
+        ind1 = 0
 
     swath_border.append((ind1+ind2)/2)
     swath_border_full.append(ind1)
@@ -1347,8 +1380,6 @@ def cal_swath_offset_bias(indir_m, rngind, azmind, VX, VY, DX, DY, nodata,
 
     if (np.nanstd(VX[mask2]) < 25) & (np.nanstd(VX[mask1]) < 25) \
             & (np.nanstd(VY[mask2]) < 25) & (np.nanstd(VY[mask1]) < 25):
-        # output.append(np.nanmedian(DX[mask2])-np.nanmedian(DX[mask1]))
-        # output.append(np.nanmedian(DY[mask2])-np.nanmedian(DY[mask1]))
         output.append(output_ref[0])
         output.append(output_ref[1])
         flag21 = 1
@@ -1356,8 +1387,9 @@ def cal_swath_offset_bias(indir_m, rngind, azmind, VX, VY, DX, DY, nodata,
         output.append(output_ref[0])
         output.append(output_ref[1])
 
-    ind2 = int(np.round((frames[1].farRange - frames[0].startingRange)/frames[0].bursts[0].rangePixelSize))
-    ind1 = int(np.round((frames[2].startingRange - frames[0].startingRange)/frames[0].bursts[0].rangePixelSize))
+    if len(swaths) > 1:
+        ind2 = int(np.round((IW2_far_range - swaths[0].starting_range) / swaths[0].range_pixel_spacing))
+        ind1 = int(np.round((swaths[2].starting_range - swaths[0].starting_range) / swaths[0].range_pixel_spacing))
 
     swath_border.append((ind1+ind2)/2)
     swath_border_full.append(ind1)
@@ -1368,8 +1400,6 @@ def cal_swath_offset_bias(indir_m, rngind, azmind, VX, VY, DX, DY, nodata,
 
     if (np.nanstd(VX[mask2]) < 25) & (np.nanstd(VX[mask1]) < 25) \
             & (np.nanstd(VY[mask2]) < 25) & (np.nanstd(VY[mask1]) < 25):
-        # output.append(np.nanmedian(DX[mask2])-np.nanmedian(DX[mask1]))
-        # output.append(np.nanmedian(DY[mask2])-np.nanmedian(DY[mask1]))
         output.append(output_ref[2])
         output.append(output_ref[3])
         flag32 = 1

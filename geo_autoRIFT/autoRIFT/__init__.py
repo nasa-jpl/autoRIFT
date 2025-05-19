@@ -1,16 +1,18 @@
-#!/usr/bin/env python
+from importlib.metadata import PackageNotFoundError, version
 
-#def SplitRangeSpectrum():
-#    from .splitSpectrum import PySplitRangeSpectrum
-#    return PySplitRangeSpectrum()
-
-# should always work - standalone or with ISCE
 from .autoRIFT import autoRIFT
 
+_pip_name = 'geo_autoRIFT'
 try:
-    from .autoRIFT_ISCE import autoRIFT_ISCE
-except ImportError:
-    # this means ISCE support not available. Don't raise error. Allow standalone use
-    pass
+    __version__ = version(_pip_name)
+except PackageNotFoundError:
+    print(f'autoRIFT package is not installed!\n'
+          f'From the top of this repository, install in editable/develop mode via:\n'
+          f'   python -m pip install -e .\n'
+          f'Or, to just get the version number use:\n'
+          f'   python setup.py --version')
 
-__version__ = '1.5.0'
+__all__ = [
+    '__version__',
+    'autoRIFT',
+]
