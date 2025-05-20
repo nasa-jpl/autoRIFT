@@ -26,19 +26,85 @@
 #
 # Author: Yang Lei
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+import datetime
+import glob
+import os
 import re
 import warnings
+
+from pathlib import Path
 from datetime import datetime, timedelta
 
 from osgeo import gdal
+from s1reader import load_bursts
+
+from testGeogrid import getPol
+
+
+def get_topsinsar_config():
+    """
+    Input file.
+    """
+    orbits = glob.glob('*.EOF')
+    fechas_orbits = [datetime.strptime(os.path.basename(file).split('_')[6], 'V%Y%m%dT%H%M%S') for file in orbits]
+    safes = glob.glob('*.SAFE')
+    if not len(safes) == 0:
+        fechas_safes = [datetime.strptime(os.path.basename(file).split('_')[5], '%Y%m%dT%H%M%S') for file in safes]
+    else:
+        safes = glob.glob('*.zip')
+        fechas_safes = [datetime.strptime(os.path.basename(file).split('_')[5], '%Y%m%dT%H%M%S') for file in safes]
+
+    safe_ref = safes[np.argmin(fechas_safes)]  # type: ignore[arg-type]
+    orbit_path_ref = orbits[np.argmin(fechas_orbits)]  # type: ignore[arg-type]
+
+    safe_sec = safes[np.argmax(fechas_safes)]  # type: ignore[arg-type]
+    orbit_path_sec = orbits[np.argmax(fechas_orbits)]  # type: ignore[arg-type]
+
+    if len(glob.glob('*_ref*.tif')) > 0:
+        swath = int(os.path.basename(glob.glob('*_ref*.tif')[0]).split('_')[2][2])
+    else:
+        swath = None
+
+    safe: str
+    pol = getPol(safe_ref, orbit_path_ref)
+    burst = None
+
+    config_data = {}
+    for name in ['reference', 'secondary']:
+        # Find the first swath with data in it
+        swath_range = [swath] if swath else [1, 2, 3]
+        for swath in swath_range:
+            try:
+                if name == 'reference':
+                    burst = load_bursts(safe_ref, orbit_path_ref, swath, pol)[0]
+                    safe = safe_ref
+                else:
+                    burst = load_bursts(safe_sec, orbit_path_sec, swath, pol)[0]
+                    safe = safe_sec
+            except IndexError:
+                continue
+            break
+
+        assert burst
+        sensing_start = burst.sensing_start
+        length, width = burst.shape
+        prf = 1 / burst.azimuth_time_interval
+
+        sensing_stop = sensing_start + timedelta(seconds=(length - 1.0) / prf)
+
+        sensing_dt = (sensing_stop - sensing_start) / 2 + sensing_start
+
+        config_data[f'{name}_filename'] = Path(safe).name
+        config_data[f'{name}_dt'] = sensing_dt.strftime('%Y%m%dT%H:%M:%S.%f').rstrip('0')
+
+    return config_data
 
 
 def runCmd(cmd):
     import subprocess
     out = subprocess.getoutput(cmd)
     return out
-
-
 
 
 def cmdLineParse():
@@ -85,7 +151,6 @@ def cmdLineParse():
 
 class Dummy(object):
     pass
-
 
 
 def loadProduct(filename):
@@ -832,13 +897,11 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         dt = geogrid_run_info['dt']
                         epsg = geogrid_run_info['epsg']
 
-                    runCmd('topsinsar_filename.py')
-    #                import scipy.io as sio
-                    conts = sio.loadmat('topsinsar_filename.mat')
-                    master_filename = conts['master_filename'][0]
-                    slave_filename = conts['slave_filename'][0]
-                    master_dt = conts['master_dt'][0]
-                    slave_dt = conts['slave_dt'][0]
+                    conts = get_topsinsar_config()
+                    master_filename = conts['reference_filename']
+                    slave_filename = conts['secondary_filename']
+                    master_dt = conts['reference_dt']
+                    slave_dt = conts['secondary_dt']
                     master_split = str.split(master_filename,'_')
                     slave_split = str.split(slave_filename,'_')
 

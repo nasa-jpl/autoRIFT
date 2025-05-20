@@ -28,7 +28,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Removed
 * The `geo_autoRIFT/__init__.py` file and all the `sconscript` files have been removed with the migration to ISCE3 -- these only served to facilitate building autoRIFT as a contributed package inside ISCE2.
-
+* `topsinsar_filename.py` has been removed with the migration to ISCE3. This functionality has been moved to the `get_topsinsar_config` function in `testautoRIFT.py`.
 
 ## [1.6.0]
 
