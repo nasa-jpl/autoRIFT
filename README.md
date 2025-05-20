@@ -47,7 +47,9 @@ Currently, the expected workflow for autoRIFT is to:
 
 However, these files are not distributed with the package and so will need to be cloned/copied from the GitHub repository and likely modified for your use case. 
 
-For a description of how to call these scripts and the options available, please use the `--help` command:
+**For an example of using autoRIFT to determine the velocity of glaciers in Greenland, please see [`docs/demo.md`](docs/demo.md).**
+
+For a full description of how to call these scripts and the options available, please use the `--help` command:
 ```shell
 testGeogrid.py --help
 testautoRIFT.py --help
@@ -56,7 +58,7 @@ netcdf_output.py --help
 
 ## Future Development
 
-Notable changes to this project will be recorded in our [CHANGELOG](./CHANGELOG.md) and provided as release notes.
+Notable changes to this project will be recorded in our [CHANGELOG](CHANGELOG.md) and provided as release notes.
 
 Here are some known development opportunities:
 * for radar (SAR) images, it is yet to include the complex correlation of the two images, i.e. the current version only uses the amplitude correlation
