@@ -8,7 +8,27 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [2.0.0]
 
-### TBD
+### Changed
+* The radar version of Geogrid has been changed from `Geogrid.py` to `GeogridRadar.py`.
+* The radar version of Geogrid now uses [ISCE3](https://github.com/isce-framework/isce3) rather than [ISCE2](https://github.com/isce-framework/isce2).
+* The `test*.py` workflows are no longer specific to optical or radar processing:
+  * `testGeogridOptical.py` and `testGeogrid_ISCE.py` have been combined into a new `testGeogrid.py` script
+  * `testautoRIFT.py` and `testautoRIFT_ISCE.py` workflow scripts have been merged into one `testautoRIFT.py` script
+* Significant performance improvements to functions in `autoRIFT.py`:
+  * `arPixDisp_s` and `arPixDisp_u` (`float32` and `uint8` pixel-wise displacement functions):
+    * Moved the looping code into `autoriftmodule.cpp` 
+    * Multi-threading is now done via [OpenMP](https://www.openmp.org/) in C++, rather than by using Python's `multiprocessing` library
+    * Removed the `loop_unpacking_` functions that were used for multi-processing
+  * `colfilt` (column-wise filter function):
+    * All of the filter methods have been manually implemented with [Numba's @jit](https://numba.pydata.org/numba-doc/dev/user/jit.html)
+    * The filters are now applied using SciPy's [LowLevelCallable](https://docs.scipy.org/doc/scipy/reference/generated/scipy.LowLevelCallable.html) and [generic_filter](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.generic_filter.html#scipy.ndimage.generic_filter)
+
+### Fixed
+* The `arPixDisp_s` and `arSubPixDisp_s` C++ functions now use normalized cross-covariance (`CV_TM_CCOEFF_NORMED`) in the `cv::matchTemplate` calls, rather than normalized cross-correlation (`CV_TM_CCORR_NORMED`). This matches what the `arPixDisp_u` and `arSubPixDisp_u` workflows have been using. See [here](https://docs.opencv.org/4.x/df/dfb/group__imgproc__object.html#gga3a7850640f1fe1f58fe91a2d7583695da5382c8f9df87e87cf1e9f9927dc3bc31) for the differences between the methods.
+
+### Removed
+* All `sconscript` files and the `geo_autoRIFT/__init__.py` files have been removed with the migration to ISCE3 -- these only served to facilitate building autoRIFT as a contributed package inside ISCE2.
+
 
 ## [1.6.0]
 
