@@ -27,7 +27,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 * The `arPixDisp_s` and `arSubPixDisp_s` C++ functions now use normalized cross-covariance (`CV_TM_CCOEFF_NORMED`) in the `cv::matchTemplate` calls, rather than normalized cross-correlation (`CV_TM_CCORR_NORMED`). This matches what the `arPixDisp_u` and `arSubPixDisp_u` workflows have been using. See [here](https://docs.opencv.org/4.x/df/dfb/group__imgproc__object.html#gga3a7850640f1fe1f58fe91a2d7583695da5382c8f9df87e87cf1e9f9927dc3bc31) for the differences between the methods.
 
 ### Removed
-* All `sconscript` files and the `geo_autoRIFT/__init__.py` files have been removed with the migration to ISCE3 -- these only served to facilitate building autoRIFT as a contributed package inside ISCE2.
+* The `geo_autoRIFT/__init__.py` file and all the `sconscript` files have been removed with the migration to ISCE3 -- these only served to facilitate building autoRIFT as a contributed package inside ISCE2.
 
 
 ## [1.6.0]
