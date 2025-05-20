@@ -1,0 +1,18 @@
+name: Changelog updated?
+
+on:
+  pull_request:
+    types:
+      - opened
+      - labeled
+      - unlabeled
+      - synchronize
+    branches:
+      - main
+
+jobs:
+  call-changelog-check-workflow:
+    # Docs: https://github.com/ASFHyP3/actions
+    uses: ASFHyP3/actions/.github/workflows/reusable-changelog-check.yml@v0.18.1
+    permissions:
+      contents: read
