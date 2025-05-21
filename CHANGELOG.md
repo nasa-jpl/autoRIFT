@@ -12,10 +12,12 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 > This release includes major changes to Geogrid, autoRIFT, and the expected usage; please read the release notes carefully. Notably, the radar workflow has been migrated from ISCE2 to ISCE3 and autoRIFT now depends on ISCE3 instead of being built inside it.
 
 ### Added
+* An `environment.yml` file for creating a developmental conda environment
 * Updating the changelog will now be required for all PRs into autoRIFT's `main` branch.
 * geogrid C++ extension for the radar workflow which calls core ISCE3 C++ code directly.
 
 ### Changed
+* geogrid and autoRIFT now require Python 3.10 or greater
 * All project documentation has been consolidated into the `README.md` and `docs/demo.md`, which have been updated to reflect new usage. 
 * Python's `sysconfig` is now used to get the Python include directory and `purelib` library paths instead of predicting it from the OpenCV build info. 
 * Geogrid and autoRIFT now report their version numbers from the `geo_autoRIFT` namespace package metadata
