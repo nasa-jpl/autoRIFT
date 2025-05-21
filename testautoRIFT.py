@@ -39,7 +39,17 @@ from datetime import datetime, timedelta
 from osgeo import gdal
 from s1reader import load_bursts
 
-from testGeogrid import getPol
+
+def getPol(safe, orbit_path):
+    pols = ['vv', 'vh', 'hh', 'hv']
+    for pol in pols:
+        try:
+            bursts = load_bursts(safe,orbit_path,1,pol)
+            print('Polarization '+pol)
+            return pol
+        except:
+            pass
+    raise ValueError(f"No polarization information found for {safe}.")
 
 
 def get_topsinsar_config():
