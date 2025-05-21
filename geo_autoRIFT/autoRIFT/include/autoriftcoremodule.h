@@ -31,25 +31,20 @@
 #include <Python.h>
 #include <stdint.h>
 
-
-extern "C"
-{
-        PyObject * createAutoRiftCore(PyObject*, PyObject*);
-        PyObject * destroyAutoRiftCore(PyObject*, PyObject*);
-        PyObject * arPixDisp_u(PyObject *, PyObject *);
-        PyObject * arSubPixDisp_u(PyObject *, PyObject *);
-        PyObject * arPixDisp_s(PyObject *, PyObject *);
-        PyObject * arSubPixDisp_s(PyObject *, PyObject *);
+extern "C" {
+PyObject *createAutoRiftCore(PyObject *, PyObject *);
+PyObject *destroyAutoRiftCore(PyObject *, PyObject *);
+PyObject *arPixDisp_u(PyObject *, PyObject *);
+PyObject *arSubPixDisp_u(PyObject *, PyObject *);
+PyObject *arPixDisp_s(PyObject *, PyObject *);
+PyObject *arSubPixDisp_s(PyObject *, PyObject *);
 }
 
-static PyMethodDef autoriftcore_methods[] =
-{
-        {"createAutoRiftCore_Py", createAutoRiftCore, METH_VARARGS, " "},
-        {"destroyAutoRiftCore_Py", destroyAutoRiftCore, METH_VARARGS, " "},
-        {"arPixDisp_u_Py", arPixDisp_u, METH_VARARGS, " "},
-        {"arSubPixDisp_u_Py", arSubPixDisp_u, METH_VARARGS, " "},
-        {"arPixDisp_s_Py", arPixDisp_s, METH_VARARGS, " "},
-        {"arSubPixDisp_s_Py", arSubPixDisp_s, METH_VARARGS, " "},
-        {NULL, NULL, 0, NULL}
-};
-#endif //autoRiftCoremodule_h
+static PyMethodDef autoriftcore_methods[] = {{"createAutoRiftCore_Py", createAutoRiftCore, METH_VARARGS, " "},
+                                             {"destroyAutoRiftCore_Py", destroyAutoRiftCore, METH_VARARGS, " "},
+                                             {"arPixDisp_u_Py", arPixDisp_u, METH_VARARGS, " "},
+                                             {"arSubPixDisp_u_Py", arSubPixDisp_u, METH_VARARGS, " "},
+                                             {"arPixDisp_s_Py", arPixDisp_s, METH_VARARGS, " "},
+                                             {"arSubPixDisp_s_Py", arSubPixDisp_s, METH_VARARGS, " "},
+                                             {NULL, NULL, 0, NULL}};
+#endif  // autoRiftCoremodule_h
