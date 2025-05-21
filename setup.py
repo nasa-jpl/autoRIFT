@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-from distutils.core import setup
-from distutils.extension import Extension
+from setuptools import setup
+from setuptools.extension import Extension
 from pathlib import Path
 from sysconfig import get_path
 
