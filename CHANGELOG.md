@@ -8,6 +8,9 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [2.0.0]
 
+> [!IMPORTANT]
+> This release includes major changes to Geogrid, autoRIFT, and the expected usage; please read the release notes carefully. Notably, the radar workflow has been migrated from ISCE2 to ISCE3 and autoRIFT now depends on ISCE3 instead of being built inside it.
+
 ### Changed
 * The radar version of Geogrid has been changed from `Geogrid.py` to `GeogridRadar.py`.
 * The radar version of Geogrid now uses [ISCE3](https://github.com/isce-framework/isce3) rather than [ISCE2](https://github.com/isce-framework/isce2).
@@ -31,9 +34,6 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 * `topsinsar_filename.py` has been removed with the migration to ISCE3. This functionality has been moved to the `get_topsinsar_config` function in `testautoRIFT.py`.
 
 ## [1.6.0]
-
-> [!IMPORTANT]
-> This will be the last v1.0 series release with significant changes coming in v2.0! Please see the "Deprecated" section below and read the v2.0.0 release notes once released.
 
 ### Added
 * autoRIFT can now successfully process Sentinel-1 burst mosaics generated with [burst2safe](https://github.com/ASFHyP3/burst2safe). We recommend processing at least 2 bursts along track, with 3-5 bursts seeing improvements in data quality.
