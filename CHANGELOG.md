@@ -13,6 +13,9 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 * An `environment.yml` file for creating a developmental conda environment
+* `ruff.toml` configuration files for formatting python code with [ruff](https://docs.astral.sh/ruff/) 
+* `.clang-format` configuration files for formatting C/C++ code with [clang-format](https://clang.llvm.org/docs/ClangFormat.html)
+
 * Updating the changelog will now be required for all PRs into autoRIFT's `main` branch.
 * geogrid C++ extension for the radar workflow which calls core ISCE3 C++ code directly.
 
@@ -30,9 +33,9 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   * `arPixDisp_s` and `arPixDisp_u` (`float32` and `uint8` pixel-wise displacement functions):
     * Moved the looping code into `autoriftmodule.cpp` 
     * Multi-threading is now done via [OpenMP](https://www.openmp.org/) in C++, rather than by using Python's `multiprocessing` library
-    * Removed the `loop_unpacking_` functions that were used for multi-processing
+    * Removed the `loop_unpacking_` functions that were used for multiprocessing
   * `colfilt` (column-wise filter function):
-    * All of the filter methods have been manually implemented with [Numba's @jit](https://numba.pydata.org/numba-doc/dev/user/jit.html)
+    * All the filter methods have been manually implemented with [Numba's @jit](https://numba.pydata.org/numba-doc/dev/user/jit.html)
     * The filters are now applied using SciPy's [LowLevelCallable](https://docs.scipy.org/doc/scipy/reference/generated/scipy.LowLevelCallable.html) and [generic_filter](https://docs.scipy.org/doc/scipy/reference/generated/scipy.ndimage.generic_filter.html#scipy.ndimage.generic_filter)
 
 ### Fixed
