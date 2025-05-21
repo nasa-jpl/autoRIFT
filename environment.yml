@@ -1,0 +1,24 @@
+name: autoRIFT
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python>=3.10
+  - pip
+  # For building
+  - cxx-compiler
+  - eigen>=3.3  # For ISCE3 C++ code we include
+  # For packaging, and testing
+  - setuptools>=64
+  # For running
+  - gdal>=3
+  - isce3>=0.14
+  - libgdal-jp2openjpeg  # Needed for Sentinel-2 L1C data
+  - netCDF4
+  - numba
+  - numpy>=1.20,<2.0
+  - opencv
+  - pandas>=1.4
+  - s1reader>=0.2.2
+  - scikit-image
+  - scipy>=1.0,<1.13
