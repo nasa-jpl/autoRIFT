@@ -43,29 +43,29 @@ class GeogridRadar():
         '''
         from . import geogridRadar
 
-        ##Determine appropriate EPSG system
+        # Determine appropriate EPSG system
         self.epsg = self.getProjectionSystem()
 
-        ###Determine extent of data needed
+        # Determine extent of data needed
         bbox = self.determineBbox()
 
-        ###Load approrpriate DEM from database
+        # Load approrpriate DEM from database
         if self.demname is None:
             self.demname, self.dhdxname, self.dhdyname, self.vxname, self.vyname, self.srxname, self.sryname, self.csminxname, self.csminyname, self.csmaxxname, self.csmaxyname, self.ssmname = self.getDEM(bbox)
 
 
-        ##Create and set parameters
+        # Create and set parameters
         self.setState()
 
-        ##check parameters
+        # check parameters
         self.checkState()
 
-        ##Run
+        # Run
         geogridRadar.geogridRadar_Py(self._geogrid)
 
         self.get_center_latlon()
 
-        ##Get parameters
+        # Get parameters
         self.getState()
         output = open('output.txt')
         lines = output.readlines()
@@ -83,7 +83,7 @@ class GeogridRadar():
             elif 'Y_res' in line:
                 self.Y_res = float(line.split()[1])
 
-        ##Clean up
+        # Clean up
         self.finalize()
 
     def get_center_latlon(self):
@@ -156,7 +156,7 @@ class GeogridRadar():
 
         deg2rad = np.pi/180.0
 
-        ###First range line
+        # First range line
         for rr in rng:
             for zz in zrange:
                 llh = rdr2geo(self.aztime, rr, self.orbit, self.lookSide, 0.0, self.wavelength, DEMInterpolator(zz), refElp)
@@ -354,7 +354,7 @@ class GeogridRadar():
     def __init__(self):
         super(GeogridRadar, self).__init__()
 
-        ##Radar image related parameters
+        # Radar image related parameters
         self.orbit = None
         self.sensingStart = None
         self.sensingStop = None
@@ -370,7 +370,7 @@ class GeogridRadar():
         self.chipSizeX0 = None
         self.gridSpacingX = None
 
-        ##Input related parameters
+        # Input related parameters
         self.orbitname = None
         self.demname = None
         self.dhdxname = None
@@ -385,7 +385,7 @@ class GeogridRadar():
         self.csmaxyname = None
         self.ssmname = None
 
-        ##Output related parameters
+        # Output related parameters
         self.winlocname = None
         self.winoffname = None
         self.winsrname = None
@@ -396,23 +396,23 @@ class GeogridRadar():
         self.winro2vyname = None
         self.winsfname = None
 
-        ##dt-varying search range scale (srs) rountine parameters
+        # dt-varying search range scale (srs) rountine parameters
         self.srs_dt_unity = 182
         self.srs_max_scale = 5
         self.srs_max_search = 20000
         self.srs_min_search = 0
 
-        ##Coordinate system
+        # Coordinate system
         self.epsg = None
         self._xlim = None
         self._ylim = None
         self.nodata_out = None
 
-        ##Pointer to C
+        # Pointer to C
         self._geogrid = None
         self._orbit = None
 
-        ##parameters for autoRIFT
+        # parameters for autoRIFT
         self.pOff = None
         self.lOff = None
         self.pCount = None

@@ -39,27 +39,27 @@ class GeogridOptical():
 
         from . import geogridOptical
 
-        ##Determine appropriate EPSG system
+        # Determine appropriate EPSG system
         self.epsgDem = self.getProjectionSystem(self.demname)
         self.epsgDat = self.getProjectionSystem(self.dat1name)
 
-        ###Determine extent of data needed
+        # Determine extent of data needed
         bbox = self.determineBbox()
 
-        ##Create and set parameters
+        # Create and set parameters
         self.setState()
 
-        ##check parameters
+        # check parameters
         self.checkState()
 
-        ##Run
+        # Run
         geogridOptical.geogridOptical_Py(self._geogridOptical)
         self.get_center_latlon()
 
-        ##Get parameters
+        # Get parameters
         self.getState()
 
-        ##Clean up
+        # Clean up
         self.finalize()
 
     def get_center_latlon(self):
@@ -137,7 +137,7 @@ class GeogridOptical():
         utms = []
         xyzs = []
 
-        ### Four corner coordinates
+        #  Four corner coordinates
         for ss in samples:
             for ll in lines:
                 for zz in zrange:
@@ -300,7 +300,7 @@ class GeogridOptical():
     def __init__(self):
         super(GeogridOptical, self).__init__()
 
-        ##Optical image related parameters
+        # Optical image related parameters
         self.startingY = None
         self.startingX = None
         self.XSize = None
@@ -311,7 +311,7 @@ class GeogridOptical():
         self.chipSizeX0 = None
         self.gridSpacingX = None
 
-        ##Input related parameters
+        # Input related parameters
         self.dat1name = None
         self.demname = None
         self.dhdxname = None
@@ -326,7 +326,7 @@ class GeogridOptical():
         self.csmaxyname = None
         self.ssmname = None
 
-        ##Output related parameters
+        # Output related parameters
         self.winlocname = None
         self.winoffname = None
         self.winsrname = None
@@ -337,23 +337,23 @@ class GeogridOptical():
         self.winro2vyname = None
         self.winsfname = None
 
-        ##dt-varying search range scale (srs) rountine parameters
+        # dt-varying search range scale (srs) rountine parameters
         self.srs_dt_unity = 182
         self.srs_max_scale = 5
         self.srs_max_search = 20000
         self.srs_min_search = 0
 
-        ##Coordinate system
+        # Coordinate system
         self.epsgDem = None
         self.epsgDat = None
         self._xlim = None
         self._ylim = None
         self.nodata_out = None
 
-        ##Pointer to C
+        # Pointer to C
         self._geogridOptical = None
 
-        ##parameters for autoRIFT
+        # parameters for autoRIFT
         self.pOff = None
         self.lOff = None
         self.pCount = None
