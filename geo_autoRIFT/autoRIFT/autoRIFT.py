@@ -34,9 +34,10 @@ import sys
 import numpy as np
 import numpy.fft as fft
 from numba import cfunc, carray, jit
-from numba.types import intc, CPointer, float64, intp, voidptr
+from numba.core.types import intc, CPointer, float64, intp, voidptr
 from scipy import LowLevelCallable
 from scipy.ndimage import generic_filter
+
 
 def _remove_local_mean(image, kernel):
     mean = cv2.filter2D(image, -1, kernel, borderType=cv2.BORDER_CONSTANT)
@@ -49,7 +50,7 @@ def _preprocess_filt_std(image, kernel):
     conv_squared_sum = cv2.filter2D(image**2, -1, kernel, borderType=cv2.BORDER_REFLECT)
 
     variance = conv_squared_sum - (conv_sum**2)
-    variance = np.clip(variance, 0., None)
+    variance = np.clip(variance, 0.0, None)
 
     std = np.sqrt(variance) * np.sqrt(n / (n - 1))
     return std
@@ -61,7 +62,7 @@ def _wallis_filter(image, filter_width):
 
     shifted = _remove_local_mean(image, kernel)
     std = _preprocess_filt_std(image, kernel)
-    std[np.isclose(std, 0.)] = np.nan
+    std[np.isclose(std, 0.0)] = np.nan
     return shifted / std
 
 
@@ -71,9 +72,23 @@ def _wallis_filter_fill(image, filter_width, std_cutoff):
 
     # find edges of image, this makes missing scan lines valid and will
     # later be filled with random white noise
-    potential_data = cv2.distanceTransform(invalid_data.astype(np.uint8), distanceType=cv2.DIST_L2, maskSize=cv2.DIST_MASK_PRECISE) < 30
+    potential_data = (
+        cv2.distanceTransform(
+            invalid_data.astype(np.uint8),
+            distanceType=cv2.DIST_L2,
+            maskSize=cv2.DIST_MASK_PRECISE,
+        )
+        < 30
+    )
     missing_data = potential_data & invalid_data
-    missing_data = cv2.distanceTransform((~missing_data).astype(np.uint8), distanceType=cv2.DIST_L2, maskSize=cv2.DIST_MASK_PRECISE) <= buff
+    missing_data = (
+        cv2.distanceTransform(
+            (~missing_data).astype(np.uint8),
+            distanceType=cv2.DIST_L2,
+            maskSize=cv2.DIST_MASK_PRECISE,
+        )
+        <= buff
+    )
 
     # trying to frame out the image
     valid_domain = ~invalid_data | missing_data
@@ -86,7 +101,14 @@ def _wallis_filter_fill(image, filter_width, std_cutoff):
     std = _preprocess_filt_std(image, kernel)
 
     low_std = std < std_cutoff
-    low_std = cv2.distanceTransform((~low_std).astype(np.uint8), distanceType=cv2.DIST_L2, maskSize=cv2.DIST_MASK_PRECISE) <= buff
+    low_std = (
+        cv2.distanceTransform(
+            (~low_std).astype(np.uint8),
+            distanceType=cv2.DIST_L2,
+            maskSize=cv2.DIST_MASK_PRECISE,
+        )
+        <= buff
+    )
     missing_data = (missing_data | low_std) & valid_domain
 
     std[missing_data] = np.nan
@@ -135,36 +157,36 @@ def _fft_filter(Ix, valid_domain, power_threshold=500):
     center_x = x / 2
     center_x_int = np.floor(x / 2).astype(int)
 
-    regions = (valid_domain != 0).astype("uint8") * 255
+    regions = (valid_domain != 0).astype('uint8') * 255
     single_region = _find_largest_region(regions)
     single_region = np.uint8(single_region * 255)
     contours, hierarchy = cv2.findContours(single_region, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if hierarchy.shape[1] > 1:
-        raise ValueError(f"{hierarchy.shape[1]} external objects founds, only expecting 1.")
+        raise ValueError(f'{hierarchy.shape[1]} external objects founds, only expecting 1.')
     contour = contours[0]
     moment = cv2.moments(contour)
 
-    centroid_y = moment["m01"] / moment["m00"]
-    centroid_x = moment["m10"] / moment["m00"]
+    centroid_y = moment['m01'] / moment['m00']
+    centroid_x = moment['m10'] / moment['m00']
     centroid_y_int = np.floor(centroid_y).astype(int)
     centroid_x_int = np.floor(centroid_x).astype(int)
     angle = cv2.minAreaRect(contour)[2]
-    quadrants = np.ones(single_region.shape).astype("uint8")
+    quadrants = np.ones(single_region.shape).astype('uint8')
     quadrants[:, centroid_x_int:] += 1
     quadrants[centroid_y_int:, :] += 2
 
     rotation = cv2.getRotationMatrix2D(center=(centroid_x, centroid_y), angle=-angle, scale=1)
     rotated_quadrants = cv2.warpAffine(src=quadrants, M=rotation, dsize=(x, y))
 
-    centroid_array = np.ones(single_region.shape).astype("uint8")
+    centroid_array = np.ones(single_region.shape).astype('uint8')
     centroid_array[centroid_y_int, centroid_x_int] = 0
     distance_from_centroid = cv2.distanceTransform(centroid_array, cv2.DIST_L2, 5)
     distance_from_centroid[single_region != 255] = 0
     slices = {
-        "tl": 1,
-        "tr": 2,
-        "bl": 3,
-        "br": 4,
+        'tl': 1,
+        'tr': 2,
+        'bl': 3,
+        'br': 4,
     }
     corners = {}
     for s in slices:
@@ -176,8 +198,8 @@ def _fft_filter(Ix, valid_domain, power_threshold=500):
         corners[s] = max_point
 
     along_track, cross_track = _get_slopes(**corners)
-    print(f"Along track angle is {along_track:.2f} degrees")
-    print(f"Cross track angle is {cross_track:.2f} degrees")
+    print(f'Along track angle is {along_track:.2f} degrees')
+    print(f'Cross track angle is {cross_track:.2f} degrees')
 
     filter_base = np.zeros((y, x))
     filter_base[center_y_int - 70 : center_y_int + 70, :] = 1
@@ -187,17 +209,6 @@ def _fft_filter(Ix, valid_domain, power_threshold=500):
     rotation_b = cv2.getRotationMatrix2D(center=(center_x, center_y), angle=along_track, scale=1)
     filter_a = cv2.warpAffine(src=filter_base, M=rotation_a, dsize=(x, y))
     filter_b = cv2.warpAffine(src=filter_base, M=rotation_b, dsize=(x, y))
-
-    # Alex's code appears not to use this shift
-    # y_shift = centroid_y - center_y
-    # x_shift = centroid_x - center_x
-    # print(f"shift = ({x_shift:.1f},{y_shift:.1f})")
-
-    # translation = np.array([[1, 0, x_shift],
-    #                         [0, 1, y_shift]],
-    #                        dtype=np.float32)
-    # filter_a = cv2.warpAffine(src=filter_a, M=translation, dsize=(x, y))
-    # filter_b = cv2.warpAffine(src=filter_b, M=translation, dsize=(x, y))
 
     image = Ix.copy()
     image[image > 3] = 3
@@ -212,8 +223,8 @@ def _fft_filter(Ix, valid_domain, power_threshold=500):
 
     sA = np.nansum(P[filter_a == 1])
     sB = np.nansum(P[filter_b == 1])
-    print(f"Along track power is {sA:.0f} degrees")
-    print(f"Cross track power is {sB:.0f} degrees")
+    print(f'Along track power is {sA:.0f} degrees')
+    print(f'Cross track power is {sB:.0f} degrees')
     if ((sA / sB >= 2) | (sB / sA >= 2)) & ((sA > power_threshold) | (sB > power_threshold)):
         if sA > sB:
             final_filter = filter_a.copy()
@@ -224,8 +235,9 @@ def _fft_filter(Ix, valid_domain, power_threshold=500):
         filtered_image[~valid_domain] = 0
     else:
         print(
-            f"Power along flight direction ({max(sB, sA)}) does not exceed banding threshold ({power_threshold}). "
-            f"No banding filter applied.")
+            f'Power along flight direction ({max(sB, sA)}) does not exceed banding threshold ({power_threshold}). '
+            f'No banding filter applied.'
+        )
         return image
 
     return filtered_image
@@ -254,7 +266,7 @@ class autoRIFT:
         """
         self.I1zeroMask = self.I1 == 0
         self.I2zeroMask = self.I2 == 0
-        print(f"Wallis filter width is {self.WallisFilterWidth}")
+        print(f'Wallis filter width is {self.WallisFilterWidth}')
 
         self.I1 = _wallis_filter(self.I1, self.WallisFilterWidth)
         nan_mask = np.isnan(self.I1)
@@ -281,8 +293,6 @@ class autoRIFT:
 
         kernel = kernel / kernel.size
 
-        #        pdb.set_trace()
-
         self.I1 = cv2.filter2D(self.I1, -1, kernel, borderType=cv2.BORDER_CONSTANT)
 
         self.I2 = cv2.filter2D(self.I2, -1, kernel, borderType=cv2.BORDER_CONSTANT)
@@ -293,18 +303,15 @@ class autoRIFT:
         """
         self.I1 = _fft_filter(self.I1, ~self.I1zeroMask, power_threshold=500)
         self.I2 = _fft_filter(self.I2, ~self.I2zeroMask, power_threshold=500)
-        print("fft done")
+        print('fft done')
 
     def preprocess_db(self):
         """
         Do the pre processing using db scale (4 min).
         """
-        import cv2
         import numpy as np
 
         self.zeroMask = self.I1 == 0
-
-        #        pdb.set_trace()
 
         self.I1 = 20.0 * np.log10(self.I1)
 
@@ -333,7 +340,7 @@ class autoRIFT:
 
     def preprocess_filt_lap(self):
         """
-        Do the pre processing using Laplacian filter (2.5 min / 4 min).
+        Do the pre-processing using Laplacian filter (2.5 min / 4 min).
         """
         import cv2
         import numpy as np
@@ -347,12 +354,10 @@ class autoRIFT:
         self.I2 = cv2.Laplacian(self.I2, -1, ksize=self.WallisFilterWidth, borderType=cv2.BORDER_CONSTANT)
 
     def uniform_data_type(self):
-
         import numpy as np
 
         if self.DataType == 0:
             if self.zeroMask is not None:
-                #            validData = np.logical_not(np.isnan(self.I1))
                 validData = np.isfinite(self.I1)
                 temp = self.I1[validData]
             else:
@@ -363,11 +368,9 @@ class autoRIFT:
             self.I1 = (self.I1 - (M1 - 3 * S1)) / (6 * S1) * (2**8 - 0)
             del S1, M1, temp
 
-            #            self.I1[np.logical_not(np.isfinite(self.I1))] = 0
             self.I1 = np.round(np.clip(self.I1, 0, 255)).astype(np.uint8)
 
             if self.zeroMask is not None:
-                #            validData = np.logical_not(np.isnan(self.I2))
                 validData = np.isfinite(self.I2)
                 temp = self.I2[validData]
             else:
@@ -378,7 +381,6 @@ class autoRIFT:
             self.I2 = (self.I2 - (M2 - 3 * S2)) / (6 * S2) * (2**8 - 0)
             del S2, M2, temp
 
-            #            self.I2[np.logical_not(np.isfinite(self.I2))] = 0
             self.I2 = np.round(np.clip(self.I2, 0, 255)).astype(np.uint8)
 
             if self.zeroMask is not None:
@@ -387,7 +389,6 @@ class autoRIFT:
                 self.zeroMask = None
 
         elif self.DataType == 1:
-
             if self.zeroMask is not None:
                 self.I1[np.logical_not(np.isfinite(self.I1))] = 0
                 self.I2[np.logical_not(np.isfinite(self.I2))] = 0
@@ -401,7 +402,7 @@ class autoRIFT:
                 self.zeroMask = None
 
         else:
-            sys.exit("invalid data type for the image pair which must be unsigned integer 8 or 32-bit float")
+            sys.exit('invalid data type for the image pair which must be unsigned integer 8 or 32-bit float')
 
     def autorift(self):
         """
@@ -415,12 +416,12 @@ class autoRIFT:
         ChipSizeUniX = np.delete(ChipSizeUniX, np.where(ChipSizeUniX == 0)[0])
 
         if np.any(np.mod(ChipSizeUniX, self.ChipSize0X) != 0):
-            sys.exit("chip sizes must be even integers of ChipSize0")
+            sys.exit('chip sizes must be even integers of ChipSize0')
 
         ChipRangeX = self.ChipSize0X * np.array([1, 2, 4, 8, 16, 32, 64], np.float32)
         #        ChipRangeX = ChipRangeX[ChipRangeX < (2**8 - 1)]
         if np.max(ChipSizeUniX) > np.max(ChipRangeX):
-            sys.exit("max each chip size is out of range")
+            sys.exit('max each chip size is out of range')
 
         ChipSizeUniX = ChipRangeX[(ChipRangeX >= np.min(ChipSizeUniX)) & (ChipRangeX <= np.max(ChipSizeUniX))]
 
@@ -428,9 +429,9 @@ class autoRIFT:
 
         if (np.mod(self.xGrid.shape[0], maxScale) != 0) | (np.mod(self.xGrid.shape[1], maxScale) != 0):
             message = (
-                "xgrid and ygrid have an incorect size "
+                'xgrid and ygrid have an incorect size '
                 + str(self.xGrid.shape)
-                + " for nested search, they must have dimensions that an interger multiple of "
+                + ' for nested search, they must have dimensions that an interger multiple of '
                 + str(maxScale)
             )
             sys.exit(message)
@@ -473,7 +474,7 @@ class autoRIFT:
         if self.ChipSize0X > self.GridSpacingX:
             if np.mod(self.ChipSize0X, self.GridSpacingX) != 0:
                 sys.exit(
-                    "when GridSpacing < smallest allowable chip size (ChipSize0), ChipSize0 must be integer multiples of GridSpacing"
+                    'when GridSpacing < smallest allowable chip size (ChipSize0), ChipSize0 must be integer multiples of GridSpacing'
                 )
             else:
                 ChipSize0_GridSpacing_oversample_ratio = int(self.ChipSize0X / self.GridSpacingX)
@@ -481,7 +482,12 @@ class autoRIFT:
             ChipSize0_GridSpacing_oversample_ratio = 1
 
         DispFiltC = DISP_FILT()
-        overlap_c = np.max((1 - self.sparseSearchSampleRate / ChipSize0_GridSpacing_oversample_ratio, 0))
+        overlap_c = np.max(
+            (
+                1 - self.sparseSearchSampleRate / ChipSize0_GridSpacing_oversample_ratio,
+                0,
+            )
+        )
         DispFiltC.FracValid = self.FracValid * (1 - overlap_c) + overlap_c**2
         DispFiltC.FracSearch = self.FracSearch
         DispFiltC.FiltWidth = (self.FiltWidth - 1) * ChipSize0_GridSpacing_oversample_ratio + 1
@@ -499,13 +505,23 @@ class autoRIFT:
         DispFiltF.colfiltChunkSize = self.colfiltChunkSize
 
         for i in range(ChipSizeUniX.__len__()):
-
             # Nested grid setup: chip size being ChipSize0X no need to resize, otherwise has to resize the arrays
             if self.ChipSize0X != ChipSizeUniX[i]:
                 Scale = self.ChipSize0X / ChipSizeUniX[i]
-                dstShape = (int(self.xGrid.shape[0] * Scale), int(self.xGrid.shape[1] * Scale))
-                xGrid0 = cv2.resize(self.xGrid.astype(np.float32), dstShape[::-1], interpolation=cv2.INTER_AREA)
-                yGrid0 = cv2.resize(self.yGrid.astype(np.float32), dstShape[::-1], interpolation=cv2.INTER_AREA)
+                dstShape = (
+                    int(self.xGrid.shape[0] * Scale),
+                    int(self.xGrid.shape[1] * Scale),
+                )
+                xGrid0 = cv2.resize(
+                    self.xGrid.astype(np.float32),
+                    dstShape[::-1],
+                    interpolation=cv2.INTER_AREA,
+                )
+                yGrid0 = cv2.resize(
+                    self.yGrid.astype(np.float32),
+                    dstShape[::-1],
+                    interpolation=cv2.INTER_AREA,
+                )
 
                 if np.mod(ChipSizeUniX[i], 2) == 0:
                     xGrid0 = np.round(xGrid0 + 0.5) - 0.5
@@ -515,19 +531,52 @@ class autoRIFT:
                     yGrid0 = np.round(yGrid0)
 
                 M0 = (ChipSizeX == 0) & (self.ChipSizeMinX <= ChipSizeUniX[i]) & (self.ChipSizeMaxX >= ChipSizeUniX[i])
-                M0 = colfilt(M0.copy(), (int(1 / Scale * 6), int(1 / Scale * 6)), 0, self.colfiltChunkSize)
+                M0 = colfilt(
+                    M0.copy(),
+                    (int(1 / Scale * 6), int(1 / Scale * 6)),
+                    0,
+                    self.colfiltChunkSize,
+                )
                 M0 = cv2.resize(
-                    np.logical_not(M0).astype(np.uint8), dstShape[::-1], interpolation=cv2.INTER_NEAREST
+                    np.logical_not(M0).astype(np.uint8),
+                    dstShape[::-1],
+                    interpolation=cv2.INTER_NEAREST,
                 ).astype(bool)
 
                 SearchLimitX0 = colfilt(
-                    self.SearchLimitX.copy(), (int(1 / Scale), int(1 / Scale)), 0, self.colfiltChunkSize
-                ) + colfilt(self.Dx0.copy(), (int(1 / Scale), int(1 / Scale)), 4, self.colfiltChunkSize)
+                    self.SearchLimitX.copy(),
+                    (int(1 / Scale), int(1 / Scale)),
+                    0,
+                    self.colfiltChunkSize,
+                ) + colfilt(
+                    self.Dx0.copy(),
+                    (int(1 / Scale), int(1 / Scale)),
+                    4,
+                    self.colfiltChunkSize,
+                )
                 SearchLimitY0 = colfilt(
-                    self.SearchLimitY.copy(), (int(1 / Scale), int(1 / Scale)), 0, self.colfiltChunkSize
-                ) + colfilt(self.Dy0.copy(), (int(1 / Scale), int(1 / Scale)), 4, self.colfiltChunkSize)
-                Dx00 = colfilt(self.Dx0.copy(), (int(1 / Scale), int(1 / Scale)), 2, self.colfiltChunkSize)
-                Dy00 = colfilt(self.Dy0.copy(), (int(1 / Scale), int(1 / Scale)), 2, self.colfiltChunkSize)
+                    self.SearchLimitY.copy(),
+                    (int(1 / Scale), int(1 / Scale)),
+                    0,
+                    self.colfiltChunkSize,
+                ) + colfilt(
+                    self.Dy0.copy(),
+                    (int(1 / Scale), int(1 / Scale)),
+                    4,
+                    self.colfiltChunkSize,
+                )
+                Dx00 = colfilt(
+                    self.Dx0.copy(),
+                    (int(1 / Scale), int(1 / Scale)),
+                    2,
+                    self.colfiltChunkSize,
+                )
+                Dy00 = colfilt(
+                    self.Dy0.copy(),
+                    (int(1 / Scale), int(1 / Scale)),
+                    2,
+                    self.colfiltChunkSize,
+                )
 
                 SearchLimitX0 = np.ceil(cv2.resize(SearchLimitX0, dstShape[::-1]))
                 SearchLimitY0 = np.ceil(cv2.resize(SearchLimitY0, dstShape[::-1]))
@@ -535,7 +584,6 @@ class autoRIFT:
                 SearchLimitY0[M0] = 0
                 Dx00 = np.round(cv2.resize(Dx00, dstShape[::-1], interpolation=cv2.INTER_NEAREST))
                 Dy00 = np.round(cv2.resize(Dy00, dstShape[::-1], interpolation=cv2.INTER_NEAREST))
-            #                pdb.set_trace()
             else:
                 SearchLimitX0 = self.SearchLimitX.copy()
                 SearchLimitY0 = self.SearchLimitY.copy()
@@ -543,9 +591,6 @@ class autoRIFT:
                 Dy00 = self.Dy0.copy()
                 xGrid0 = self.xGrid.copy()
                 yGrid0 = self.yGrid.copy()
-            #                M0 = (ChipSizeX == 0) & (self.ChipSizeMinX <= ChipSizeUniX[i]) & (self.ChipSizeMaxX >= ChipSizeUniX[i])
-            #                SearchLimitX0[np.logical_not(M0)] = 0
-            #                SearchLimitY0[np.logical_not(M0)] = 0
 
             if np.logical_not(np.any(SearchLimitX0 != 0)):
                 continue
@@ -570,15 +615,29 @@ class autoRIFT:
             xGrid0C = xGrid0[rIdxC, cIdxC]
             yGrid0C = yGrid0[rIdxC, cIdxC]
 
-            #            pdb.set_trace()
-
-            if np.remainder((self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio), 2) == 0:
+            if (
+                np.remainder(
+                    (self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio),
+                    2,
+                )
+                == 0
+            ):
                 filtWidth = (self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio) + 1
             else:
                 filtWidth = self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio
 
-            SearchLimitX0C = colfilt(SearchLimitX0.copy(), (int(filtWidth), int(filtWidth)), 0, self.colfiltChunkSize)
-            SearchLimitY0C = colfilt(SearchLimitY0.copy(), (int(filtWidth), int(filtWidth)), 0, self.colfiltChunkSize)
+            SearchLimitX0C = colfilt(
+                SearchLimitX0.copy(),
+                (int(filtWidth), int(filtWidth)),
+                0,
+                self.colfiltChunkSize,
+            )
+            SearchLimitY0C = colfilt(
+                SearchLimitY0.copy(),
+                (int(filtWidth), int(filtWidth)),
+                0,
+                self.colfiltChunkSize,
+            )
             SearchLimitX0C = SearchLimitX0C[rIdxC, cIdxC]
             SearchLimitY0C = SearchLimitY0C[rIdxC, cIdxC]
 
@@ -594,8 +653,6 @@ class autoRIFT:
                 overSampleRatio = self.OverSampleRatio[ChipSizeUniX[i]]
             else:
                 overSampleRatio = self.OverSampleRatio
-
-            #            pdb.set_trace()
 
             if self.I1.dtype == np.uint8:
                 DxC, DyC = arImgDisp_u(
@@ -628,15 +685,18 @@ class autoRIFT:
                     overSampleRatio,
                 )
             else:
-                sys.exit("invalid data type for the image pair which must be unsigned integer 8 or 32-bit float")
-
-            #            pdb.set_trace()
+                sys.exit('invalid data type for the image pair which must be unsigned integer 8 or 32-bit float')
 
             # M0C is the mask for reliable estimates after coarse search, MC is the mask after disparity filtering, MC2 is the mask after area closing for fine search
             M0C = np.logical_not(np.isnan(DxC))
 
             MC = DispFiltC.filtDisp(
-                DxC.copy(), DyC.copy(), SearchLimitX0C.copy(), SearchLimitY0C.copy(), M0C.copy(), overSampleRatio
+                DxC.copy(),
+                DyC.copy(),
+                SearchLimitX0C.copy(),
+                SearchLimitY0C.copy(),
+                M0C.copy(),
+                overSampleRatio,
             )
 
             MC[np.logical_not(M0C)] = False
@@ -653,7 +713,6 @@ class autoRIFT:
             )
 
             MC2 = cv2.resize(MC2.astype(np.uint8), dstShape[::-1], interpolation=cv2.INTER_NEAREST).astype(bool)
-            #            pdb.set_trace()
             if np.logical_not(np.all(MC2.shape == SearchLimitX0.shape)):
                 rowAdd = SearchLimitX0.shape[0] - MC2.shape[0]
                 colAdd = SearchLimitX0.shape[1] - MC2.shape[1]
@@ -669,7 +728,6 @@ class autoRIFT:
             SubPixFlag = True
             ChipSizeXF = ChipSizeUniX[i]
             ChipSizeYF = np.float32(np.round(ChipSizeXF * self.ScaleChipSizeY / 2) * 2)
-            #            pdb.set_trace()
             if self.I1.dtype == np.uint8:
                 DxF, DyF = arImgDisp_u(
                     self.I2.copy(),
@@ -701,9 +759,7 @@ class autoRIFT:
                     overSampleRatio,
                 )
             else:
-                sys.exit("invalid data type for the image pair which must be unsigned integer 8 or 32-bit float")
-
-            #            pdb.set_trace()
+                sys.exit('invalid data type for the image pair which must be unsigned integer 8 or 32-bit float')
 
             M0 = DispFiltF.filtDisp(
                 DxF.copy(),
@@ -713,13 +769,22 @@ class autoRIFT:
                 np.logical_not(np.isnan(DxF)),
                 overSampleRatio,
             )
-            #            pdb.set_trace()
             DxF[np.logical_not(M0)] = np.nan
             DyF[np.logical_not(M0)] = np.nan
 
             # Light interpolation with median filtered values: DxFM (filtered) and DxF (unfiltered)
-            DxFM = colfilt(DxF.copy(), (self.fillFiltWidth, self.fillFiltWidth), 3, self.colfiltChunkSize)
-            DyFM = colfilt(DyF.copy(), (self.fillFiltWidth, self.fillFiltWidth), 3, self.colfiltChunkSize)
+            DxFM = colfilt(
+                DxF.copy(),
+                (self.fillFiltWidth, self.fillFiltWidth),
+                3,
+                self.colfiltChunkSize,
+            )
+            DyFM = colfilt(
+                DyF.copy(),
+                (self.fillFiltWidth, self.fillFiltWidth),
+                3,
+                self.colfiltChunkSize,
+            )
 
             # M0 is mask for original valid estimates, MF is mask for filled ones, MM is mask where filtered ones exist for filling
             MF = np.zeros(M0.shape, dtype=bool)
@@ -728,9 +793,14 @@ class autoRIFT:
             for j in range(3):
                 foo = MF | M0  # initial valid estimates
                 foo1 = (
-                    cv2.filter2D(foo.astype(np.float32), -1, np.ones((3, 3)), borderType=cv2.BORDER_CONSTANT) >= 6
+                    cv2.filter2D(
+                        foo.astype(np.float32),
+                        -1,
+                        np.ones((3, 3)),
+                        borderType=cv2.BORDER_CONSTANT,
+                    )
+                    >= 6
                 ) | foo  # 1st area closing followed by the 2nd (part of the next line calling OpenCV)
-                #                pdb.set_trace()
                 fillIdx = (
                     np.logical_not(bwareaopen(np.logical_not(foo1).astype(np.uint8), 5)) & np.logical_not(foo) & MM
                 )
@@ -752,10 +822,20 @@ class autoRIFT:
 
                 # DxF0 (filtered) / Dx (unfiltered) is the result from earlier iterations, DxFM (filtered) / DxF (unfiltered) is that of the current iteration
                 # first colfilt nans within 2-by-2 area (otherwise 1 nan will contaminate all 4 points)
-                DxF0 = colfilt(Dx.copy(), (int(Scale + 1), int(Scale + 1)), 2, self.colfiltChunkSize)
+                DxF0 = colfilt(
+                    Dx.copy(),
+                    (int(Scale + 1), int(Scale + 1)),
+                    2,
+                    self.colfiltChunkSize,
+                )
                 # then resize to half size using area (similar to averaging) to match the current iteration
                 DxF0 = cv2.resize(DxF0, dstShape[::-1], interpolation=cv2.INTER_AREA)
-                DyF0 = colfilt(Dy.copy(), (int(Scale + 1), int(Scale + 1)), 2, self.colfiltChunkSize)
+                DyF0 = colfilt(
+                    Dy.copy(),
+                    (int(Scale + 1), int(Scale + 1)),
+                    2,
+                    self.colfiltChunkSize,
+                )
                 DyF0 = cv2.resize(DyF0, dstShape[::-1], interpolation=cv2.INTER_AREA)
 
                 # Note this DxFM is almost the same as DxFM (same variable) in the light interpolation (only slightly better); however, only small portion of it will be used later at locations specified by M0 and MF that are determined in the light interpolation. So even without the following two lines, the final Dx and Dy result is still the same.
@@ -807,7 +887,6 @@ class autoRIFT:
         rlim = int(np.floor(self.xGrid.shape[0] / chopFactor) * chopFactor)
         clim = int(np.floor(self.xGrid.shape[1] / chopFactor) * chopFactor)
         self.origSize = self.xGrid.shape
-        #        pdb.set_trace()
         self.xGrid = np.round(self.xGrid[0:rlim, 0:clim]) + 0.5
         self.yGrid = np.round(self.yGrid[0:rlim, 0:clim]) + 0.5
 
@@ -830,10 +909,9 @@ class autoRIFT:
         self.autorift()
 
     def __init__(self):
-
         super(autoRIFT, self).__init__()
 
-        ##Input related parameters
+        # Input related parameters
         self.I1 = None
         self.I2 = None
         self.xGrid = None
@@ -845,14 +923,14 @@ class autoRIFT:
         self.I1zeroMask = None
         self.I2zeroMask = None
 
-        ##Output file
+        # Output file
         self.Dx = None
         self.Dy = None
         self.InterpMask = None
         self.ChipSizeX = None
         self.ChipSizeY = None
 
-        ##Parameter list
+        # Parameter list
         self.WallisFilterWidth = 5
         self.StandardDeviationCutoff = 0.25
         self.ChipSizeMinX = 32
@@ -882,7 +960,7 @@ class autoRIFT:
 
 class AUTO_RIFT_CORE:
     def __init__(self):
-        ##Pointer to C
+        # Pointer to C
         self._autoriftcore = None
 
 
@@ -890,16 +968,16 @@ var_dict = {}
 
 
 def initializer(I1, I2, xGrid, yGrid, SearchLimitX, SearchLimitY, ChipSizeX, ChipSizeY, Dx0, Dy0):
-    var_dict["I1"] = I1
-    var_dict["I2"] = I2
-    var_dict["xGrid"] = xGrid
-    var_dict["yGrid"] = yGrid
-    var_dict["SearchLimitX"] = SearchLimitX
-    var_dict["SearchLimitY"] = SearchLimitY
-    var_dict["ChipSizeX"] = ChipSizeX
-    var_dict["ChipSizeY"] = ChipSizeY
-    var_dict["Dx0"] = Dx0
-    var_dict["Dy0"] = Dy0
+    var_dict['I1'] = I1
+    var_dict['I2'] = I2
+    var_dict['xGrid'] = xGrid
+    var_dict['yGrid'] = yGrid
+    var_dict['SearchLimitX'] = SearchLimitX
+    var_dict['SearchLimitY'] = SearchLimitY
+    var_dict['ChipSizeX'] = ChipSizeX
+    var_dict['ChipSizeY'] = ChipSizeY
+    var_dict['Dx0'] = Dx0
+    var_dict['Dy0'] = Dy0
 
 
 def arImgDisp_u(
@@ -918,7 +996,6 @@ def arImgDisp_u(
 ):
     import numpy as np
     from . import autoriftcore
-    import multiprocessing as mp
 
     core = AUTO_RIFT_CORE()
     if core._autoriftcore is not None:
@@ -928,36 +1005,36 @@ def arImgDisp_u(
 
     if np.size(SearchLimitX) == 1:
         if np.logical_not(isinstance(SearchLimitX, np.float32) & isinstance(SearchLimitY, np.float32)):
-            sys.exit("SearchLimit must be float")
+            sys.exit('SearchLimit must be float')
     else:
         if np.logical_not((SearchLimitX.dtype == np.float32) & (SearchLimitY.dtype == np.float32)):
-            sys.exit("SearchLimit must be float")
+            sys.exit('SearchLimit must be float')
 
     if np.size(Dx0) == 1:
         if np.logical_not(isinstance(Dx0, np.float32) & isinstance(Dy0, np.float32)):
-            sys.exit("Search offsets must be float")
+            sys.exit('Search offsets must be float')
     else:
         if np.logical_not((Dx0.dtype == np.float32) & (Dy0.dtype == np.float32)):
-            sys.exit("Search offsets must be float")
+            sys.exit('Search offsets must be float')
 
     if np.size(ChipSizeX) == 1:
         if np.logical_not(isinstance(ChipSizeX, np.float32) & isinstance(ChipSizeY, np.float32)):
-            sys.exit("ChipSize must be float")
+            sys.exit('ChipSize must be float')
     else:
         if np.logical_not((ChipSizeX.dtype == np.float32) & (ChipSizeY.dtype == np.float32)):
-            sys.exit("ChipSize must be float")
+            sys.exit('ChipSize must be float')
 
     if np.any(np.mod(ChipSizeX, 2) != 0) | np.any(np.mod(ChipSizeY, 2) != 0):
-        sys.exit("it is better to have ChipSize = even number")
+        sys.exit('it is better to have ChipSize = even number')
 
     if np.any(np.mod(SearchLimitX, 1) != 0) | np.any(np.mod(SearchLimitY, 1) != 0):
-        sys.exit("SearchLimit must be an integar value")
+        sys.exit('SearchLimit must be an integar value')
 
     if np.any(SearchLimitX < 0) | np.any(SearchLimitY < 0):
-        sys.exit("SearchLimit cannot be negative")
+        sys.exit('SearchLimit cannot be negative')
 
     if np.any(np.mod(ChipSizeX, 4) != 0) | np.any(np.mod(ChipSizeY, 4) != 0):
-        sys.exit("ChipSize should be evenly divisible by 4")
+        sys.exit('ChipSize should be evenly divisible by 4')
 
     if np.size(Dx0) == 1:
         Dx0 = np.ones(xGrid.shape, dtype=np.float32) * Dx0
@@ -985,10 +1062,12 @@ def arImgDisp_u(
     SLy_max = np.max(SearchLimitY + np.abs(Dy0))
     Py = int(np.max(ChipSizeY) / 2 + SLy_max + 2)
 
-    I1 = np.lib.pad(I1, ((Py, Py), (Px, Px)), "constant")
-    I2 = np.lib.pad(I2, ((Py, Py), (Px, Px)), "constant")
+    I1 = np.lib.pad(I1, ((Py, Py), (Px, Px)), 'constant')
+    I2 = np.lib.pad(I2, ((Py, Py), (Px, Px)), 'constant')
 
-    # adjust center location by the padarray size and 0.5 is added because we need to extract the chip centered at X+1 with -chipsize/2:chipsize/2-1, which equivalently centers at X+0.5 (X is the original grid point location). So for even chipsize, always returns offset estimates at (X+0.5).
+    # adjust center location by the padarray size and 0.5 is added because we need to extract the chip centered at X+1
+    # with -chipsize/2:chipsize/2-1, which equivalently centers at X+0.5 (X is the original grid point location). So for
+    # even chipsize, always returns offset estimates at (X+0.5).
     xGrid += Px + 0.5
     yGrid += Py + 0.5
 
@@ -1020,7 +1099,7 @@ def arImgDisp_u(
                 Dx.ravel(),
                 Dy.ravel(),
                 Dx0.ravel(),
-                Dy0.ravel()
+                Dy0.ravel(),
             )
         )
     else:
@@ -1047,7 +1126,7 @@ def arImgDisp_u(
                 Dy.ravel(),
                 Dx0.ravel(),
                 Dy0.ravel(),
-                oversample
+                oversample,
             )
         )
 
@@ -1085,7 +1164,6 @@ def arImgDisp_s(
 ):
     import numpy as np
     from . import autoriftcore
-    import multiprocessing as mp
 
     core = AUTO_RIFT_CORE()
     if core._autoriftcore is not None:
@@ -1095,36 +1173,36 @@ def arImgDisp_s(
 
     if np.size(SearchLimitX) == 1:
         if np.logical_not(isinstance(SearchLimitX, np.float32) & isinstance(SearchLimitY, np.float32)):
-            sys.exit("SearchLimit must be float")
+            sys.exit('SearchLimit must be float')
     else:
         if np.logical_not((SearchLimitX.dtype == np.float32) & (SearchLimitY.dtype == np.float32)):
-            sys.exit("SearchLimit must be float")
+            sys.exit('SearchLimit must be float')
 
     if np.size(Dx0) == 1:
         if np.logical_not(isinstance(Dx0, np.float32) & isinstance(Dy0, np.float32)):
-            sys.exit("Search offsets must be float")
+            sys.exit('Search offsets must be float')
     else:
         if np.logical_not((Dx0.dtype == np.float32) & (Dy0.dtype == np.float32)):
-            sys.exit("Search offsets must be float")
+            sys.exit('Search offsets must be float')
 
     if np.size(ChipSizeX) == 1:
         if np.logical_not(isinstance(ChipSizeX, np.float32) & isinstance(ChipSizeY, np.float32)):
-            sys.exit("ChipSize must be float")
+            sys.exit('ChipSize must be float')
     else:
         if np.logical_not((ChipSizeX.dtype == np.float32) & (ChipSizeY.dtype == np.float32)):
-            sys.exit("ChipSize must be float")
+            sys.exit('ChipSize must be float')
 
     if np.any(np.mod(ChipSizeX, 2) != 0) | np.any(np.mod(ChipSizeY, 2) != 0):
-        sys.exit("it is better to have ChipSize = even number")
+        sys.exit('it is better to have ChipSize = even number')
 
     if np.any(np.mod(SearchLimitX, 1) != 0) | np.any(np.mod(SearchLimitY, 1) != 0):
-        sys.exit("SearchLimit must be an integar value")
+        sys.exit('SearchLimit must be an integar value')
 
     if np.any(SearchLimitX < 0) | np.any(SearchLimitY < 0):
-        sys.exit("SearchLimit cannot be negative")
+        sys.exit('SearchLimit cannot be negative')
 
     if np.any(np.mod(ChipSizeX, 4) != 0) | np.any(np.mod(ChipSizeY, 4) != 0):
-        sys.exit("ChipSize should be evenly divisible by 4")
+        sys.exit('ChipSize should be evenly divisible by 4')
 
     if np.size(Dx0) == 1:
         Dx0 = np.ones(xGrid.shape, dtype=np.float32) * Dx0
@@ -1152,10 +1230,12 @@ def arImgDisp_s(
     SLy_max = np.max(SearchLimitY + np.abs(Dy0))
     Py = int(np.max(ChipSizeY) / 2 + SLy_max + 2)
 
-    I1 = np.lib.pad(I1, ((Py, Py), (Px, Px)), "constant")
-    I2 = np.lib.pad(I2, ((Py, Py), (Px, Px)), "constant")
+    I1 = np.lib.pad(I1, ((Py, Py), (Px, Px)), 'constant')
+    I2 = np.lib.pad(I2, ((Py, Py), (Px, Px)), 'constant')
 
-    # adjust center location by the padarray size and 0.5 is added because we need to extract the chip centered at X+1 with -chipsize/2:chipsize/2-1, which equivalently centers at X+0.5 (X is the original grid point location). So for even chipsize, always returns offset estimates at (X+0.5).
+    # adjust center location by the padarray size and 0.5 is added because we need to extract the chip centered at X+1
+    # with -chipsize/2:chipsize/2-1, which equivalently centers at X+0.5 (X is the original grid point location). So for
+    # even chipsize, always returns offset estimates at (X+0.5).
     xGrid += Px + 0.5
     yGrid += Py + 0.5
 
@@ -1187,7 +1267,7 @@ def arImgDisp_s(
                 Dx.ravel(),
                 Dy.ravel(),
                 Dx0.ravel(),
-                Dy0.ravel()
+                Dy0.ravel(),
             )
         )
     else:
@@ -1214,7 +1294,7 @@ def arImgDisp_s(
                 Dy.ravel(),
                 Dx0.ravel(),
                 Dy0.ravel(),
-                oversample
+                oversample,
             )
         )
 
@@ -1234,7 +1314,7 @@ def arImgDisp_s(
     return Dx, Dy
 
 
-################## Chunked version of column filter
+# Chunked version of column filter
 def jit_filter_function(filter_function):
     """Decorator for use with scipy.ndimage.generic_filter."""
     jitted_function = jit(filter_function, nopython=True)
@@ -1244,7 +1324,8 @@ def jit_filter_function(filter_function):
         values = carray(values_ptr, (len_values,), dtype=float64)
         result[0] = jitted_function(values)
         return 1
-    return LowLevelCallable(wrapped.ctypes, signature="int (double *, npy_intp, double *, void *)")
+
+    return LowLevelCallable(wrapped.ctypes, signature='int (double *, npy_intp, double *, void *)')
 
 
 @jit_filter_function
@@ -1273,14 +1354,14 @@ def fmean(values):
     result = 0
     count = 0
     for v in values:
-        if v==v:            # if not a nan
+        if v == v:  # if not a nan
             result += v
             count += 1
         else:
             pass
     if count == 0:
         return np.nan
-    return result/count
+    return result / count
 
 
 @jit
@@ -1291,56 +1372,56 @@ def partition(values, low, high):
         if values[j] <= pivot:
             i += 1
             values[i], values[j] = values[j], values[i]
-            
+
     values[i + 1], values[high] = values[high], values[i + 1]
     return i + 1
 
 
 @jit
 def quickselect_non_recursive(values, k):
-        low = 0
-        high = len(values) - 1
-        while low <= high:
-            pivot_index = partition(values, low, high)
-            if pivot_index < k:
-                low = pivot_index + 1
-            elif pivot_index > k:
-                high = pivot_index - 1
-            else:
-                return values[pivot_index]
-        return None
+    low = 0
+    high = len(values) - 1
+    while low <= high:
+        pivot_index = partition(values, low, high)
+        if pivot_index < k:
+            low = pivot_index + 1
+        elif pivot_index > k:
+            high = pivot_index - 1
+        else:
+            return values[pivot_index]
+    return None
 
 
 @jit
 def quickselect_non_recursive_duo(values, k):
-        # this function returns (values[k-1]+values[k])/2
-        low = 0
-        high = len(values) - 1
-        while low <= high:
-            pivot_index = partition(values, low, high)
-            if pivot_index < k-1:
-                low = pivot_index + 1
-            elif pivot_index > k:
-                high = pivot_index - 1
-            elif pivot_index == k:
-                temp_max = values[0]
-                for v in values[1:k]:
-                    if v > temp_max:
-                        temp_max = v
-                return (values[pivot_index]+temp_max)/2
-            else:                               # pivot_index == k-1:
-                temp_min = values[k]
-                for v in values[k+1:]:
-                    if v < temp_min:
-                        temp_min = v
-                return (values[pivot_index]+temp_min)/2
-        return None
+    # this function returns (values[k-1]+values[k])/2
+    low = 0
+    high = len(values) - 1
+    while low <= high:
+        pivot_index = partition(values, low, high)
+        if pivot_index < k - 1:
+            low = pivot_index + 1
+        elif pivot_index > k:
+            high = pivot_index - 1
+        elif pivot_index == k:
+            temp_max = values[0]
+            for v in values[1:k]:
+                if v > temp_max:
+                    temp_max = v
+            return (values[pivot_index] + temp_max) / 2
+        else:  # pivot_index == k-1:
+            temp_min = values[k]
+            for v in values[k + 1 :]:
+                if v < temp_min:
+                    temp_min = v
+            return (values[pivot_index] + temp_min) / 2
+    return None
 
 
 @jit_filter_function
 def fmedian_quickSelect(values):
     """colfilt median function that propagates nans"""
-    values = [v for v in values if v==v]  # remove nans
+    values = [v for v in values if v == v]  # remove nans
     if len(values) < 3:
         if len(values) == 1:
             return values[0]
@@ -1349,10 +1430,10 @@ def fmedian_quickSelect(values):
         else:
             return np.nan
     else:
-        if len(values)%2:
-            return quickselect_non_recursive(values, len(values)//2)
+        if len(values) % 2:
+            return quickselect_non_recursive(values, len(values) // 2)
         else:
-            return quickselect_non_recursive_duo(values, len(values)//2)
+            return quickselect_non_recursive_duo(values, len(values) // 2)
 
 
 @jit_filter_function
@@ -1365,7 +1446,7 @@ def frange(values):
             result_min = v
         if v > result_max:
             result_max = v
-    return result_max-result_min
+    return result_max - result_min
 
 
 @jit
@@ -1375,83 +1456,107 @@ def median_quickSelect(values):
         if len(values) == 1:
             return values[0]
         elif len(values) == 2:
-            return (values[0]+values[1])/2
+            return (values[0] + values[1]) / 2
         else:
             return np.nan
     else:
-        if len(values)%2:
-            return quickselect_non_recursive(values, len(values)//2)
+        if len(values) % 2:
+            return quickselect_non_recursive(values, len(values) // 2)
         else:
-            return quickselect_non_recursive_duo(values, len(values)//2)
+            return quickselect_non_recursive_duo(values, len(values) // 2)
 
 
 @jit_filter_function
 def fMAD(values):
     """colfilt mean absolute deviation function"""
-    values = [v for v in values if v==v]  # remove nans
+    values = [v for v in values if v == v]  # remove nans
     if len(values):
         med = median_quickSelect(values)
-        values = [abs(v-med) for v in values]
+        values = [abs(v - med) for v in values]
         return median_quickSelect(values)
     else:
         return np.nan
 
 
 def colfilt(A, kernelSize, option, chunkSize=4):
-    kernelSize = (min(kernelSize[0],A.shape[0]), min(kernelSize[1],A.shape[1]))
+    kernelSize = (min(kernelSize[0], A.shape[0]), min(kernelSize[1], A.shape[1]))
     N_winsInCols = A.shape[1] - kernelSize[1] + 1
-    N_chunks = min(chunkSize,N_winsInCols)
-    N_winsInChunk_vec = np.full(N_chunks,N_winsInCols//N_chunks)
-    N_winsInChunk_vec[:(N_winsInCols % N_chunks)] += 1
+    N_chunks = min(chunkSize, N_winsInCols)
+    N_winsInChunk_vec = np.full(N_chunks, N_winsInCols // N_chunks)
+    N_winsInChunk_vec[: (N_winsInCols % N_chunks)] += 1
     cs = np.cumsum(N_winsInChunk_vec)
     ind_startCols_chunks = cs - N_winsInChunk_vec
     ind_stopCols_chunks = cs + kernelSize[1] - 1
-    m = (kernelSize[1]-1)//2    # margin due to kernel size (left)
+    m = (kernelSize[1] - 1) // 2  # margin due to kernel size (left)
     m2 = kernelSize[1] - m - 1  # margin due to kernel size (right)
     ind_out_start = ind_startCols_chunks + m
     ind_out_start[0] = 0
     ind_out_stop = ind_stopCols_chunks - m2
     ind_out_stop[-1] = A.shape[1]
-    relInd_start = np.full(N_chunks,m)
+    relInd_start = np.full(N_chunks, m)
     relInd_stop = relInd_start + N_winsInChunk_vec
     relInd_start[0] = 0
     relInd_stop[-1] = N_winsInChunk_vec[-1] + kernelSize[1] - 1
-    out = np.full(A.shape,np.float32(np.nan))   # pre-allocate output
+    out = np.full(A.shape, np.float32(np.nan))  # pre-allocate output
 
     if option == 0:  # max
         for ii in np.arange(N_chunks):
-            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
-                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fmax,size=kernelSize)[:,relInd_start[ii]:relInd_stop[ii]]
+            out[:, ind_out_start[ii] : ind_out_stop[ii]] = generic_filter(
+                A[:, ind_startCols_chunks[ii] : ind_stopCols_chunks[ii]],
+                fmax,
+                size=kernelSize,
+            )[:, relInd_start[ii] : relInd_stop[ii]]
         out[np.isneginf(out)] = np.nan
 
     elif option == 1:  # min
         for ii in np.arange(N_chunks):
-            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
-                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fmin,size=kernelSize)[:,relInd_start[ii]:relInd_stop[ii]]
+            out[:, ind_out_start[ii] : ind_out_stop[ii]] = generic_filter(
+                A[:, ind_startCols_chunks[ii] : ind_stopCols_chunks[ii]],
+                fmin,
+                size=kernelSize,
+            )[:, relInd_start[ii] : relInd_stop[ii]]
         out[np.isposinf(out)] = np.nan
 
     elif option == 2:  # mean
         for ii in np.arange(N_chunks):
-            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
-                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fmean,size=kernelSize,mode='constant',cval=np.nan)[:,relInd_start[ii]:relInd_stop[ii]]
+            out[:, ind_out_start[ii] : ind_out_stop[ii]] = generic_filter(
+                A[:, ind_startCols_chunks[ii] : ind_stopCols_chunks[ii]],
+                fmean,
+                size=kernelSize,
+                mode='constant',
+                cval=np.nan,
+            )[:, relInd_start[ii] : relInd_stop[ii]]
 
     elif option == 3:  # median
         for ii in np.arange(N_chunks):
-            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
-                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fmedian_quickSelect,size=kernelSize,mode='constant',cval=np.nan)[:,relInd_start[ii]:relInd_stop[ii]]
+            out[:, ind_out_start[ii] : ind_out_stop[ii]] = generic_filter(
+                A[:, ind_startCols_chunks[ii] : ind_stopCols_chunks[ii]],
+                fmedian_quickSelect,
+                size=kernelSize,
+                mode='constant',
+                cval=np.nan,
+            )[:, relInd_start[ii] : relInd_stop[ii]]
 
     elif option == 4:  # range
         for ii in np.arange(N_chunks):
-            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
-                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],frange,size=kernelSize)[:,relInd_start[ii]:relInd_stop[ii]]
+            out[:, ind_out_start[ii] : ind_out_stop[ii]] = generic_filter(
+                A[:, ind_startCols_chunks[ii] : ind_stopCols_chunks[ii]],
+                frange,
+                size=kernelSize,
+            )[:, relInd_start[ii] : relInd_stop[ii]]
 
     elif option == 6:  # MAD (Median Absolute Deviation)
         for ii in np.arange(N_chunks):
-            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
-                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fMAD,size=kernelSize,mode='constant',cval=np.nan)[:,relInd_start[ii]:relInd_stop[ii]]
+            out[:, ind_out_start[ii] : ind_out_stop[ii]] = generic_filter(
+                A[:, ind_startCols_chunks[ii] : ind_stopCols_chunks[ii]],
+                fMAD,
+                size=kernelSize,
+                mode='constant',
+                cval=np.nan,
+            )[:, relInd_start[ii] : relInd_stop[ii]]
 
     elif option[0] == 5:  # displacement distance count with option[1] being the threshold
-        center_ind = int(round((kernelSize[0]*kernelSize[1] + 1) / 2) - 1)
+        center_ind = int(round((kernelSize[0] * kernelSize[1] + 1) / 2) - 1)
 
         @jit_filter_function
         def fDDC(values):
@@ -1459,21 +1564,26 @@ def colfilt(A, kernelSize, option, chunkSize=4):
             for v in values:
                 count += abs(v - values[center_ind]) < option[1]
             return count
-    
+
         for ii in np.arange(N_chunks):
-            out[:,ind_out_start[ii]:ind_out_stop[ii]] \
-                = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fDDC,size=kernelSize,mode='constant',cval=np.nan)[:,relInd_start[ii]:relInd_stop[ii]]
+            out[:, ind_out_start[ii] : ind_out_stop[ii]] = generic_filter(
+                A[:, ind_startCols_chunks[ii] : ind_stopCols_chunks[ii]],
+                fDDC,
+                size=kernelSize,
+                mode='constant',
+                cval=np.nan,
+            )[:, relInd_start[ii] : relInd_stop[ii]]
     else:
-        sys.exit("invalid option for columnwise neighborhood filtering")
+        sys.exit('invalid option for columnwise neighborhood filtering')
         pass
-    
+
     return out
 
 
 class DISP_FILT:
     def __init__(self):
-        ##filter parameters; try different parameters to decide how much fine-resolution estimates we keep, which can make the final images smoother
-
+        # filter parameters; try different parameters to decide how much fine-resolution estimates we keep, which can
+        # make the final images smoother
         self.FracValid = 8 / 25
         self.FracSearch = 0.20
         self.FiltWidth = 5
@@ -1482,15 +1592,13 @@ class DISP_FILT:
         self.colfiltChunkSize = 4
 
     def filtDisp(self, Dx, Dy, SearchLimitX, SearchLimitY, M, OverSampleRatio):
-
         import numpy as np
 
         if np.mod(self.FiltWidth, 2) == 0:
-            sys.exit("NDC filter width must be an odd number")
+            sys.exit('NDC filter width must be an odd number')
 
         dToleranceX = self.FracValid * self.FiltWidth**2
         dToleranceY = self.FracValid * self.FiltWidth**2
-        #        pdb.set_trace()
         Dx = Dx / SearchLimitX
         Dy = Dy / SearchLimitY
 
@@ -1501,15 +1609,22 @@ class DISP_FILT:
             Dx[np.logical_not(M)] = np.nan
             Dy[np.logical_not(M)] = np.nan
             M = (
-                colfilt(Dx.copy(), (self.FiltWidth, self.FiltWidth), (5, self.FracSearch), self.colfiltChunkSize)
+                colfilt(
+                    Dx.copy(),
+                    (self.FiltWidth, self.FiltWidth),
+                    (5, self.FracSearch),
+                    self.colfiltChunkSize,
+                )
                 >= dToleranceX
             ) & (
-                colfilt(Dy.copy(), (self.FiltWidth, self.FiltWidth), (5, self.FracSearch), self.colfiltChunkSize)
+                colfilt(
+                    Dy.copy(),
+                    (self.FiltWidth, self.FiltWidth),
+                    (5, self.FracSearch),
+                    self.colfiltChunkSize,
+                )
                 >= dToleranceY
             )
-
-        #        if self.Iter == 3:
-        #            pdb.set_trace()
 
         for i in range(np.max([self.Iter - 1, 1])):
             Dx[np.logical_not(M)] = np.nan
@@ -1531,7 +1646,6 @@ class DISP_FILT:
 
 
 def bwareaopen(image, size1):
-    import numpy as np
     from skimage import measure
 
     # now identify the objects and remove those above a threshold

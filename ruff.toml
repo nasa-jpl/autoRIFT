@@ -1,0 +1,33 @@
+# Please keep the following ruff options up-to-date with https://github.com/ASFHyP3/actions/#reusable-ruffyml
+line-length = 120
+# The directories to consider when resolving first- vs. third-party imports.
+# See: https://docs.astral.sh/ruff/settings/#src
+src = ["geo_autoRIFT", "tests"]
+
+[format]
+indent-style = "space"
+quote-style = "single"
+
+[lint]
+extend-select = [
+    "NPY", # numpy-specific rules: https://docs.astral.sh/ruff/rules/#numpy-specific-rules-npy
+    # TODO: uncomment these and apply fixes
+    # "I",   # isort: https://docs.astral.sh/ruff/rules/#isort-i
+    # "UP",  # pyupgrade: https://docs.astral.sh/ruff/rules/#pyupgrade-up
+    # "D",   # pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    # "ANN", # annotations: https://docs.astral.sh/ruff/rules/#flake8-annotations-ann
+    # "PTH", # use-pathlib-pth: https://docs.astral.sh/ruff/rules/#flake8-use-pathlib-pth
+]
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.isort]
+case-sensitive = true
+lines-after-imports = 2
+
+[lint.flake8-annotations]
+suppress-dummy-args = true
+
+[lint.extend-per-file-ignores]
+"tests/*" = ["D1", "ANN"]

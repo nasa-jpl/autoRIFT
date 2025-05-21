@@ -25,93 +25,88 @@
  * Authors: Piyush Agram, Yang Lei
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-
 #ifndef GEOGRID_H
 #define GEOGRID_H
 
 #include <iostream>
 
-extern "C"
-{
+extern "C" {
 #include "orbit.h"
 };
 
-struct geoGrid
-{
-    //DEM related inputs
-    std::string demname;    //DEM
-    std::string dhdxname;   //Slope in X
-    std::string dhdyname;   //Slope in Y
-    std::string vxname;     //Velocity in X
-    std::string vyname;     //Velocity in Y
-    std::string srxname;     //Search range in X
-    std::string sryname;     //Search range in Y
-    std::string csminxname;     //Chip size minimum in x
-    std::string csminyname;     //Chip size minimum in y
-    std::string csmaxxname;     //Chip size maximum in x
-    std::string csmaxyname;     //Chip size maximum in y
-    std::string ssmname;     //Stable surface mask
-    int epsgcode;
-    double chipSizeX0;
-    double gridSpacingX;
+struct geoGrid {
+  // DEM related inputs
+  std::string demname;     // DEM
+  std::string dhdxname;    // Slope in X
+  std::string dhdyname;    // Slope in Y
+  std::string vxname;      // Velocity in X
+  std::string vyname;      // Velocity in Y
+  std::string srxname;     // Search range in X
+  std::string sryname;     // Search range in Y
+  std::string csminxname;  // Chip size minimum in x
+  std::string csminyname;  // Chip size minimum in y
+  std::string csmaxxname;  // Chip size maximum in x
+  std::string csmaxyname;  // Chip size maximum in y
+  std::string ssmname;     // Stable surface mask
+  int epsgcode;
+  double chipSizeX0;
+  double gridSpacingX;
 
-    //Bounding box related
-    double xmin, xmax;
-    double ymin, ymax;
+  // Bounding box related
+  double xmin, xmax;
+  double ymin, ymax;
 
-    //Radar image related inputs
-    cOrbit *orbit;
-    double sensingStart;
-    double prf;
-    int nLines;
-    double startingRange;
-    double dr;
-    double dt;
-    int nPixels;
-    int lookSide;
-    int nodata_out;
-    double incidenceAngle;
-    int pOff, lOff, pCount, lCount;
-    double grd_res, azm_res;
-    
-    //dt-varying search range rountine parameters
-    double dt_unity;
-    double max_factor;
-    double upper_thld, lower_thld;
+  // Radar image related inputs
+  cOrbit *orbit;
+  double sensingStart;
+  double prf;
+  int nLines;
+  double startingRange;
+  double dr;
+  double dt;
+  int nPixels;
+  int lookSide;
+  int nodata_out;
+  double incidenceAngle;
+  int pOff, lOff, pCount, lCount;
+  double grd_res, azm_res;
 
-    //Output file names
-    std::string pixlinename;
-    std::string offsetname;
-    std::string searchrangename;
-    std::string chipsizeminname;
-    std::string chipsizemaxname;
-    std::string stablesurfacemaskname;
-    std::string ro2vx_name;
-    std::string ro2vy_name;
-    std::string sfname;
+  // dt-varying search range routine parameters
+  double dt_unity;
+  double max_factor;
+  double upper_thld, lower_thld;
 
+  // Output file names
+  std::string pixlinename;
+  std::string offsetname;
+  std::string searchrangename;
+  std::string chipsizeminname;
+  std::string chipsizemaxname;
+  std::string stablesurfacemaskname;
+  std::string ro2vx_name;
+  std::string ro2vy_name;
+  std::string sfname;
 
-    //Functions
-    void computeBbox(double *);
-    void geogrid();
+  // Functions
+  void computeBbox(double *);
+  void geogrid();
 };
 
-struct geoGridPoint
-{
-    //Map coordinates
-    double pos[3];
-    
-    //DEM slope info
-    double slope[2];
+struct geoGridPoint {
+  // Map coordinates
+  double pos[3];
 
-    //Velocity related info
-    double vel[3];
-    double schrng[3];
+  // DEM slope info
+  double slope[2];
 
-    //Outputs
-    double range;
-    double aztime;
-    double los[3];
+  // Velocity related info
+  double vel[3];
+  double schrng[3];
+
+  // Outputs
+  double range;
+  double aztime;
+  double los[3];
 };
 
 #endif

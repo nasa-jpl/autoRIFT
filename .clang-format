@@ -1,0 +1,4 @@
+Language: Cpp
+BasedOnStyle: Google
+UseTab: Never
+ColumnLimit: 120
