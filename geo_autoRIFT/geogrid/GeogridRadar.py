@@ -118,7 +118,7 @@ class GeogridRadar():
         if not epsgstr:  #Empty string->use shell command gdalsrsinfo for last trial
             cmd = 'gdalsrsinfo -o epsg {0}'.format(self.demname)
             epsgstr = subprocess.check_output(cmd, shell=True)
-            epsgstr = re.findall("EPSG:(\d+)", str(epsgstr))[0]
+            epsgstr = re.findall(r"EPSG:(\d+)", str(epsgstr))[0]
         if not epsgstr:  #Empty string
             raise Exception('Could not auto-identify epsg code')
         epsgcode = int(epsgstr)

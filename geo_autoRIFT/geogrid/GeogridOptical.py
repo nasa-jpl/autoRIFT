@@ -104,7 +104,7 @@ class GeogridOptical():
         if not epsgstr:
             cmd = 'gdalsrsinfo -o epsg {0}'.format(filename)
             epsgstr = subprocess.check_output(cmd, shell=True)
-            epsgstr = re.findall("EPSG:(\d+)", str(epsgstr))[0]
+            epsgstr = re.findall(r"EPSG:(\d+)", str(epsgstr))[0]
         if not epsgstr:
             raise Exception('Could not auto-identify epsg code')
         epsgcode = int(epsgstr)
