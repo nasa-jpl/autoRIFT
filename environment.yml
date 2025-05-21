@@ -10,6 +10,8 @@ dependencies:
   - eigen>=3.3  # For ISCE3 C++ code we include
   # For packaging, and testing
   - setuptools>=64
+  - ruff
+  - clang-format
   # For running
   - gdal>=3
   - isce3>=0.14

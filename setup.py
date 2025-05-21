@@ -16,7 +16,7 @@ LIBRARY_PATHS = [
 
 extensions = [
     Extension(
-        name="autoRIFT.autoriftcore",
+        name='autoRIFT.autoriftcore',
         sources=[
             'geo_autoRIFT/autoRIFT/bindings/autoriftcoremodule.cpp',
         ],
@@ -24,10 +24,10 @@ extensions = [
         library_dirs=LIBRARY_PATHS,
         libraries=['opencv_core', 'opencv_imgproc'],
         extra_compile_args=['-std=c++11', '-fopenmp', '-O4'],
-        language="c++",
+        language='c++',
     ),
     Extension(
-        name="geogrid.geogridOptical",
+        name='geogrid.geogridOptical',
         sources=[
             'geo_autoRIFT/geogrid/bindings/geogridOpticalmodule.cpp',
             'geo_autoRIFT/geogrid/src/geogridOptical.cpp',
@@ -36,10 +36,10 @@ extensions = [
         library_dirs=LIBRARY_PATHS,
         libraries=['gomp', 'gdal'],
         extra_compile_args=['-std=c++11', '-O4'],
-        language="c++"
+        language='c++',
     ),
     Extension(
-        name="geogrid.geogridRadar",
+        name='geogrid.geogridRadar',
         sources=[
             'geo_autoRIFT/geogrid/bindings/geogridRadarmodule.cpp',
             'geo_autoRIFT/geogrid/src/geogridRadar.cpp',
@@ -48,14 +48,16 @@ extensions = [
         library_dirs=LIBRARY_PATHS,
         libraries=['gomp', 'gdal', 'isce3'],
         extra_compile_args=['-std=c++17', '-O4'],
-        language="c++"
-    )
+        language='c++',
+    ),
 ]
 
-setup(name='geo_autoRIFT',
-      version='2.0.0',
-      description='This is the autoRIFT python package',
-      python_requires='>=3.10',
-      package_dir={'autoRIFT': 'geo_autoRIFT/autoRIFT', 'geogrid': 'geo_autoRIFT/geogrid'},
-      packages=['autoRIFT', 'geogrid'],
-      ext_modules=extensions)
+setup(
+    name='geo_autoRIFT',
+    version='2.0.0',
+    description='This is the autoRIFT python package',
+    python_requires='>=3.10',
+    package_dir={'autoRIFT': 'geo_autoRIFT/autoRIFT', 'geogrid': 'geo_autoRIFT/geogrid'},
+    packages=['autoRIFT', 'geogrid'],
+    ext_modules=extensions,
+)

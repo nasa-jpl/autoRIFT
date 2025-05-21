@@ -73,20 +73,20 @@ class GeogridOptical:
         self.epsgDem = 4326
         self.epsgDat = self.getProjectionSystem(self.dat1name)
         self.determineBbox()
-        if gdal.__version__[0] == "2":
+        if gdal.__version__[0] == '2':
             self.cen_lat = (self._ylim[0] + self._ylim[1]) / 2
             self.cen_lon = (self._xlim[0] + self._xlim[1]) / 2
         else:
             self.cen_lon = (self._ylim[0] + self._ylim[1]) / 2
             self.cen_lat = (self._xlim[0] + self._xlim[1]) / 2
-        print("Scene-center lat/lon: " + str(self.cen_lat) + "  " + str(self.cen_lon))
+        print('Scene-center lat/lon: ' + str(self.cen_lat) + '  ' + str(self.cen_lon))
 
     def getProjectionSystem(self, filename):
         """
         Testing with Greenland.
         """
         if not filename:
-            raise Exception("File {0} does not exist".format(filename))
+            raise Exception('File {0} does not exist'.format(filename))
 
         from osgeo import gdal, osr
 
@@ -96,19 +96,19 @@ class GeogridOptical:
         ds = None
 
         if srs.IsProjected():
-            epsgstr = srs.GetAuthorityCode("PROJCS")
+            epsgstr = srs.GetAuthorityCode('PROJCS')
         elif srs.IsGeographic():
-            raise Exception("Geographic coordinate system encountered")
+            raise Exception('Geographic coordinate system encountered')
         elif srs.IsLocal():
-            raise Exception("Local coordinate system encountered")
+            raise Exception('Local coordinate system encountered')
         else:
-            raise Exception("Non-standard coordinate system encountered")
+            raise Exception('Non-standard coordinate system encountered')
         if not epsgstr:
-            cmd = "gdalsrsinfo -o epsg {0}".format(filename)
+            cmd = 'gdalsrsinfo -o epsg {0}'.format(filename)
             epsgstr = subprocess.check_output(cmd, shell=True)
-            epsgstr = re.findall(r"EPSG:(\d+)", str(epsgstr))[0]
+            epsgstr = re.findall(r'EPSG:(\d+)', str(epsgstr))[0]
         if not epsgstr:
-            raise Exception("Could not auto-identify epsg code")
+            raise Exception('Could not auto-identify epsg code')
         epsgcode = int(epsgstr)
         return epsgcode
 
@@ -126,13 +126,13 @@ class GeogridOptical:
         if self.epsgDat:
             coordDat.ImportFromEPSG(self.epsgDat)
         else:
-            raise Exception("EPSG code does not exist for image data")
+            raise Exception('EPSG code does not exist for image data')
 
         coordDem = osr.SpatialReference()
         if self.epsgDem:
             coordDem.ImportFromEPSG(self.epsgDem)
         else:
-            raise Exception("EPSG code does not exist for DEM")
+            raise Exception('EPSG code does not exist for DEM')
 
         trans = osr.CoordinateTransformation(coordDat, coordDem)
 
@@ -173,15 +173,9 @@ class GeogridOptical:
             geogridOptical.destroyGeoGridOptical_Py(self._geogridOptical)
 
         self._geogridOptical = geogridOptical.createGeoGridOptical_Py()
-        geogridOptical.setOpticalImageDimensions_Py(
-            self._geogridOptical, self.numberOfSamples, self.numberOfLines
-        )
-        geogridOptical.setXParameters_Py(
-            self._geogridOptical, self.startingX, self.XSize
-        )
-        geogridOptical.setYParameters_Py(
-            self._geogridOptical, self.startingY, self.YSize
-        )
+        geogridOptical.setOpticalImageDimensions_Py(self._geogridOptical, self.numberOfSamples, self.numberOfLines)
+        geogridOptical.setXParameters_Py(self._geogridOptical, self.startingX, self.XSize)
+        geogridOptical.setYParameters_Py(self._geogridOptical, self.startingY, self.YSize)
         geogridOptical.setRepeatTime_Py(self._geogridOptical, self.repeatTime)
 
         geogridOptical.setDtUnity_Py(self._geogridOptical, self.srs_dt_unity)
@@ -199,51 +193,29 @@ class GeogridOptical:
             geogridOptical.setDEM_Py(self._geogridOptical, self.demname)
 
         if (self.dhdxname is not None) and (self.dhdyname is not None):
-            geogridOptical.setSlopes_Py(
-                self._geogridOptical, self.dhdxname, self.dhdyname
-            )
+            geogridOptical.setSlopes_Py(self._geogridOptical, self.dhdxname, self.dhdyname)
 
         if (self.vxname is not None) and (self.vyname is not None):
-            geogridOptical.setVelocities_Py(
-                self._geogridOptical, self.vxname, self.vyname
-            )
+            geogridOptical.setVelocities_Py(self._geogridOptical, self.vxname, self.vyname)
 
         if (self.srxname is not None) and (self.sryname is not None):
-            geogridOptical.setSearchRange_Py(
-                self._geogridOptical, self.srxname, self.sryname
-            )
+            geogridOptical.setSearchRange_Py(self._geogridOptical, self.srxname, self.sryname)
 
         if (self.csminxname is not None) and (self.csminyname is not None):
-            geogridOptical.setChipSizeMin_Py(
-                self._geogridOptical, self.csminxname, self.csminyname
-            )
+            geogridOptical.setChipSizeMin_Py(self._geogridOptical, self.csminxname, self.csminyname)
 
         if (self.csmaxxname is not None) and (self.csmaxyname is not None):
-            geogridOptical.setChipSizeMax_Py(
-                self._geogridOptical, self.csmaxxname, self.csmaxyname
-            )
+            geogridOptical.setChipSizeMax_Py(self._geogridOptical, self.csmaxxname, self.csmaxyname)
 
         if self.ssmname is not None:
             geogridOptical.setStableSurfaceMask_Py(self._geogridOptical, self.ssmname)
 
-        geogridOptical.setWindowLocationsFilename_Py(
-            self._geogridOptical, self.winlocname
-        )
-        geogridOptical.setWindowOffsetsFilename_Py(
-            self._geogridOptical, self.winoffname
-        )
-        geogridOptical.setWindowSearchRangeFilename_Py(
-            self._geogridOptical, self.winsrname
-        )
-        geogridOptical.setWindowChipSizeMinFilename_Py(
-            self._geogridOptical, self.wincsminname
-        )
-        geogridOptical.setWindowChipSizeMaxFilename_Py(
-            self._geogridOptical, self.wincsmaxname
-        )
-        geogridOptical.setWindowStableSurfaceMaskFilename_Py(
-            self._geogridOptical, self.winssmname
-        )
+        geogridOptical.setWindowLocationsFilename_Py(self._geogridOptical, self.winlocname)
+        geogridOptical.setWindowOffsetsFilename_Py(self._geogridOptical, self.winoffname)
+        geogridOptical.setWindowSearchRangeFilename_Py(self._geogridOptical, self.winsrname)
+        geogridOptical.setWindowChipSizeMinFilename_Py(self._geogridOptical, self.wincsminname)
+        geogridOptical.setWindowChipSizeMaxFilename_Py(self._geogridOptical, self.wincsmaxname)
+        geogridOptical.setWindowStableSurfaceMaskFilename_Py(self._geogridOptical, self.winssmname)
         geogridOptical.setRO2VXFilename_Py(self._geogridOptical, self.winro2vxname)
         geogridOptical.setRO2VYFilename_Py(self._geogridOptical, self.winro2vyname)
         geogridOptical.setSFFilename_Py(self._geogridOptical, self.winsfname)
@@ -254,7 +226,7 @@ class GeogridOptical:
         Create C object and populate.
         """
         if self.repeatTime < 0:
-            raise Exception("Input image 1 must be older than input image 2")
+            raise Exception('Input image 1 must be older than input image 2')
 
     def finalize(self):
         """
@@ -284,17 +256,13 @@ class GeogridOptical:
 
         if epsg1 != epsg2:
             raise Exception(
-                "The current version of geo_autoRIFT assumes the two images are in the same projection, i.e. it cannot handle two different projections; the users are thus recommended to do the tranformation themselves before running geo_autoRIFT."
+                'The current version of geo_autoRIFT assumes the two images are in the same projection, i.e. it cannot handle two different projections; the users are thus recommended to do the tranformation themselves before running geo_autoRIFT.'
             )
 
         W = np.max([trans1[0], trans2[0]])
         N = np.min([trans1[3], trans2[3]])
-        E = np.min(
-            [trans1[0] + (xsize1 - 1) * trans1[1], trans2[0] + (xsize2 - 1) * trans2[1]]
-        )
-        S = np.max(
-            [trans1[3] + (ysize1 - 1) * trans1[5], trans2[3] + (ysize2 - 1) * trans2[5]]
-        )
+        E = np.min([trans1[0] + (xsize1 - 1) * trans1[1], trans2[0] + (xsize2 - 1) * trans2[1]])
+        S = np.max([trans1[3] + (ysize1 - 1) * trans1[5], trans2[3] + (ysize2 - 1) * trans2[5]])
 
         x1a = int(np.round((W - trans1[0]) / trans1[1]))
         x1b = int(np.round((E - trans1[0]) / trans1[1]))
@@ -316,26 +284,13 @@ class GeogridOptical:
             | (y2a > (ysize2 - 1))
             | (y2b > (ysize2 - 1))
         ):
-            raise Exception(
-                "Uppper bound of coregistered image index should be <= size of image1 (and image2) minus 1"
-            )
+            raise Exception('Uppper bound of coregistered image index should be <= size of image1 (and image2) minus 1')
 
-        if (
-            (x1a < 0)
-            | (x1b < 0)
-            | (x2a < 0)
-            | (x2b < 0)
-            | (y1a < 0)
-            | (y1b < 0)
-            | (y2a < 0)
-            | (y2b < 0)
-        ):
-            raise Exception("Lower bound of coregistered image index should be >= 0")
+        if (x1a < 0) | (x1b < 0) | (x2a < 0) | (x2b < 0) | (y1a < 0) | (y1b < 0) | (y2a < 0) | (y2b < 0):
+            raise Exception('Lower bound of coregistered image index should be >= 0')
 
         if ((x1b - x1a) != (x2b - x2a)) | ((y1b - y1a) != (y2b - y2a)):
-            raise Exception(
-                "Coregistered image size mismatch between image1 and image2"
-            )
+            raise Exception('Coregistered image size mismatch between image1 and image2')
 
         x1a = int(x1a)
         x1b = int(x1b)

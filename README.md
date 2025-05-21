@@ -35,6 +35,13 @@ mamba activate autoRIFT
 python -m pip install --use-pep517 --no-build-isolation -e .
 ```
 
+When developing files, please use `ruff` and `clang-format` to ensure files are formatted to match our style:
+```shell
+ruff format .
+find geo_autoRIFT -iname "*.h" -exec clang-format -i {} \;
+find geo_autoRIFT -iname "*.cpp" -exec clang-format -i {} \;
+```
+
 ## Usage
 
 > [!WARNING]

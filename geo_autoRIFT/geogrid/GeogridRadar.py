@@ -77,20 +77,20 @@ class GeogridRadar:
 
         # Get parameters
         self.getState()
-        output = open("output.txt")
+        output = open('output.txt')
         lines = output.readlines()
         for line in lines:
-            if "pOff" in line:
+            if 'pOff' in line:
                 self.pOff = int(line.split()[1])
-            elif "lOff" in line:
+            elif 'lOff' in line:
                 self.lOff = int(line.split()[1])
-            elif "pCount" in line:
+            elif 'pCount' in line:
                 self.pCount = int(line.split()[1])
-            elif "lCount" in line:
+            elif 'lCount' in line:
                 self.lCount = int(line.split()[1])
-            elif "X_res" in line:
+            elif 'X_res' in line:
                 self.X_res = float(line.split()[1])
-            elif "Y_res" in line:
+            elif 'Y_res' in line:
                 self.Y_res = float(line.split()[1])
 
         # Clean up
@@ -104,14 +104,14 @@ class GeogridRadar:
         self.determineBbox()
         self.cen_lat = (self._ylim[0] + self._ylim[1]) / 2
         self.cen_lon = (self._xlim[0] + self._xlim[1]) / 2
-        print("Scene-center lat/lon: " + str(self.cen_lat) + "  " + str(self.cen_lon))
+        print('Scene-center lat/lon: ' + str(self.cen_lat) + '  ' + str(self.cen_lon))
 
     def getProjectionSystem(self):
         """
         Testing with Greenland.
         """
         if not self.demname:
-            raise Exception("At least the DEM parameter must be set for geogrid")
+            raise Exception('At least the DEM parameter must be set for geogrid')
 
         from osgeo import gdal, osr
 
@@ -121,19 +121,19 @@ class GeogridRadar:
         ds = None
 
         if srs.IsProjected():
-            epsgstr = srs.GetAuthorityCode("PROJCS")
+            epsgstr = srs.GetAuthorityCode('PROJCS')
         elif srs.IsGeographic():
-            raise Exception("Geographic coordinate system encountered")
+            raise Exception('Geographic coordinate system encountered')
         elif srs.IsLocal():
-            raise Exception("Local coordinate system encountered")
+            raise Exception('Local coordinate system encountered')
         else:
-            raise Exception("Non-standard coordinate system encountered")
+            raise Exception('Non-standard coordinate system encountered')
         if not epsgstr:  # Empty string->use shell command gdalsrsinfo for last trial
-            cmd = "gdalsrsinfo -o epsg {0}".format(self.demname)
+            cmd = 'gdalsrsinfo -o epsg {0}'.format(self.demname)
             epsgstr = subprocess.check_output(cmd, shell=True)
-            epsgstr = re.findall(r"EPSG:(\d+)", str(epsgstr))[0]
+            epsgstr = re.findall(r'EPSG:(\d+)', str(epsgstr))[0]
         if not epsgstr:  # Empty string
-            raise Exception("Could not auto-identify epsg code")
+            raise Exception('Could not auto-identify epsg code')
         epsgcode = int(epsgstr)
         return epsgcode
 
@@ -149,10 +149,7 @@ class GeogridRadar:
 
         refElp = Ellipsoid(a=6378137.0, e2=0.0066943799901)
 
-        rng = (
-            self.startingRange
-            + np.linspace(0, self.numberOfSamples - 1, num=21) * self.rangePixelSize
-        )
+        rng = self.startingRange + np.linspace(0, self.numberOfSamples - 1, num=21) * self.rangePixelSize
         deltat = np.linspace(0, 1.0, num=21)[1:-1]
 
         lonlat = osr.SpatialReference()
@@ -185,7 +182,7 @@ class GeogridRadar:
                 llht[0] = llh[1] / deg2rad
                 llht[1] = llh[0] / deg2rad
                 llhs.append(llh)
-                if gdal.__version__[0] == "2":
+                if gdal.__version__[0] == '2':
                     x, y, z = trans.TransformPoint(llht[1], llht[0], llht[2])
                 else:
                     x, y, z = trans.TransformPoint(llht[0], llht[1], llht[2])
@@ -210,7 +207,7 @@ class GeogridRadar:
                 llht[0] = llh[1] / deg2rad
                 llht[1] = llh[0] / deg2rad
                 llhs.append(llh)
-                if gdal.__version__[0] == "2":
+                if gdal.__version__[0] == '2':
                     x, y, z = trans.TransformPoint(llht[1], llht[0], llht[2])
                 else:
                     x, y, z = trans.TransformPoint(llht[0], llht[1], llht[2])
@@ -236,7 +233,7 @@ class GeogridRadar:
                     llht[0] = llh[1] / deg2rad
                     llht[1] = llh[0] / deg2rad
                     llhs.append(llh)
-                    if gdal.__version__[0] == "2":
+                    if gdal.__version__[0] == '2':
                         x, y, z = trans.TransformPoint(llht[1], llht[0], llht[2])
                     else:
                         x, y, z = trans.TransformPoint(llht[0], llht[1], llht[2])
@@ -246,7 +243,7 @@ class GeogridRadar:
         llhs = np.array(llhs)
         xyzs = np.array(xyzs)
 
-        if str(self.epsg) == "4326":
+        if str(self.epsg) == '4326':
             self._xlim = [np.min(xyzs[:, 1]), np.max(xyzs[:, 1])]
             self._ylim = [np.min(xyzs[:, 0]), np.max(xyzs[:, 0])]
         else:
@@ -266,10 +263,7 @@ class GeogridRadar:
 
         thetas = []
 
-        midrng = (
-            self.startingRange
-            + (np.floor(self.numberOfSamples / 2) - 1) * self.rangePixelSize
-        )
+        midrng = self.startingRange + (np.floor(self.numberOfSamples / 2) - 1) * self.rangePixelSize
         midsensing = self.aztime + (np.floor(self.numberOfLines / 2) - 1) / self.prf
         master_pos, master_vel = self.orbit.interpolate(midsensing)
         mxyz = master_pos
@@ -299,7 +293,7 @@ class GeogridRadar:
             thetas.append([theta])
 
         thetas = np.array(thetas)
-        print("Incidence Angle", thetas)
+        print('Incidence Angle', thetas)
         self.incidenceAngle = np.mean(thetas)
 
     def getDEM(self, bbox):
@@ -307,7 +301,7 @@ class GeogridRadar:
         Look up database and return values.
         """
 
-        return "", "", "", "", ""
+        return '', '', '', '', ''
 
     def getState(self):
         from geogrid import geogridRadar as geogrid
@@ -329,15 +323,10 @@ class GeogridRadar:
             geogrid.destroyGeoGrid_Py(self._geogrid)
 
         self._geogrid = geogrid.createGeoGrid_Py()
-        geogrid.setRadarImageDimensions_Py(
-            self._geogrid, self.numberOfSamples, self.numberOfLines
-        )
-        geogrid.setRangeParameters_Py(
-            self._geogrid, self.startingRange, self.rangePixelSize
-        )
+        geogrid.setRadarImageDimensions_Py(self._geogrid, self.numberOfSamples, self.numberOfLines)
+        geogrid.setRangeParameters_Py(self._geogrid, self.startingRange, self.rangePixelSize)
         aztime = (
-            self.sensingStart
-            - self.sensingStart.replace(hour=0, minute=0, second=0, microsecond=0)
+            self.sensingStart - self.sensingStart.replace(hour=0, minute=0, second=0, microsecond=0)
         ).total_seconds()
         geogrid.setAzimuthParameters_Py(self._geogrid, aztime, self.prf)
         geogrid.setRepeatTime_Py(self._geogrid, self.repeatTime)
@@ -355,16 +344,10 @@ class GeogridRadar:
         geogrid.setXLimits_Py(self._geogrid, self._xlim[0], self._xlim[1])
         geogrid.setYLimits_Py(self._geogrid, self._ylim[0], self._ylim[1])
 
-        midsensing = self.sensingStart + datetime.timedelta(
-            seconds=(np.floor(self.numberOfLines / 2) - 1) / self.prf
-        )
-        tmids = midsensing.strftime("%Y-%m-%dT%H:%M:%S.%f")
-        itime = (midsensing - datetime.timedelta(seconds=600)).strftime(
-            "%Y-%m-%dT%H:%M:%S.%f"
-        )
-        ftime = (midsensing + datetime.timedelta(seconds=600)).strftime(
-            "%Y-%m-%dT%H:%M:%S.%f"
-        )
+        midsensing = self.sensingStart + datetime.timedelta(seconds=(np.floor(self.numberOfLines / 2) - 1) / self.prf)
+        tmids = midsensing.strftime('%Y-%m-%dT%H:%M:%S.%f')
+        itime = (midsensing - datetime.timedelta(seconds=600)).strftime('%Y-%m-%dT%H:%M:%S.%f')
+        ftime = (midsensing + datetime.timedelta(seconds=600)).strftime('%Y-%m-%dT%H:%M:%S.%f')
         geogrid.setTimes_Py(self._geogrid, tmids, itime, ftime)
         geogrid.setOrbit_Py(self._geogrid, self.orbitname)
         if self.demname:
@@ -405,7 +388,7 @@ class GeogridRadar:
         Create C object and populate.
         """
         if self.repeatTime < 0:
-            raise Exception("Input image 1 must be older than input image 2")
+            raise Exception('Input image 1 must be older than input image 2')
 
     def finalize(self):
         """
