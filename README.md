@@ -1,31 +1,17 @@
 # autoRIFT (autonomous Repeat Image Feature Tracking)
 
-[![Language](https://img.shields.io/badge/python-3.6%2B-blue.svg)](https://www.python.org/)
-[![Latest version](https://img.shields.io/badge/latest%20version-v1.4.0-yellowgreen.svg)](https://github.com/leiyangleon/autoRIFT/releases)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/leiyangleon/autoRIFT/blob/master/LICENSE)
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/autorift.svg)](https://anaconda.org/conda-forge/autorift)
+[![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/autorift.svg)](https://anaconda.org/conda-forge/autorift)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/nasa-jpl/autoRIFT/blob/main/LICENSE)
 [![Citation](https://img.shields.io/badge/DOI-10.3390/rs13040749-blue)](https://doi.org/10.3390/rs13040749)
 
-### Update Notes:
+A Python module of a fast and intelligent algorithm for finding the pixel displacement between two images that can be used for all dense feature tracking applications, including the measurement of surface displacements occurring between two repeat satellite images as a result of glacier flow, large earthquake displacements, and land slides.
 
-```diff
-+ refined the workflow and ready for scaling the production of both optical and radar data results
-+ improved memory use (by 50%) for autoRIFT and runtime (60x) for GeogridOptical
-+ refined NDC filter to accommodate fine grid with spatially overlapping (dependent) search chips
-+ parallel computing for NCC
-+ support for remote input files using GDAL virtual file systems (e.g., `/vsicurl/https://...`)
-+   see: https://gdal.org/user/virtual_file_systems.html
-```
+Dense feature tracking in an arbitrary map-projected Cartesian (northing/easting) coordinate systems can be done when used in combination with the sister Geogrid Python package distributed with autoRIFT. Example applications include searching radar-coordinate imagery on a polar stereographic grid and searching Universal Transverse Mercator (UTM) imagery at a user-specified map-projected Cartesian (northing/easting) coordinate grid.
 
+> [!IMPORTANT]
+> autoRIFT only returns displacement values for locations where significant feature matches are found, otherwise autoRIFT returns no data values.
 
-**A Python module of a fast and intelligent algorithm for finding the pixel displacement between two images**
-
-**autoRIFT can be installed as a standalone Python module (only supports Cartesian coordinates) either manually or as a conda install (https://github.com/conda-forge/autorift-feedstock). To allow support for both Cartesian and radar coordinates, autoRIFT must be installed with the InSAR Scientific Computing Environment (ISCE: https://github.com/isce-framework/isce2)**
-
-**Use cases include all dense feature tracking applications, including the measurement of surface displacements occurring between two repeat satellite images as a result of glacier flow, large earthquake displacements, and land slides**  
-
-**autoRIFT can be used for dense feature tracking between two images over a grid defined in an arbitrary map-projected Cartesian (northing/easting) coordinate system when used in combination with the sister Geogrid Python module (https://github.com/leiyangleon/Geogrid). Example applications include searching radar-coordinate imagery on a polar stereographic grid and searching Universal Transverse Mercator (UTM) imagery at a user-specified map-projected Cartesian (northing/easting) coordinate grid**
-
-**NOTE: autoRIFT only returns displacement values for locations where significant feature matches are found, otherwise autoRIFT returns no data values.**
 
 Copyright (C) 2019 California Institute of Technology.  Government Sponsorship Acknowledged.
 
@@ -33,47 +19,69 @@ Link: https://github.com/nasa-jpl/autoRIFT
 
 Citation: https://doi.org/10.3390/rs13040749
 
+## Installation
 
-## 1. Authors
+Released version of autoRIFT are available from conda-forge and can be installed using [`conda`/`mamba`](https://conda-forge.org/download/):
+```shell
+mamba install -c conda-forge autorift
+```
 
-Alex Gardner (JPL/Caltech; alex.s.gardner@jpl.nasa.gov) first described the algorithm "auto-RIFT" in (Gardner et al., 2018), developed the first version in MATLAB and continued to refine the algorithm;
+For a development version, we recommend using [`conda`/`mamba`](https://conda-forge.org/download/) as some dependencies (e.g., ISCE3) are only distributed on Conda-Forge and would need to be built manually otherwise. To setup a development environment, clone this repository, create a conda environment, and install an editable version of this repository:
+```shell
+git clone https://github.com/nasa-jpl/autoRIFT.git
+cd autoRIFT
+mamba env create -f environment.yml
+mamba activate autoRIFT
+python -m pip install -e .
+```
 
-Yang Lei (GPS/Caltech; ylei@caltech.edu; leiyangfrancis@gmail.com) translated it to Python, further optimized and incorporated to the ISCE software while also developed its sister module Geogrid;
+## Usage
 
-Piyush Agram (GPS/Caltech; piyush@gps.caltech.edu) set up the installation as a standalone module and further cleaned the code.
+> [!WARNING]
+> autoRIFT is undergoing a significant refactor during the v2.0+ series so usage is subject to change. We expect to release a stable, user-friendly version of autoRIFT with v3.0.
+
+Currently, the expected workflow for autoRIFT is to:
+1. (Optionally) Run `testGeogrid.py` for working with map-projected Cartesian (northing/easting) coordinates (lat/lon is not supported)
+2. Run `testautoRIFT.py` to generate offsets and velocity maps
+3. (Optionally) Run `netcdf_output.py` to package output products into an ITS_LIVE netCDF file. 
+
+However, these files are not distributed with the package and so will need to be cloned/copied from the GitHub repository and likely modified for your use case. 
+
+**For an example of using autoRIFT to determine the velocity of glaciers in Greenland, please see [`docs/demo.md`](docs/demo.md).**
+
+For a full description of how to call these scripts and the options available, please use the `--help` command:
+```shell
+testGeogrid.py --help
+testautoRIFT.py --help
+netcdf_output.py --help
+```
+
+## Future Development
+
+Notable changes to this project will be recorded in our [CHANGELOG](CHANGELOG.md) and provided as release notes.
+
+Here are some known development opportunities:
+* for radar (SAR) images, it is yet to include the complex correlation of the two images, i.e. the current version only uses the amplitude correlation
+* combinative use of current SAR amplitude-based offset tracking results with InSAR phase-derived velocity maps needs to be investigated with a better data fusion
+* the GPU implementation would be useful to extend 
+
+## Authors
+
+AutoRIFT 1.0 was initially developed by:
+1. Alex Gardner (JPL/Caltech; alex.s.gardner@jpl.nasa.gov) who first described the algorithm "auto-RIFT" in (Gardner et al., 2018) and developed the first version in MATLAB and continued to refine the algorithm;
+2. Yang Lei (GPS/Caltech; leiyangfrancis@gmail.com) who translated it to Python, further optimized and incorporated it into the ISCE2 software while also developed its sister module Geogrid;
+3. and Piyush Agram (GPS/Caltech; piyush@gps.caltech.edu) who set up the installation as a standalone module and further cleaned the code.
+
+Since then, autoRIFT has been further developed by a number of ITS_LIVE project members, collaborators, and contributors. Please see: 
+https://github.com/nasa-jpl/autoRIFT/graphs/contributors
 
 **Reference:** 
 
 ***1.*** Gardner, A.S., Moholdt, G., Scambos, T., Fahnstock, M., Ligtenberg, S., Broeke, M.V.D. and Nilsson, J., 2018. [**Increased West Antarctic and unchanged East Antarctic ice discharge over the last 7 years.**](https://doi.org/10.5194/tc-12-521-2018) *The Cryosphere*, 12(2), pp.521-547. 
 
-***2.*** **[NEW]** Lei, Y., Gardner, A. and Agram, P., 2021. [**Autonomous Repeat Image Feature Tracking (autoRIFT) and Its Application for Tracking Ice Displacement.**](https://doi.org/10.3390/rs13040749) *Remote Sensing*, 13(4), p.749. 
+***2.*** Lei, Y., Gardner, A. and Agram, P., 2021. [**Autonomous Repeat Image Feature Tracking (autoRIFT) and Its Application for Tracking Ice Displacement.**](https://doi.org/10.3390/rs13040749) *Remote Sensing*, 13(4), p.749. 
 
 
-## 2. Acknowledgement
+## Acknowledgement
 
-This effort was funded by the NASA MEaSUREs program in contribution to the Inter-mission Time Series of Land Ice Velocity and Elevation (ITS_LIVE) project (https://its-live.jpl.nasa.gov/) and through Alex Gardner’s participation in the NASA NISAR Science Team
-    
-       
-## 3. [Features](/docs/features.md)
-
-
-
-## 4. [Future Development](/docs/future.md)
-
-
-
-
-## 5. [Demo](/docs/demo.md)
-
-
-
-
-
-## 6. [Install](/docs/install.md)
-
-
-
-
-
-## 7. [Instructions](/docs/instruction.md)
-
+This effort was funded by the NASA MEaSUREs program in contribution to the Inter-mission Time Series of Land Ice Velocity and Elevation (ITS_LIVE) project (https://its-live.jpl.nasa.gov/) and through Alex Gardner’s participation in the NASA NISAR Science Team.
