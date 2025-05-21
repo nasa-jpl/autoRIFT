@@ -1493,7 +1493,6 @@ class DISP_FILT:
 
 
 def bwareaopen(image, size1):
-    import numpy as np
     from skimage import measure
 
     # now identify the objects and remove those above a threshold
