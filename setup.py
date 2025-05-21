@@ -16,7 +16,7 @@ LIBRARY_PATHS = [
 
 extensions = [
     Extension(
-        name="autoRIFT/autoriftcore",
+        name="autoRIFT.autoriftcore",
         sources=[
             'geo_autoRIFT/autoRIFT/bindings/autoriftcoremodule.cpp',
         ],
@@ -27,7 +27,7 @@ extensions = [
         language="c++",
     ),
     Extension(
-        name="geogrid/geogridOptical",
+        name="geogrid.geogridOptical",
         sources=[
             'geo_autoRIFT/geogrid/bindings/geogridOpticalmodule.cpp',
             'geo_autoRIFT/geogrid/src/geogridOptical.cpp',
@@ -39,7 +39,7 @@ extensions = [
         language="c++"
     ),
     Extension(
-        name="geogrid/geogridRadar",
+        name="geogrid.geogridRadar",
         sources=[
             'geo_autoRIFT/geogrid/bindings/geogridRadarmodule.cpp',
             'geo_autoRIFT/geogrid/src/geogridRadar.cpp',

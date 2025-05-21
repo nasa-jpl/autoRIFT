@@ -32,11 +32,8 @@ git clone https://github.com/nasa-jpl/autoRIFT.git
 cd autoRIFT
 mamba env create -f environment.yml
 mamba activate autoRIFT
-python -m pip install .
+python -m pip install --use-pep517 --no-build-isolation -e .
 ```
-> [!WARNING]
-> Editable/development installs of autoRIFT and geogrid don't work well at this time and will be fixed in a future release.
-
 
 ## Usage
 
