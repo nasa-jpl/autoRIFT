@@ -11,8 +11,15 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 > [!IMPORTANT]
 > This release includes major changes to Geogrid, autoRIFT, and the expected usage; please read the release notes carefully. Notably, the radar workflow has been migrated from ISCE2 to ISCE3 and autoRIFT now depends on ISCE3 instead of being built inside it.
 
+### Added
+* Updating the changelog will now be required for all PRs into autoRIFT's `main` branch.
+* geogrid C++ extension for the radar workflow which calls core ISCE3 C++ code directly.
+
 ### Changed
-* The radar version of Geogrid has been changed from `Geogrid.py` to `GeogridRadar.py`.
+* All project documentation has been consolidated into the `README.md` and `docs/demo.md`, which have been updated to reflect new usage. 
+* Python's `sysconfig` is now used to get the Python include directory and `purelib` library paths instead of predicting it from the OpenCV build info. 
+* Geogrid and autoRIFT now report their version numbers from the `geo_autoRIFT` namespace package metadata
+* The radar module in the Geogrid package has been changed from `Geogrid.py` to `GeogridRadar.py`.
 * The radar version of Geogrid now uses [ISCE3](https://github.com/isce-framework/isce3) rather than [ISCE2](https://github.com/isce-framework/isce2).
 * The `test*.py` workflows are no longer specific to optical or radar processing:
   * `testGeogridOptical.py` and `testGeogrid_ISCE.py` have been combined into a new `testGeogrid.py` script
