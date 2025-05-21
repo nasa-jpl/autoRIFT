@@ -210,18 +210,16 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
     from autoRIFT import autoRIFT
     import numpy as np
     import time
-    import subprocess
 
 
     obj = autoRIFT()
-    # obj.configure()
 
     obj.WallisFilterWidth = preprocessing_filter_width
     print(f'Setting Wallis Filter Width to {preprocessing_filter_width}')
 
-#    ##########     uncomment if starting from preprocessed images
-#    I1 = I1.astype(np.uint8)
-#    I2 = I2.astype(np.uint8)
+    # uncomment if starting from preprocessed images
+    # I1 = I1.astype(np.uint8)
+    # I2 = I2.astype(np.uint8)
 
     obj.MultiThread = mpflag
 
@@ -232,24 +230,6 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
 
     obj.I1 = I1
     obj.I2 = I2
-
-    # test with lena image (533 X 533)
-#    obj.ChipSizeMinX=16
-#    obj.ChipSizeMaxX=32
-#    obj.ChipSize0X=16
-#    obj.SkipSampleX=16
-#    obj.SkipSampleY=16
-
-    # test with Venus image (407 X 407)
-#    obj.ChipSizeMinX=8
-#    obj.ChipSizeMaxX=16
-#    obj.ChipSize0X=8
-#    obj.SkipSampleX=8
-#    obj.SkipSampleY=8
-
-    # test with small tiff images
-#    obj.SkipSampleX=16
-#    obj.SkipSampleY=16
 
     # create the grid if it does not exist
     if xGrid is None:
@@ -278,21 +258,20 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
                     if (I1[obj.yGrid[ii,jj]-1,obj.xGrid[ii,jj]-1]==0)|(I2[obj.yGrid[ii,jj]-1,obj.xGrid[ii,jj]-1]==0):
                         noDataMask[ii,jj] = True
 
-    ######### mask out nodata to skip the offset searching using the nodata mask (by setting SearchLimit to be 0)
+    # mask out nodata to skip the offset searching using the nodata mask (by setting SearchLimit to be 0)
 
     if SRx0 is None:
-#        ###########     uncomment to customize SearchLimit based on velocity distribution (i.e. Dx0 must not be None)
-#        obj.SearchLimitX = np.int32(4+(25-4)/(np.max(np.abs(Dx0[np.logical_not(noDataMask)]))-np.min(np.abs(Dx0[np.logical_not(noDataMask)])))*(np.abs(Dx0)-np.min(np.abs(Dx0[np.logical_not(noDataMask)]))))
-#        obj.SearchLimitY = 5
-#        ###########
+        # uncomment to customize SearchLimit based on velocity distribution (i.e. Dx0 must not be None)
+        # obj.SearchLimitX = np.int32(4+(25-4)/(np.max(np.abs(Dx0[np.logical_not(noDataMask)]))-np.min(np.abs(Dx0[np.logical_not(noDataMask)])))*(np.abs(Dx0)-np.min(np.abs(Dx0[np.logical_not(noDataMask)]))))
+        # obj.SearchLimitY = 5
         obj.SearchLimitX = obj.SearchLimitX * np.logical_not(noDataMask)
         obj.SearchLimitY = obj.SearchLimitY * np.logical_not(noDataMask)
     else:
         obj.SearchLimitX = SRx0
         obj.SearchLimitY = SRy0
-#        ############ add buffer to search range
-#        obj.SearchLimitX[obj.SearchLimitX!=0] = obj.SearchLimitX[obj.SearchLimitX!=0] + 2
-#        obj.SearchLimitY[obj.SearchLimitY!=0] = obj.SearchLimitY[obj.SearchLimitY!=0] + 2
+        # add buffer to search range
+        # obj.SearchLimitX[obj.SearchLimitX!=0] = obj.SearchLimitX[obj.SearchLimitX!=0] + 2
+        # obj.SearchLimitY[obj.SearchLimitY!=0] = obj.SearchLimitY[obj.SearchLimitY!=0] + 2
 
     if CSMINx0 is not None:
         obj.ChipSizeMaxX = CSMAXx0
@@ -313,11 +292,8 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
         obj.ChipSize0X = int(np.ceil(chipsizex0/pixsizex/4)*4)
         obj.GridSpacingX = int(obj.ChipSize0X*gridspacingx/chipsizex0)
 
-        # obj.ChipSize0X = np.min(CSMINx0[CSMINx0!=nodata])
         RATIO_Y2X = CSMINy0/CSMINx0
         obj.ScaleChipSizeY = np.median(RATIO_Y2X[(CSMINx0!=nodata)&(CSMINy0!=nodata)])
-        # obj.ChipSizeMaxX = obj.ChipSizeMaxX / obj.ChipSizeMaxX * 544
-        # obj.ChipSizeMinX = obj.ChipSizeMinX / obj.ChipSizeMinX * 68
     else:
         if ((optflag == 1)&(xGrid is not None)):
             obj.ChipSizeMaxX = 32
@@ -350,11 +326,10 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
 
 
 
-    ######## preprocessing
+    # preprocessing
     t1 = time.time()
     print("Pre-process Start!!!")
     print(f"Using Wallis Filter Width: {obj.WallisFilterWidth}")
-#    obj.zeroMask = 1
 
     # TODO: Allow different filters to be applied images independently
     # default to most stringent filtering
@@ -374,86 +349,30 @@ def runAutorift(I1, I2, xGrid, yGrid, Dx0, Dy0, SRx0, SRy0, CSMINx0, CSMINy0, CS
         warnings.warn('FFT filtering must be done before processing with geogrid! Be careful when using this method', UserWarning)
     else:
         obj.preprocess_filt_hps()
-#    obj.I1 = np.abs(I1)
-#    obj.I2 = np.abs(I2)
     print("Pre-process Done!!!")
     print(time.time()-t1)
 
     t1 = time.time()
-#    obj.DataType = 0
     obj.uniform_data_type()
     print("Uniform Data Type Done!!!")
     print(time.time()-t1)
 
-#    pdb.set_trace()
-
-#    obj.sparseSearchSampleRate = 16
-
     obj.OverSampleRatio = 64
-#    obj.colfiltChunkSize = 4
-
-    #   OverSampleRatio can be assigned as a scalar (such as the above line) or as a Python dictionary below for intellgient use (ChipSize-dependent).
-    #   Here, four chip sizes are used: ChipSize0X*[1,2,4,8] and four OverSampleRatio are considered [16,32,64,128]. The intelligent selection of OverSampleRatio (as a function of chip size) was determined by analyzing various combinations of (OverSampleRatio and chip size) and comparing the resulting image quality and statistics with the reference scenario (where the largest OverSampleRatio of 128 and chip size of ChipSize0X*8 are considered).
-    #   The selection for the optical data flag is based on Landsat-8 data over an inland region (thus stable and not moving much) of Greenland, while that for the radar flag (optflag = 0) is based on Sentinel-1 data over the same region of Greenland.
+    # OverSampleRatio can be assigned as a scalar (such as the above line) or as a Python dictionary below for
+    # intelligent use (ChipSize-dependent). Here, four chip sizes are used: ChipSize0X*[1,2,4,8] and four
+    # OverSampleRatio are considered [16,32,64,128]. The intelligent selection of OverSampleRatio (as a function of
+    # chip size) was determined by analyzing various combinations of (OverSampleRatio and chip size) and comparing
+    # the resulting image quality and statistics with the reference scenario (where the largest OverSampleRatio of
+    # 128 and chip size of ChipSize0X*8 are considered). The selection for the optical data flag is based on Landsat-8
+    # data over an inland region (thus stable and not moving much) of Greenland, while that for the radar flag
+    # (optflag = 0) is based on Sentinel-1 data over the same region of Greenland.
     if CSMINx0 is not None:
         if (optflag == 1):
             obj.OverSampleRatio = {obj.ChipSize0X:16,obj.ChipSize0X*2:32,obj.ChipSize0X*4:64,obj.ChipSize0X*8:64}
         else:
             obj.OverSampleRatio = {obj.ChipSize0X:32,obj.ChipSize0X*2:64,obj.ChipSize0X*4:128,obj.ChipSize0X*8:128}
 
-
-
-#    ########## export preprocessed images to files; can be commented out if not debugging
-#
-#    t1 = time.time()
-#
-#    I1 = obj.I1
-#    I2 = obj.I2
-#
-#    length,width = I1.shape
-#
-#    filename1 = 'I1_uint8_hpsnew.off'
-#
-#    slcFid = open(filename1, 'wb')
-#
-#    for yy in range(length):
-#        data = I1[yy,:]
-#        data.astype(np.float32).tofile(slcFid)
-#
-#    slcFid.close()
-#
-#    img = isceobj.createOffsetImage()
-#    img.setFilename(filename1)
-#    img.setBands(1)
-#    img.setWidth(width)
-#    img.setLength(length)
-#    img.setAccessMode('READ')
-#    img.renderHdr()
-#
-#
-#    filename2 = 'I2_uint8_hpsnew.off'
-#
-#    slcFid = open(filename2, 'wb')
-#
-#    for yy in range(length):
-#        data = I2[yy,:]
-#        data.astype(np.float32).tofile(slcFid)
-#
-#    slcFid.close()
-#
-#    img = isceobj.createOffsetImage()
-#    img.setFilename(filename2)
-#    img.setBands(1)
-#    img.setWidth(width)
-#    img.setLength(length)
-#    img.setAccessMode('READ')
-#    img.renderHdr()
-#
-#    print("output Done!!!")
-#    print(time.time()-t1)
-
-
-    ########## run Autorift
+    # run Autorift
     t1 = time.time()
     print("AutoRIFT Start!!!")
     obj.runAutorift()
@@ -496,11 +415,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
 
     if optical_flag == 1:
         data_m, data_s = loadProductOptical(indir_m, indir_s)
-        # test with lena/Venus image
-#        import scipy.io as sio
-#        conts = sio.loadmat(indir_m)
-#        data_m = conts['I']
-#        data_s = conts['I1']
     else:
         data_m = loadProduct(indir_m)
         data_s = loadProduct(indir_s)
@@ -653,28 +567,11 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
     import scipy.io as sio
     sio.savemat('offset.mat',{'Dx':DX,'Dy':DY,'InterpMask':INTERPMASK,'ChipSizeX':CHIPSIZEX})
 
-#    #####################  Uncomment for debug mode
-#    sio.savemat('debug.mat',{'Dx':DX,'Dy':DY,'InterpMask':INTERPMASK,'ChipSizeX':CHIPSIZEX,'ScaleChipSizeY':ScaleChipSizeY,'SearchLimitX':SEARCHLIMITX,'SearchLimitY':SEARCHLIMITY})
-#    conts = sio.loadmat('debug.mat')
-#    DX = conts['Dx']
-#    DY = conts['Dy']
-#    INTERPMASK = conts['InterpMask']
-#    CHIPSIZEX = conts['ChipSizeX']
-#    GridSpacingX = conts['GridSpacingX']
-#    ScaleChipSizeY = conts['ScaleChipSizeY']
-#    SEARCHLIMITX = conts['SearchLimitX']
-#    SEARCHLIMITY = conts['SearchLimitY']
-#    origSize = (conts['origSize'][0][0],conts['origSize'][0][1])
-#    noDataMask = conts['noDataMask']
-#    #####################
-
     netcdf_file = None
     if grid_location is not None:
 
-
         t1 = time.time()
         print("Write Outputs Start!!!")
-
 
         # Create the GeoTiff
         driver = gdal.GetDriverByName('GTiff')
@@ -695,7 +592,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
         outband.WriteArray(CHIPSIZEX)
         outband.FlushCache()
         del outRaster
-
 
         if offset2vx is not None:
 
@@ -748,8 +644,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
             VX = VX.astype(np.float32)
             VY = VY.astype(np.float32)
 
-            ############ write velocity output in Geotiff format
-
+            # write velocity output in Geotiff format
             outRaster = driver.Create("velocity.tif", int(xGrid.shape[1]), int(xGrid.shape[0]), 2, gdal.GDT_Float32)
             outRaster.SetGeoTransform(tran)
             outRaster.SetProjection(proj)
@@ -761,8 +656,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
             outband.FlushCache()
             del outRaster
 
-            ############ prepare for netCDF packaging
-
+            # prepare for netCDF packaging
             if nc_sensor is not None:
 
                 if nc_sensor == "S1":
@@ -830,7 +724,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 DXref = DXref / scale_factor_1
                 DYref = DYref / scale_factor_2
 
-#                stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
                 stable_count = np.sum(SSM & np.logical_not(np.isnan(DX)))
 
                 V_temp = np.sqrt(VXref**2 + VYref**2)
@@ -840,7 +733,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 except IndexError:
                     SSM1 = np.zeros(V_temp.shape).astype('bool')
 
-#                stable_count1 = np.sum(SSM1 & np.logical_not(np.isnan(DX)) & (DX-DXref > -5) & (DX-DXref < 5) & (DY-DYref > -5) & (DY-DYref < 5))
                 stable_count1 = np.sum(SSM1 & np.logical_not(np.isnan(DX)))
 
                 dx_mean_shift = 0.0
@@ -851,23 +743,19 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 if stable_count != 0:
                     temp = DX.copy() - DXref.copy()
                     temp[np.logical_not(SSM)] = np.nan
-#                    dx_mean_shift = np.median(temp[(temp > -5)&(temp < 5)])
                     dx_mean_shift = np.median(temp[np.logical_not(np.isnan(temp))])
 
                     temp = DY.copy() - DYref.copy()
                     temp[np.logical_not(SSM)] = np.nan
-#                    dy_mean_shift = np.median(temp[(temp > -5)&(temp < 5)])
                     dy_mean_shift = np.median(temp[np.logical_not(np.isnan(temp))])
 
                 if stable_count1 != 0:
                     temp = DX.copy() - DXref.copy()
                     temp[np.logical_not(SSM1)] = np.nan
-#                    dx_mean_shift1 = np.median(temp[(temp > -5)&(temp < 5)])
                     dx_mean_shift1 = np.median(temp[np.logical_not(np.isnan(temp))])
 
                     temp = DY.copy() - DYref.copy()
                     temp[np.logical_not(SSM1)] = np.nan
-#                    dy_mean_shift1 = np.median(temp[(temp > -5)&(temp < 5)])
                     dy_mean_shift1 = np.median(temp[np.logical_not(np.isnan(temp))])
 
                 if stable_count == 0:
@@ -888,8 +776,7 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                 VX = VX.astype(np.float32)
                 VY = VY.astype(np.float32)
 
-            ########################################################################################
-                ############   netCDF packaging for Sentinel and Landsat dataset; can add other sensor format as well
+                # netCDF packaging for Sentinel and Landsat dataset; can add other sensor format as well
                 if nc_sensor == "S1":
                     if geogrid_run_info is None:
                         chipsizex0 = float(str.split(runCmd('fgrep "Smallest Allowable Chip Size in m:" testGeogrid.txt'))[-1])
@@ -923,7 +810,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
                     else:
                         raise Exception('Input search range is all zero everywhere, thus no search conducted')
-    #                out_nc_filename = 'Jakobshavn.nc'
                     PPP = roi_valid_percentage * 100
                     if ncname is None:
                         out_nc_filename = f"./{master_filename[0:-4]}_X_{slave_filename[0:-4]}" \
@@ -932,10 +818,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         out_nc_filename = f"{ncname}_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc"
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
 
-
-
-#                    d0 = datetime(np.int(master_split[5][0:4]),np.int(master_split[5][4:6]),np.int(master_split[5][6:8]))
-#                    d1 = datetime(np.int(slave_split[5][0:4]),np.int(slave_split[5][4:6]),np.int(slave_split[5][6:8]))
                     d0 = datetime.strptime(master_dt,"%Y%m%dT%H:%M:%S.%f")
                     d1 = datetime.strptime(slave_dt,"%Y%m%dT%H:%M:%S.%f")
                     date_dt_base = (d1 - d0).total_seconds() / timedelta(days=1).total_seconds()
@@ -1008,12 +890,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     master_split = str.split(master_filename,'_')
                     slave_split = str.split(slave_filename,'_')
 
-#                    master_MTL_path = master_path[:-6]+'MTL.txt'
-#                    slave_MTL_path = slave_path[:-6]+'MTL.txt'
-#
-#                    master_time = str.split(str.split(runCmd('fgrep "SCENE_CENTER_TIME" '+master_MTL_path))[2][1:-2],':')
-#                    slave_time = str.split(str.split(runCmd('fgrep "SCENE_CENTER_TIME" '+slave_MTL_path))[2][1:-2],':')
-
                     import netcdf_output as no
                     pair_type = 'optical'
                     detection_method = 'feature'
@@ -1022,7 +898,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         roi_valid_percentage = int(round(np.sum(CHIPSIZEX!=0)/np.sum(SEARCHLIMITX!=0)*1000.0))/1000
                     else:
                         raise Exception('Input search range is all zero everywhere, thus no search conducted')
-    #                out_nc_filename = 'Jakobshavn_opt.nc'
                     PPP = roi_valid_percentage * 100
                     if ncname is None:
                         out_nc_filename = f"./{master_filename[0:-7]}_X_{slave_filename[0:-7]}" \
@@ -1120,9 +995,6 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                         master_filename = os.path.basename(master_path)[:-8]
                         slave_filename = os.path.basename(slave_path)[:-8]
 
-#                    master_filename = master_split[0][-3:]+'_'+master_split[2]+'_'+master_split[4][:3]+'_'+os.path.basename(master_path)
-#                    slave_filename = slave_split[0][-3:]+'_'+slave_split[2]+'_'+slave_split[4][:3]+'_'+os.path.basename(slave_path)
-
                     import netcdf_output as no
                     pair_type = 'optical'
                     detection_method = 'feature'
@@ -1153,8 +1025,8 @@ def generateAutoriftProduct(indir_m, indir_s, grid_location, init_offset, search
                     slave_dt = d1.strftime("%Y%m%dT%H:%M:%S.%f").rstrip('0')
 
                     IMG_INFO_DICT = {
-                        'id_img1': master_id,
-                        'id_img2': slave_id,
+                        'id_img1': master_filename,
+                        'id_img2': slave_filename,
                         'acquisition_date_img1': master_dt,
                         'acquisition_date_img2': slave_dt,
                         'correction_level_img1': master_split[4][:3],

@@ -25,8 +25,6 @@
  * Author: Yang Lei
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-
-
 #ifndef autoriftcoremodule_h
 #define autoriftcoremodule_h
 
@@ -55,4 +53,3 @@ static PyMethodDef autoriftcore_methods[] =
         {NULL, NULL, 0, NULL}
 };
 #endif //autoRiftCoremodule_h
-

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # Yang Lei, Jet Propulsion Laboratory
 # November 2017
-
 import datetime
 import os
 
@@ -161,13 +160,11 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     vx_mean_shift = offset2vx_1 * dx_mean_shift + offset2vx_2 * dy_mean_shift
     temp = vx_mean_shift
     temp[np.logical_not(SSM)] = np.nan
-    # vx_mean_shift = np.median(temp[(temp > -500)&(temp < 500)])
     vx_mean_shift = np.median(temp[np.logical_not(np.isnan(temp))])
 
     vy_mean_shift = offset2vy_1 * dx_mean_shift + offset2vy_2 * dy_mean_shift
     temp = vy_mean_shift
     temp[np.logical_not(SSM)] = np.nan
-    # vy_mean_shift = np.median(temp[(temp > -500)&(temp < 500)])
     vy_mean_shift = np.median(temp[np.logical_not(np.isnan(temp))])
 
     vx_mean_shift1 = offset2vx_1 * dx_mean_shift1 + offset2vx_2 * dy_mean_shift1
@@ -187,11 +184,9 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         SlantRangePixelSize = np.median(offset2vr[np.logical_not(np.isnan(offset2vr))]) * dt/365.0/24.0/3600.0
         azimuthPixelSize = np.median(offset2va[np.logical_not(np.isnan(offset2va))]) * dt/365.0/24.0/3600.0
 
-        # VR = DX * rangePixelSize / dt * 365.0 * 24.0 * 3600.0
         VR = DX * offset2vr
         VR = VR.astype(np.float32)
 
-        # VA = DY * azimuthPixelSize / dt * 365.0 * 24.0 * 3600.0
         VA = DY * offset2va
         VA = VA.astype(np.float32)
 
@@ -201,19 +196,15 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         VAref = DYref * offset2va
         VAref = VAref.astype(np.float32)
 
-        # vr_mean_shift = dx_mean_shift * rangePixelSize / dt * 365.0 * 24.0 * 3600.0
         vr_mean_shift = dx_mean_shift * offset2vr
         vr_mean_shift = np.median(vr_mean_shift[np.logical_not(np.isnan(vr_mean_shift))])
 
-        # va_mean_shift = dy_mean_shift * azimuthPixelSize / dt * 365.0 * 24.0 * 3600.0
         va_mean_shift = dy_mean_shift * offset2va
         va_mean_shift = np.median(va_mean_shift[np.logical_not(np.isnan(va_mean_shift))])
 
-        # vr_mean_shift1 = dx_mean_shift1 * rangePixelSize / dt * 365.0 * 24.0 * 3600.0
         vr_mean_shift1 = dx_mean_shift1 * offset2vr
         vr_mean_shift1 = np.median(vr_mean_shift1[np.logical_not(np.isnan(vr_mean_shift1))])
 
-        # va_mean_shift1 = dy_mean_shift1 * azimuthPixelSize / dt * 365.0 * 24.0 * 3600.0
         va_mean_shift1 = dy_mean_shift1 * offset2va
         va_mean_shift1 = np.median(va_mean_shift1[np.logical_not(np.isnan(va_mean_shift1))])
 
@@ -247,12 +238,6 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         VXR[angle_df_R < angle_threshold_R] = np.nan
         VYR[angle_df_R < angle_threshold_R] = np.nan
 
-        # obsolete fusion routine using the sp mask file to distinguish pure
-        # smoothed slopes and reference velocity fields
-        # VXP = VXS
-        # VXP[MM == 1] = VXR[MM == 1]
-        # VYP = VYS
-        # VYP[MM == 1] = VYR[MM == 1]
 
         # FIXME: Switch to using the updated (better) estimates of velocity fields when available
         # Use the updated dhdxs and dhdys input files that combine the velocity fields and smoothed slopes
@@ -281,26 +266,22 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         if stable_count_p != 0:
             temp = VXP.copy() - VX.copy()
             temp[np.logical_not(SSM)] = np.nan
-            # bias_mean_shift = np.median(temp[(temp > -500)&(temp < 500)])
             bias_mean_shift = np.median(temp[np.logical_not(np.isnan(temp))])
             vxp_mean_shift = vx_mean_shift + bias_mean_shift / 1
 
             temp = VYP.copy() - VY.copy()
             temp[np.logical_not(SSM)] = np.nan
-            # bias_mean_shift = np.median(temp[(temp > -500)&(temp < 500)])
             bias_mean_shift = np.median(temp[np.logical_not(np.isnan(temp))])
             vyp_mean_shift = vy_mean_shift + bias_mean_shift / 1
 
         if stable_count1_p != 0:
             temp = VXP.copy() - VX.copy()
             temp[np.logical_not(SSM1)] = np.nan
-            # bias_mean_shift1 = np.median(temp[(temp > -500)&(temp < 500)])
             bias_mean_shift1 = np.median(temp[np.logical_not(np.isnan(temp))])
             vxp_mean_shift1 = vx_mean_shift1 + bias_mean_shift1 / 1
 
             temp = VYP.copy() - VY.copy()
             temp[np.logical_not(SSM1)] = np.nan
-            # bias_mean_shift1 = np.median(temp[(temp > -500)&(temp < 500)])
             bias_mean_shift1 = np.median(temp[np.logical_not(np.isnan(temp))])
             vyp_mean_shift1 = vy_mean_shift1 + bias_mean_shift1 / 1
 
@@ -318,13 +299,6 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     NoDataValue = -32767
     noDataMask = np.isnan(VX) | np.isnan(VY)
 
-    # VXref[noDataMask] = NoDataValue
-    # VYref[noDataMask] = NoDataValue
-
-    # if pair_type == 'radar':
-    #     VRref[noDataMask] = NoDataValue
-    #     VAref[noDataMask] = NoDataValue
-
     CHIPSIZEX[noDataMask] = 0
     CHIPSIZEY[noDataMask] = 0
     INTERPMASK[noDataMask] = 0
@@ -332,16 +306,6 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     title = 'autoRIFT surface velocities'
     author = 'Alex S. Gardner, JPL/NASA; Yang Lei, GPS/Caltech'
     institution = 'NASA Jet Propulsion Laboratory (JPL), California Institute of Technology'
-
-    # VX = np.round(np.clip(VX, -32768, 32767)).astype(np.int16)
-    # VY = np.round(np.clip(VY, -32768, 32767)).astype(np.int16)
-    # V = np.round(np.clip(V, -32768, 32767)).astype(np.int16)
-    # if pair_type == 'radar':
-    #     VR = np.round(np.clip(VR, -32768, 32767)).astype(np.int16)
-    #     VA = np.round(np.clip(VA, -32768, 32767)).astype(np.int16)
-    # CHIPSIZEX = np.round(np.clip(CHIPSIZEX, 0, 65535)).astype(np.uint16)
-    # CHIPSIZEY = np.round(np.clip(CHIPSIZEY, 0, 65535)).astype(np.uint16)
-    # INTERPMASK = np.round(np.clip(INTERPMASK, 0, 255)).astype(np.uint8)
 
     source = f'NASA MEaSUREs ITS_LIVE project. Processed with autoRIFT version ' \
              f'{IMG_INFO_DICT["autoRIFT_software_version"]}'
@@ -471,14 +435,12 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     if stable_count != 0:
         temp = VX.copy() - VXref.copy()
         temp[np.logical_not(SSM)] = np.nan
-        # vx_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
         vx_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
     else:
         vx_error_mask = np.nan
     if stable_count1 != 0:
         temp = VX.copy() - VXref.copy()
         temp[np.logical_not(SSM1)] = np.nan
-        # vx_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
         vx_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
     else:
         vx_error_slow = np.nan
@@ -557,14 +519,12 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     if stable_count != 0:
         temp = VY.copy() - VYref.copy()
         temp[np.logical_not(SSM)] = np.nan
-        # vy_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
         vy_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
     else:
         vy_error_mask = np.nan
     if stable_count1 != 0:
         temp = VY.copy() - VYref.copy()
         temp[np.logical_not(SSM1)] = np.nan
-        # vy_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
         vy_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
     else:
         vy_error_slow = np.nan
@@ -627,7 +587,6 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
     VY[noDataMask] = NoDataValue
     var[:] = np.round(np.clip(VY, -32768, 32767)).astype(np.int16)
-    # var.setncattr('missing_value', np.int16(NoDataValue))
 
 
     var = nc_outfile.createVariable('v', np.dtype('int16'), ('y', 'x'), fill_value=NoDataValue,
@@ -639,7 +598,6 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
     V[noDataMask] = NoDataValue
     var[:] = np.round(np.clip(V, -32768, 32767)).astype(np.int16)
-    # var.setncattr('missing_value',np.int16(NoDataValue))
 
 
     var = nc_outfile.createVariable('v_error', np.dtype('int16'), ('y', 'x'), fill_value=NoDataValue,
@@ -657,7 +615,6 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     V_error[V == 0] = v_error
     V_error[noDataMask] = NoDataValue
     var[:] = np.round(np.clip(V_error, -32768, 32767)).astype(np.int16)
-#    var.setncattr('missing_value',np.int16(NoDataValue))
 
 
     if pair_type == 'radar':
@@ -672,14 +629,12 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         if stable_count != 0:
             temp = VR.copy() - VRref.copy()
             temp[np.logical_not(SSM)] = np.nan
-            # vr_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
             vr_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
         else:
             vr_error_mask = np.nan
         if stable_count1 != 0:
             temp = VR.copy() - VRref.copy()
             temp[np.logical_not(SSM1)] = np.nan
-            # vr_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
             vr_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
         else:
             vr_error_slow = np.nan
@@ -739,7 +694,6 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
         VR[noDataMask] = NoDataValue
         var[:] = np.round(np.clip(VR, -32768, 32767)).astype(np.int16)
-        # var.setncattr('missing_value', np.int16(NoDataValue))
 
 
         var = nc_outfile.createVariable('va', np.dtype('int16'), ('y', 'x'), fill_value=NoDataValue,
@@ -752,14 +706,12 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         if stable_count != 0:
             temp = VA.copy() - VAref.copy()
             temp[np.logical_not(SSM)] = np.nan
-            # va_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
             va_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
         else:
             va_error_mask = np.nan
         if stable_count1 != 0:
             temp = VA.copy() - VAref.copy()
             temp[np.logical_not(SSM1)] = np.nan
-            # va_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
             va_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
         else:
             va_error_slow = np.nan
@@ -818,28 +770,23 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
         VA[noDataMask] = NoDataValue
         var[:] = np.round(np.clip(VA, -32768, 32767)).astype(np.int16)
-        # var.setncattr('missing_value', np.int16(NoDataValue))
 
         # fuse the (slope parallel & reference) flow-based range-projected result with the raw observed range/azimuth-based result
         if stable_count_p != 0:
             temp = VXP.copy() - VXref.copy()
             temp[np.logical_not(SSM)] = np.nan
-            # vxp_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
             vxp_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
 
             temp = VYP.copy() - VYref.copy()
             temp[np.logical_not(SSM)] = np.nan
-            # vyp_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
             vyp_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
         if stable_count1_p != 0:
             temp = VXP.copy() - VXref.copy()
             temp[np.logical_not(SSM1)] = np.nan
-            # vxp_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
             vxp_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
 
             temp = VYP.copy() - VYref.copy()
             temp[np.logical_not(SSM1)] = np.nan
-            # vyp_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
             vyp_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
         vxp_error_mod = (error_vector[0][4]*IMG_INFO_DICT['date_dt']+error_vector[1][4])/IMG_INFO_DICT['date_dt']*365
         vyp_error_mod = (error_vector[0][5]*IMG_INFO_DICT['date_dt']+error_vector[1][5])/IMG_INFO_DICT['date_dt']*365
@@ -873,26 +820,22 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         if stable_count_p != 0:
             temp = VXP.copy() - VX.copy()
             temp[np.logical_not(SSM)] = np.nan
-            # bias_mean_shift = np.median(temp[(temp > -500)&(temp < 500)])
             bias_mean_shift = np.median(temp[np.logical_not(np.isnan(temp))])
             vxp_mean_shift = vx_mean_shift + bias_mean_shift / 1
 
             temp = VYP.copy() - VY.copy()
             temp[np.logical_not(SSM)] = np.nan
-            # bias_mean_shift = np.median(temp[(temp > -500)&(temp < 500)])
             bias_mean_shift = np.median(temp[np.logical_not(np.isnan(temp))])
             vyp_mean_shift = vy_mean_shift + bias_mean_shift / 1
 
         if stable_count1_p != 0:
             temp = VXP.copy() - VX.copy()
             temp[np.logical_not(SSM1)] = np.nan
-            # bias_mean_shift1 = np.median(temp[(temp > -500)&(temp < 500)])
             bias_mean_shift1 = np.median(temp[np.logical_not(np.isnan(temp))])
             vxp_mean_shift1 = vx_mean_shift1 + bias_mean_shift1 / 1
 
             temp = VYP.copy() - VY.copy()
             temp[np.logical_not(SSM1)] = np.nan
-            # bias_mean_shift1 = np.median(temp[(temp > -500)&(temp < 500)])
             bias_mean_shift1 = np.median(temp[np.logical_not(np.isnan(temp))])
             vyp_mean_shift1 = vy_mean_shift1 + bias_mean_shift1 / 1
 
@@ -903,198 +846,6 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
                 stable_shift_applied_p = 2
         else:
             stable_shift_applied_p = 1
-
-
-        # var = nc_outfile.createVariable('vxp',np.dtype('int16'),('y', 'x'), fill_value=NoDataValue,
-        #                                 zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
-        # var.setncattr('standard_name', 'projected_x_velocity')
-        # var.setncattr('description', 'x-direction velocity determined by projecting radar range measurements '
-        #                              'onto an a priori flow vector. Where projected errors are larger than those '
-        #                              'determined from range and azimuth measurements, unprojected vx estimates are used')
-        # var.setncattr('units', 'meter/year')
-        # var.setncattr('grid_mapping', mapping_var_name)
-        #
-        # if stable_count_p != 0:
-        #     temp = VXP.copy() - VXref.copy()
-        #     temp[np.logical_not(SSM)] = np.nan
-        #     # vxp_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
-        #     vxp_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
-        # else:
-        #     vxp_error_mask = np.nan
-        # if stable_count1_p != 0:
-        #     temp = VXP.copy() - VXref.copy()
-        #     temp[np.logical_not(SSM1)] = np.nan
-        #     # vxp_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
-        #     vxp_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
-        # else:
-        #     vxp_error_slow = np.nan
-        # if stable_shift_applied_p == 1:
-        #     vxp_error = vxp_error_mask
-        # elif stable_shift_applied_p == 2:
-        #     vxp_error = vxp_error_slow
-        # else:
-        #     vxp_error = vxp_error_mod
-        # var.setncattr('error', int(round(vxp_error*10))/10)
-        # var.setncattr('error_description', 'best estimate of projected_x_velocity error: vxp_error is populated '
-        #                                    'according to the approach used for the velocity bias correction as '
-        #                                    'indicated in "stable_shift_flag"')
-        #
-        # if stable_count_p != 0:
-        #     var.setncattr('error_stationary', int(round(vxp_error_mask*10))/10)
-        # else:
-        #     var.setncattr('error_stationary', np.nan)
-        # var.setncattr('error_stationary_description', 'RMSE over stable surfaces, stationary or slow-flowing surfaces '
-        #                                         'with velocity < 15 meter/year identified from an external mask')
-        #
-        # var.setncattr('error_modeled', int(round(vxp_error_mod * 10)) / 10)
-        # var.setncattr('error_modeled_description', '1-sigma error calculated using a modeled error-dt relationship')
-        #
-        # if stable_count1_p != 0:
-        #     var.setncattr('error_slow', int(round(vxp_error_slow * 10)) / 10)
-        # else:
-        #     var.setncattr('error_slow', np.nan)
-        # var.setncattr('error_slow_description', 'RMSE over slowest 25% of retrieved velocities')
-        #
-        # if stable_shift_applied_p == 2:
-        #     var.setncattr('stable_shift', int(round(vxp_mean_shift1*10))/10)
-        # elif stable_shift_applied_p == 1:
-        #     var.setncattr('stable_shift', int(round(vxp_mean_shift*10))/10)
-        # else:
-        #     var.setncattr('stable_shift', 0)
-        # var.setncattr('stable_shift_flag', stable_shift_applied_p)
-        # var.setncattr('stable_shift_flag_description', 'flag for applying velocity bias correction: 0 = no correction; '
-        #                                                '1 = correction from overlapping stable surface mask '
-        #                                                '(stationary or slow-flowing surfaces with velocity < 15 meter/year)'
-        #                                                '(top priority); 2 = correction from slowest 25% of overlapping '
-        #                                                'velocities (second priority)')
-        #
-        # if stable_count_p != 0:
-        #     var.setncattr('stable_shift_stationary',int(round(vxp_mean_shift*10))/10)
-        # else:
-        #     var.setncattr('stable_shift_stationary',np.nan)
-        # var.setncattr('stable_count_stationary',stable_count_p)
-        #
-        # if stable_count1_p != 0:
-        #     var.setncattr('stable_shift_slow',int(round(vxp_mean_shift1*10))/10)
-        # else:
-        #     var.setncattr('stable_shift_slow',np.nan)
-        # var.setncattr('stable_count_slow',stable_count1_p)
-        #
-        # VXP[noDataMask] = NoDataValue
-        # var[:] = np.round(np.clip(VXP, -32768, 32767)).astype(np.int16)
-        # # var.setncattr('missing_value', np.int16(NoDataValue))
-        #
-        #
-        # var = nc_outfile.createVariable('vyp', np.dtype('int16'), ('y', 'x'), fill_value=NoDataValue,
-        #                                 zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
-        # var.setncattr('standard_name', 'projected_y_velocity')
-        # var.setncattr('description', 'y-direction velocity determined by projecting radar range measurements '
-        #                              'onto an a priori flow vector. Where projected errors are larger than those '
-        #                              'determined from range and azimuth measurements, unprojected vy estimates are used')
-        # var.setncattr('units', 'meter/year')
-        # var.setncattr('grid_mapping', mapping_var_name)
-        #
-        # if stable_count_p != 0:
-        #     temp = VYP.copy() - VYref.copy()
-        #     temp[np.logical_not(SSM)] = np.nan
-        #     # vyp_error_mask = np.std(temp[(temp > -500)&(temp < 500)])
-        #     vyp_error_mask = np.std(temp[np.logical_not(np.isnan(temp))])
-        # else:
-        #     vyp_error_mask = np.nan
-        # if stable_count1_p != 0:
-        #     temp = VYP.copy() - VYref.copy()
-        #     temp[np.logical_not(SSM1)] = np.nan
-        #     # vyp_error_slow = np.std(temp[(temp > -500)&(temp < 500)])
-        #     vyp_error_slow = np.std(temp[np.logical_not(np.isnan(temp))])
-        # else:
-        #     vyp_error_slow = np.nan
-        # if stable_shift_applied_p == 1:
-        #     vyp_error = vyp_error_mask
-        # elif stable_shift_applied_p == 2:
-        #     vyp_error = vyp_error_slow
-        # else:
-        #     vyp_error = vyp_error_mod
-        # var.setncattr('error', int(round(vyp_error*10))/10)
-        # var.setncattr('error_description', 'best estimate of projected_y_velocity error: vyp_error is populated '
-        #                                    'according to the approach used for the velocity bias correction as '
-        #                                    'indicated in "stable_shift_flag"')
-        #
-        # if stable_count_p != 0:
-        #     var.setncattr('error_stationary', int(round(vyp_error_mask*10))/10)
-        # else:
-        #     var.setncattr('error_stationary', np.nan)
-        # var.setncattr('error_stationary_description', 'RMSE over stable surfaces, stationary or slow-flowing surfaces '
-        #                                         'with velocity < 15 meter/year identified from an external mask')
-        #
-        # var.setncattr('error_modeled', int(round(vyp_error_mod * 10)) / 10)
-        # var.setncattr('error_modeled_description', '1-sigma error calculated using a modeled error-dt relationship')
-        #
-        # if stable_count1_p != 0:
-        #     var.setncattr('error_slow', int(round(vyp_error_slow*10))/10)
-        # else:
-        #     var.setncattr('error_slow', np.nan)
-        # var.setncattr('error_slow_description', 'RMSE over slowest 25% of retrieved velocities')
-        #
-        # if stable_shift_applied_p == 2:
-        #     var.setncattr('stable_shift', int(round(vyp_mean_shift1*10))/10)
-        # elif stable_shift_applied_p == 1:
-        #     var.setncattr('stable_shift', int(round(vyp_mean_shift*10))/10)
-        # else:
-        #     var.setncattr('stable_shift', 0)
-        # var.setncattr('stable_shift_flag', stable_shift_applied_p)
-        # var.setncattr('stable_shift_flag_description', 'flag for applying velocity bias correction: 0 = no correction; '
-        #                                                '1 = correction from overlapping stable surface mask '
-        #                                                '(stationary or slow-flowing surfaces with velocity < 15 meter/year)'
-        #                                                '(top priority); 2 = correction from slowest 25% of overlapping '
-        #                                                'velocities (second priority)')
-        #
-        # if stable_count_p != 0:
-        #     var.setncattr('stable_shift_stationary', int(round(vyp_mean_shift*10))/10)
-        # else:
-        #     var.setncattr('stable_shift_stationary', np.nan)
-        # var.setncattr('stable_count_stationary', stable_count_p)
-        #
-        # if stable_count1_p != 0:
-        #     var.setncattr('stable_shift_slow',int(round(vyp_mean_shift1*10))/10)
-        # else:
-        #     var.setncattr('stable_shift_slow',np.nan)
-        # var.setncattr('stable_count_slow', stable_count1_p)
-        #
-        # VYP[noDataMask] = NoDataValue
-        # var[:] = np.round(np.clip(VYP, -32768, 32767)).astype(np.int16)
-        # # var.setncattr('missing_value', np.int16(NoDataValue))
-        #
-        #
-        # var = nc_outfile.createVariable('vp', np.dtype('int16'), ('y', 'x'), fill_value=NoDataValue,
-        #                                 zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
-        # var.setncattr('standard_name', 'projected_velocity')
-        # var.setncattr('description', 'velocity magnitude determined by projecting radar range measurements '
-        #                              'onto an a priori flow vector. Where projected errors are larger than those '
-        #                              'determined from range and azimuth measurements, unprojected v estimates are used')
-        # var.setncattr('units', 'meter/year')
-        # var.setncattr('grid_mapping', mapping_var_name)
-        #
-        # VP[noDataMask] = NoDataValue
-        # var[:] = np.round(np.clip(VP, -32768, 32767)).astype(np.int16)
-        # # var.setncattr('missing_value',np.int16(NoDataValue))
-        #
-        #
-        # var = nc_outfile.createVariable('vp_error', np.dtype('int16'), ('y', 'x'), fill_value=NoDataValue,
-        #                                 zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
-        # var.setncattr('standard_name', 'projected_velocity_error')
-        # var.setncattr('description', 'velocity magnitude error determined by projecting radar range measurements '
-        #                              'onto an a priori flow vector. Where projected errors are larger than those '
-        #                              'determined from range and azimuth measurements, unprojected v_error estimates are used')
-        # var.setncattr('units', 'meter/year')
-        # var.setncattr('grid_mapping', mapping_var_name)
-        #
-        # vp_error = v_error_cal(vxp_error, vyp_error)
-        # VP_error = np.sqrt((vxp_error * VXP / VP)**2 + (vyp_error * VYP / VP)**2)
-        # VP_error[VP==0] = vp_error
-        # VP_error[noDataMask] = NoDataValue
-        # var[:] = np.round(np.clip(VP_error, -32768, 32767)).astype(np.int16)
-        # # var.setncattr('missing_value', np.int16(NoDataValue))
-
 
         var = nc_outfile.createVariable('M11', np.dtype('float32'), ('y', 'x'), fill_value=NoDataValue,
                                         zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
@@ -1111,10 +862,6 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
         M11[noDataMask] = NoDataValue
         var[:] = M11
-        # var[:] = np.round(np.clip(M11, -32768, 32767)).astype(np.int16)
-        # var[:] = np.clip(M11, -3.4028235e+38, 3.4028235e+38).astype(np.float32)
-        # var.setncattr('missing_value',np.int16(NoDataValue))
-
 
         var = nc_outfile.createVariable('M12', np.dtype('float32'), ('y', 'x'), fill_value=NoDataValue,
                                         zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
@@ -1132,10 +879,6 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
 
         M12[noDataMask] = NoDataValue
         var[:] = M12
-        # var[:] = np.round(np.clip(M12, -32768, 32767)).astype(np.int16)
-        # var[:] = np.clip(M12, -3.4028235e+38, 3.4028235e+38).astype(np.float32)
-        # var.setncattr('missing_value',np.int16(NoDataValue))
-
 
     var = nc_outfile.createVariable('chip_size_width', np.dtype('uint16'), ('y', 'x'), fill_value=0,
                                     zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
@@ -1151,10 +894,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         var.setncattr('x_pixel_size', rangePixelSize)
         var.setncattr('chip_size_coordinates', 'image projection geometry: width = x, height = y')
 
-    # var[:] = np.flipud(vx_nomask).astype('float32')
     var[:] = np.round(np.clip(CHIPSIZEX, 0, 65535)).astype('uint16')
-    # var.setncattr('missing_value', np.uint16(0))
-
 
     var = nc_outfile.createVariable('chip_size_height', np.dtype('uint16'), ('y', 'x'), fill_value=0,
                                     zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
@@ -1170,10 +910,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
         var.setncattr('y_pixel_size', azimuthPixelSize)
         var.setncattr('chip_size_coordinates', 'image projection geometry: width = x, height = y')
 
-    # var[:] = np.flipud(vx_nomask).astype('float32')
     var[:] = np.round(np.clip(CHIPSIZEY, 0, 65535)).astype('uint16')
-    # var.setncattr('missing_value', np.uint16(0))
-
 
     var = nc_outfile.createVariable('interp_mask', np.dtype('uint8'), ('y', 'x'), fill_value=0,
                                     zlib=True, complevel=2, shuffle=True, chunksizes=ChunkSize)
@@ -1183,9 +920,7 @@ def netCDF_packaging(VX, VY, DX, DY, INTERPMASK, CHIPSIZEX, CHIPSIZEY, SSM, SSM1
     var.setncattr('flag_meanings', 'measured interpolated')
     var.setncattr('grid_mapping', mapping_var_name)
 
-    # var[:] = np.flipud(vx_nomask).astype('float32')
     var[:] = np.round(np.clip(INTERPMASK, 0, 255)).astype('uint8')
-    # var.setncattr('missing_value', np.uint8(0))
 
 
     nc_outfile.sync()  # flush data to disk
@@ -1227,13 +962,11 @@ def rotate_vel2radar(rngind, azmind, vel_x, vel_y, swath_border, swath_border_fu
 
     if flag == 0:
         mask = (rngind1 > swath_border[0]-shift) & (rngind1 < swath_border[0]+shift)
-        # mask = (rngind1 > swath_border_full[0]) & (rngind1 < swath_border_full[1])
         output_vel_x[mask] = np.nan
         output_vel_y[mask] = np.nan
 
     if flag == 1:
         mask = (rngind1 > swath_border[1]-shift) & (rngind1 < swath_border[1]+shift)
-        # mask = (rngind1 > swath_border_full[2]) & (rngind1 < swath_border_full[3])
         output_vel_x[mask] = np.nan
         output_vel_y[mask] = np.nan
 

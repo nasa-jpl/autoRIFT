@@ -25,9 +25,6 @@
  * Authors: Piyush Agram, Yang Lei
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-
-
-
 #include <Python.h>
 #include <string>
 #include "geogrid.h"
@@ -247,7 +244,7 @@ PyObject* setSearchRange(PyObject *self, PyObject* args)
     {
         return NULL;
     }
-    
+
     ((geoGrid*)(ptr))->srxname = std::string(srx);
     ((geoGrid*)(ptr))->sryname = std::string(sry);
     return Py_BuildValue("i", 0);
@@ -262,7 +259,7 @@ PyObject* setChipSizeMin(PyObject *self, PyObject* args)
     {
         return NULL;
     }
-    
+
     ((geoGrid*)(ptr))->csminxname = std::string(csminx);
     ((geoGrid*)(ptr))->csminyname = std::string(csminy);
     return Py_BuildValue("i", 0);
@@ -277,7 +274,7 @@ PyObject* setChipSizeMax(PyObject *self, PyObject* args)
     {
         return NULL;
     }
-    
+
     ((geoGrid*)(ptr))->csmaxxname = std::string(csmaxx);
     ((geoGrid*)(ptr))->csmaxyname = std::string(csmaxy);
     return Py_BuildValue("i", 0);
@@ -291,7 +288,7 @@ PyObject* setStableSurfaceMask(PyObject *self, PyObject* args)
     {
         return NULL;
     }
-    
+
     ((geoGrid*)(ptr))->ssmname = std::string(ssm);
     return Py_BuildValue("i", 0);
 }
@@ -345,7 +342,7 @@ PyObject* setWindowSearchRangeFilename(PyObject *self, PyObject *args)
     {
         return NULL;
     }
-    
+
     ((geoGrid*)(ptr))->searchrangename = std::string(name);
     return Py_BuildValue("i", 0);
 }
@@ -358,7 +355,7 @@ PyObject* setWindowChipSizeMinFilename(PyObject *self, PyObject *args)
     {
         return NULL;
     }
-    
+
     ((geoGrid*)(ptr))->chipsizeminname = std::string(name);
     return Py_BuildValue("i", 0);
 }
@@ -371,7 +368,7 @@ PyObject* setWindowChipSizeMaxFilename(PyObject *self, PyObject *args)
     {
         return NULL;
     }
-    
+
     ((geoGrid*)(ptr))->chipsizemaxname = std::string(name);
     return Py_BuildValue("i", 0);
 }
@@ -384,7 +381,7 @@ PyObject* setWindowStableSurfaceMaskFilename(PyObject *self, PyObject *args)
     {
         return NULL;
     }
-    
+
     ((geoGrid*)(ptr))->stablesurfacemaskname = std::string(name);
     return Py_BuildValue("i", 0);
 }
@@ -410,7 +407,7 @@ PyObject* setRO2VYFilename(PyObject *self, PyObject *args)
     {
         return NULL;
     }
-    
+
     ((geoGrid*)(ptr))->ro2vy_name = std::string(name);
     return Py_BuildValue("i", 0);
 }
@@ -423,7 +420,7 @@ PyObject* setSFFilename(PyObject *self, PyObject *args)
     {
         return NULL;
     }
-    
+
     ((geoGrid*)(ptr))->sfname = std::string(name);
     return Py_BuildValue("i", 0);
 }
@@ -450,7 +447,7 @@ PyObject* setNodataOut(PyObject *self, PyObject *args)
     {
         return NULL;
     }
-    
+
     ((geoGrid*)(ptr))->nodata_out = nodata;
     return Py_BuildValue("i", 0);
 }
@@ -472,12 +469,12 @@ PyObject* getXOff(PyObject *self, PyObject *args)
 {
     int var;
     uint64_t ptr;
-    
+
     if (!PyArg_ParseTuple(args, "K", &ptr))
     {
         return NULL;
     }
-    
+
     var = ((geoGrid*)(ptr))->pOff;
     return Py_BuildValue("i",var);
 }
@@ -486,12 +483,12 @@ PyObject* getYOff(PyObject *self, PyObject *args)
 {
     int var;
     uint64_t ptr;
-    
+
     if (!PyArg_ParseTuple(args, "K", &ptr))
     {
         return NULL;
     }
-    
+
     var = ((geoGrid*)(ptr))->lOff;
     return Py_BuildValue("i",var);
 }
@@ -500,12 +497,12 @@ PyObject* getXCount(PyObject *self, PyObject *args)
 {
     int var;
     uint64_t ptr;
-    
+
     if (!PyArg_ParseTuple(args, "K", &ptr))
     {
         return NULL;
     }
-    
+
     var = ((geoGrid*)(ptr))->pCount;
     return Py_BuildValue("i",var);
 }
@@ -514,12 +511,12 @@ PyObject* getYCount(PyObject *self, PyObject *args)
 {
     int var;
     uint64_t ptr;
-    
+
     if (!PyArg_ParseTuple(args, "K", &ptr))
     {
         return NULL;
     }
-    
+
     var = ((geoGrid*)(ptr))->lCount;
     return Py_BuildValue("i",var);
 }
@@ -528,12 +525,12 @@ PyObject* getXPixelSize(PyObject *self, PyObject *args)
 {
     double var;
     uint64_t ptr;
-    
+
     if (!PyArg_ParseTuple(args, "K", &ptr))
     {
         return NULL;
     }
-    
+
     var = ((geoGrid*)(ptr))->grd_res;
     return Py_BuildValue("d",var);
 }
@@ -542,12 +539,12 @@ PyObject* getYPixelSize(PyObject *self, PyObject *args)
 {
     double var;
     uint64_t ptr;
-    
+
     if (!PyArg_ParseTuple(args, "K", &ptr))
     {
         return NULL;
     }
-    
+
     var = ((geoGrid*)(ptr))->azm_res;
     return Py_BuildValue("d",var);
 }

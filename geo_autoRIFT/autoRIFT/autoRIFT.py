@@ -34,9 +34,10 @@ import sys
 import numpy as np
 import numpy.fft as fft
 from numba import cfunc, carray, jit
-from numba.types import intc, CPointer, float64, intp, voidptr
+from numba.core.types import intc, CPointer, float64, intp, voidptr
 from scipy import LowLevelCallable
 from scipy.ndimage import generic_filter
+
 
 def _remove_local_mean(image, kernel):
     mean = cv2.filter2D(image, -1, kernel, borderType=cv2.BORDER_CONSTANT)
@@ -188,17 +189,6 @@ def _fft_filter(Ix, valid_domain, power_threshold=500):
     filter_a = cv2.warpAffine(src=filter_base, M=rotation_a, dsize=(x, y))
     filter_b = cv2.warpAffine(src=filter_base, M=rotation_b, dsize=(x, y))
 
-    # Alex's code appears not to use this shift
-    # y_shift = centroid_y - center_y
-    # x_shift = centroid_x - center_x
-    # print(f"shift = ({x_shift:.1f},{y_shift:.1f})")
-
-    # translation = np.array([[1, 0, x_shift],
-    #                         [0, 1, y_shift]],
-    #                        dtype=np.float32)
-    # filter_a = cv2.warpAffine(src=filter_a, M=translation, dsize=(x, y))
-    # filter_b = cv2.warpAffine(src=filter_b, M=translation, dsize=(x, y))
-
     image = Ix.copy()
     image[image > 3] = 3
     image[image < -3] = -3
@@ -281,8 +271,6 @@ class autoRIFT:
 
         kernel = kernel / kernel.size
 
-        #        pdb.set_trace()
-
         self.I1 = cv2.filter2D(self.I1, -1, kernel, borderType=cv2.BORDER_CONSTANT)
 
         self.I2 = cv2.filter2D(self.I2, -1, kernel, borderType=cv2.BORDER_CONSTANT)
@@ -299,12 +287,9 @@ class autoRIFT:
         """
         Do the pre processing using db scale (4 min).
         """
-        import cv2
         import numpy as np
 
         self.zeroMask = self.I1 == 0
-
-        #        pdb.set_trace()
 
         self.I1 = 20.0 * np.log10(self.I1)
 
@@ -333,7 +318,7 @@ class autoRIFT:
 
     def preprocess_filt_lap(self):
         """
-        Do the pre processing using Laplacian filter (2.5 min / 4 min).
+        Do the pre-processing using Laplacian filter (2.5 min / 4 min).
         """
         import cv2
         import numpy as np
@@ -352,7 +337,6 @@ class autoRIFT:
 
         if self.DataType == 0:
             if self.zeroMask is not None:
-                #            validData = np.logical_not(np.isnan(self.I1))
                 validData = np.isfinite(self.I1)
                 temp = self.I1[validData]
             else:
@@ -363,11 +347,9 @@ class autoRIFT:
             self.I1 = (self.I1 - (M1 - 3 * S1)) / (6 * S1) * (2**8 - 0)
             del S1, M1, temp
 
-            #            self.I1[np.logical_not(np.isfinite(self.I1))] = 0
             self.I1 = np.round(np.clip(self.I1, 0, 255)).astype(np.uint8)
 
             if self.zeroMask is not None:
-                #            validData = np.logical_not(np.isnan(self.I2))
                 validData = np.isfinite(self.I2)
                 temp = self.I2[validData]
             else:
@@ -378,7 +360,6 @@ class autoRIFT:
             self.I2 = (self.I2 - (M2 - 3 * S2)) / (6 * S2) * (2**8 - 0)
             del S2, M2, temp
 
-            #            self.I2[np.logical_not(np.isfinite(self.I2))] = 0
             self.I2 = np.round(np.clip(self.I2, 0, 255)).astype(np.uint8)
 
             if self.zeroMask is not None:
@@ -535,7 +516,6 @@ class autoRIFT:
                 SearchLimitY0[M0] = 0
                 Dx00 = np.round(cv2.resize(Dx00, dstShape[::-1], interpolation=cv2.INTER_NEAREST))
                 Dy00 = np.round(cv2.resize(Dy00, dstShape[::-1], interpolation=cv2.INTER_NEAREST))
-            #                pdb.set_trace()
             else:
                 SearchLimitX0 = self.SearchLimitX.copy()
                 SearchLimitY0 = self.SearchLimitY.copy()
@@ -543,9 +523,6 @@ class autoRIFT:
                 Dy00 = self.Dy0.copy()
                 xGrid0 = self.xGrid.copy()
                 yGrid0 = self.yGrid.copy()
-            #                M0 = (ChipSizeX == 0) & (self.ChipSizeMinX <= ChipSizeUniX[i]) & (self.ChipSizeMaxX >= ChipSizeUniX[i])
-            #                SearchLimitX0[np.logical_not(M0)] = 0
-            #                SearchLimitY0[np.logical_not(M0)] = 0
 
             if np.logical_not(np.any(SearchLimitX0 != 0)):
                 continue
@@ -570,8 +547,6 @@ class autoRIFT:
             xGrid0C = xGrid0[rIdxC, cIdxC]
             yGrid0C = yGrid0[rIdxC, cIdxC]
 
-            #            pdb.set_trace()
-
             if np.remainder((self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio), 2) == 0:
                 filtWidth = (self.sparseSearchSampleRate * ChipSize0_GridSpacing_oversample_ratio) + 1
             else:
@@ -594,8 +569,6 @@ class autoRIFT:
                 overSampleRatio = self.OverSampleRatio[ChipSizeUniX[i]]
             else:
                 overSampleRatio = self.OverSampleRatio
-
-            #            pdb.set_trace()
 
             if self.I1.dtype == np.uint8:
                 DxC, DyC = arImgDisp_u(
@@ -630,8 +603,6 @@ class autoRIFT:
             else:
                 sys.exit("invalid data type for the image pair which must be unsigned integer 8 or 32-bit float")
 
-            #            pdb.set_trace()
-
             # M0C is the mask for reliable estimates after coarse search, MC is the mask after disparity filtering, MC2 is the mask after area closing for fine search
             M0C = np.logical_not(np.isnan(DxC))
 
@@ -653,7 +624,6 @@ class autoRIFT:
             )
 
             MC2 = cv2.resize(MC2.astype(np.uint8), dstShape[::-1], interpolation=cv2.INTER_NEAREST).astype(bool)
-            #            pdb.set_trace()
             if np.logical_not(np.all(MC2.shape == SearchLimitX0.shape)):
                 rowAdd = SearchLimitX0.shape[0] - MC2.shape[0]
                 colAdd = SearchLimitX0.shape[1] - MC2.shape[1]
@@ -669,7 +639,6 @@ class autoRIFT:
             SubPixFlag = True
             ChipSizeXF = ChipSizeUniX[i]
             ChipSizeYF = np.float32(np.round(ChipSizeXF * self.ScaleChipSizeY / 2) * 2)
-            #            pdb.set_trace()
             if self.I1.dtype == np.uint8:
                 DxF, DyF = arImgDisp_u(
                     self.I2.copy(),
@@ -703,8 +672,6 @@ class autoRIFT:
             else:
                 sys.exit("invalid data type for the image pair which must be unsigned integer 8 or 32-bit float")
 
-            #            pdb.set_trace()
-
             M0 = DispFiltF.filtDisp(
                 DxF.copy(),
                 DyF.copy(),
@@ -713,7 +680,6 @@ class autoRIFT:
                 np.logical_not(np.isnan(DxF)),
                 overSampleRatio,
             )
-            #            pdb.set_trace()
             DxF[np.logical_not(M0)] = np.nan
             DyF[np.logical_not(M0)] = np.nan
 
@@ -730,7 +696,6 @@ class autoRIFT:
                 foo1 = (
                     cv2.filter2D(foo.astype(np.float32), -1, np.ones((3, 3)), borderType=cv2.BORDER_CONSTANT) >= 6
                 ) | foo  # 1st area closing followed by the 2nd (part of the next line calling OpenCV)
-                #                pdb.set_trace()
                 fillIdx = (
                     np.logical_not(bwareaopen(np.logical_not(foo1).astype(np.uint8), 5)) & np.logical_not(foo) & MM
                 )
@@ -807,7 +772,6 @@ class autoRIFT:
         rlim = int(np.floor(self.xGrid.shape[0] / chopFactor) * chopFactor)
         clim = int(np.floor(self.xGrid.shape[1] / chopFactor) * chopFactor)
         self.origSize = self.xGrid.shape
-        #        pdb.set_trace()
         self.xGrid = np.round(self.xGrid[0:rlim, 0:clim]) + 0.5
         self.yGrid = np.round(self.yGrid[0:rlim, 0:clim]) + 0.5
 
@@ -833,7 +797,7 @@ class autoRIFT:
 
         super(autoRIFT, self).__init__()
 
-        ##Input related parameters
+        # Input related parameters
         self.I1 = None
         self.I2 = None
         self.xGrid = None
@@ -845,14 +809,14 @@ class autoRIFT:
         self.I1zeroMask = None
         self.I2zeroMask = None
 
-        ##Output file
+        # Output file
         self.Dx = None
         self.Dy = None
         self.InterpMask = None
         self.ChipSizeX = None
         self.ChipSizeY = None
 
-        ##Parameter list
+        # Parameter list
         self.WallisFilterWidth = 5
         self.StandardDeviationCutoff = 0.25
         self.ChipSizeMinX = 32
@@ -882,7 +846,7 @@ class autoRIFT:
 
 class AUTO_RIFT_CORE:
     def __init__(self):
-        ##Pointer to C
+        # Pointer to C
         self._autoriftcore = None
 
 
@@ -918,7 +882,6 @@ def arImgDisp_u(
 ):
     import numpy as np
     from . import autoriftcore
-    import multiprocessing as mp
 
     core = AUTO_RIFT_CORE()
     if core._autoriftcore is not None:
@@ -988,7 +951,9 @@ def arImgDisp_u(
     I1 = np.lib.pad(I1, ((Py, Py), (Px, Px)), "constant")
     I2 = np.lib.pad(I2, ((Py, Py), (Px, Px)), "constant")
 
-    # adjust center location by the padarray size and 0.5 is added because we need to extract the chip centered at X+1 with -chipsize/2:chipsize/2-1, which equivalently centers at X+0.5 (X is the original grid point location). So for even chipsize, always returns offset estimates at (X+0.5).
+    # adjust center location by the padarray size and 0.5 is added because we need to extract the chip centered at X+1
+    # with -chipsize/2:chipsize/2-1, which equivalently centers at X+0.5 (X is the original grid point location). So for
+    # even chipsize, always returns offset estimates at (X+0.5).
     xGrid += Px + 0.5
     yGrid += Py + 0.5
 
@@ -1085,7 +1050,6 @@ def arImgDisp_s(
 ):
     import numpy as np
     from . import autoriftcore
-    import multiprocessing as mp
 
     core = AUTO_RIFT_CORE()
     if core._autoriftcore is not None:
@@ -1155,7 +1119,9 @@ def arImgDisp_s(
     I1 = np.lib.pad(I1, ((Py, Py), (Px, Px)), "constant")
     I2 = np.lib.pad(I2, ((Py, Py), (Px, Px)), "constant")
 
-    # adjust center location by the padarray size and 0.5 is added because we need to extract the chip centered at X+1 with -chipsize/2:chipsize/2-1, which equivalently centers at X+0.5 (X is the original grid point location). So for even chipsize, always returns offset estimates at (X+0.5).
+    # adjust center location by the padarray size and 0.5 is added because we need to extract the chip centered at X+1
+    # with -chipsize/2:chipsize/2-1, which equivalently centers at X+0.5 (X is the original grid point location). So for
+    # even chipsize, always returns offset estimates at (X+0.5).
     xGrid += Px + 0.5
     yGrid += Py + 0.5
 
@@ -1234,7 +1200,7 @@ def arImgDisp_s(
     return Dx, Dy
 
 
-################## Chunked version of column filter
+# Chunked version of column filter
 def jit_filter_function(filter_function):
     """Decorator for use with scipy.ndimage.generic_filter."""
     jitted_function = jit(filter_function, nopython=True)
@@ -1291,7 +1257,7 @@ def partition(values, low, high):
         if values[j] <= pivot:
             i += 1
             values[i], values[j] = values[j], values[i]
-            
+
     values[i + 1], values[high] = values[high], values[i + 1]
     return i + 1
 
@@ -1328,7 +1294,7 @@ def quickselect_non_recursive_duo(values, k):
                     if v > temp_max:
                         temp_max = v
                 return (values[pivot_index]+temp_max)/2
-            else:                               # pivot_index == k-1:
+            else:  # pivot_index == k-1:
                 temp_min = values[k]
                 for v in values[k+1:]:
                     if v < temp_min:
@@ -1459,21 +1425,21 @@ def colfilt(A, kernelSize, option, chunkSize=4):
             for v in values:
                 count += abs(v - values[center_ind]) < option[1]
             return count
-    
+
         for ii in np.arange(N_chunks):
             out[:,ind_out_start[ii]:ind_out_stop[ii]] \
                 = generic_filter(A[:,ind_startCols_chunks[ii]:ind_stopCols_chunks[ii]],fDDC,size=kernelSize,mode='constant',cval=np.nan)[:,relInd_start[ii]:relInd_stop[ii]]
     else:
         sys.exit("invalid option for columnwise neighborhood filtering")
         pass
-    
+
     return out
 
 
 class DISP_FILT:
     def __init__(self):
-        ##filter parameters; try different parameters to decide how much fine-resolution estimates we keep, which can make the final images smoother
-
+        # filter parameters; try different parameters to decide how much fine-resolution estimates we keep, which can
+        # make the final images smoother
         self.FracValid = 8 / 25
         self.FracSearch = 0.20
         self.FiltWidth = 5
@@ -1490,7 +1456,6 @@ class DISP_FILT:
 
         dToleranceX = self.FracValid * self.FiltWidth**2
         dToleranceY = self.FracValid * self.FiltWidth**2
-        #        pdb.set_trace()
         Dx = Dx / SearchLimitX
         Dy = Dy / SearchLimitY
 
@@ -1507,9 +1472,6 @@ class DISP_FILT:
                 colfilt(Dy.copy(), (self.FiltWidth, self.FiltWidth), (5, self.FracSearch), self.colfiltChunkSize)
                 >= dToleranceY
             )
-
-        #        if self.Iter == 3:
-        #            pdb.set_trace()
 
         for i in range(np.max([self.Iter - 1, 1])):
             Dx[np.logical_not(M)] = np.nan

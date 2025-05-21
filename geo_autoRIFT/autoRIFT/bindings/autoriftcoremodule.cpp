@@ -25,17 +25,9 @@
  * Author: Yang Lei
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-
-
-
-
-
-
 #include <Python.h>
 #include <string>
-//#include "autoriftcore.h"
 #include "autoriftcoremodule.h"
-
 
 #include "stdio.h"
 #include "iostream"
@@ -49,10 +41,12 @@ using namespace cv;
 using namespace std;
 
 struct autoRiftCore{
-//  This empty structure "autoRiftCore" in C++ is assgined to "self._autoriftcore" in python, which can take a set of variables in this file (declare here or in "autoriftcore.h" and set states below). For example,
+// This empty structure "autoRiftCore" in C++ is assigned to "self._autoriftcore" in python, which can take a set of
+// variables in this file (declare here or in "autoriftcore.h" and set states below). For example,
 //    ((autoRiftCore*)(ptr))->widC = widC;
 //    ((autoRiftCore*)(ptr))->arPixDisp()
-//  If taking all the variables here in the structure, the complicated computation can be performed in another C++ file, "autoriftcore.cpp" (that includes functions like void autoRiftCore::arPixDisp()).
+//  If taking all the variables here in the structure, the complicated computation can be performed in another C++ file,
+// "autoriftcore.cpp" (that includes functions like void autoRiftCore::arPixDisp()).
 };
 
 
@@ -71,7 +65,6 @@ PyModuleDef moduledef = {
     autoriftcore_methods,
 };
 
-//Initialization function for the module
 PyMODINIT_FUNC
 PyInit_autoriftcore()
 {

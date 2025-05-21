@@ -25,8 +25,6 @@
  * Authors: Piyush Agram, Yang Lei
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-
-
 #ifndef geogridRadarmodule_h
 #define geogridRadarmodule_h
 
@@ -42,7 +40,7 @@ extern "C"
         PyObject * setRangeParameters(PyObject *, PyObject *);
         PyObject * setAzimuthParameters(PyObject*, PyObject *);
         PyObject * setRepeatTime(PyObject *, PyObject *);
-    
+
         PyObject * setDEM(PyObject *, PyObject *);
         PyObject * setVelocities(PyObject*, PyObject*);
         PyObject * setSearchRange(PyObject*, PyObject*);
@@ -54,7 +52,7 @@ extern "C"
         PyObject * setTimes(PyObject *, PyObject *);
         PyObject * setLookSide(PyObject *, PyObject *);
         PyObject * setNodataOut(PyObject *, PyObject *);
-    
+
         PyObject * setDtUnity(PyObject *, PyObject *);
         PyObject * setMaxFactor(PyObject *, PyObject *);
         PyObject * setUpperThreshold(PyObject*, PyObject *);
@@ -131,4 +129,3 @@ static PyMethodDef geogrid_methods[] =
         {NULL, NULL, 0, NULL}
 };
 #endif //geoGridmodule_h
-

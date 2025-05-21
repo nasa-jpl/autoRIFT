@@ -25,28 +25,26 @@
  * Authors: Piyush Agram, Yang Lei
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-
 #ifndef GEOGRIDOPTICAL_H
 #define GEOGRIDOPTICAL_H
 
 #include <iostream>
 
 
-
 struct geoGridOptical
 {
     //DEM related inputs
-    std::string demname;    //DEM
-    std::string dhdxname;   //Slope in X
-    std::string dhdyname;   //Slope in Y
-    std::string vxname;     //Velocity in X
-    std::string vyname;     //Velocity in Y
+    std::string demname;     //DEM
+    std::string dhdxname;    //Slope in X
+    std::string dhdyname;    //Slope in Y
+    std::string vxname;      //Velocity in X
+    std::string vyname;      //Velocity in Y
     std::string srxname;     //Search range in X
     std::string sryname;     //Search range in Y
-    std::string csminxname;     //Chip size minimum in x
-    std::string csminyname;     //Chip size minimum in y
-    std::string csmaxxname;     //Chip size maximum in x
-    std::string csmaxyname;     //Chip size maximum in y
+    std::string csminxname;  //Chip size minimum in x
+    std::string csminyname;  //Chip size minimum in y
+    std::string csmaxxname;  //Chip size maximum in x
+    std::string csmaxyname;  //Chip size maximum in y
     std::string ssmname;     //Stable surface mask
     int epsgDem, epsgDat;
     double chipSizeX0;
@@ -64,7 +62,7 @@ struct geoGridOptical
     int nodata_out;
     int pOff, lOff, pCount, lCount;
     double X_res, Y_res;
-    
+
     //dt-varying search range rountine parameters
     double dt_unity;
     double max_factor;

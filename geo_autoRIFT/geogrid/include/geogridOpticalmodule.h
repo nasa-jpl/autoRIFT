@@ -25,8 +25,6 @@
  * Authors: Piyush Agram, Yang Lei
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-
-
 #ifndef geogridOpticalmodule_h
 #define geogridOpticalmodule_h
 
@@ -42,7 +40,7 @@ extern "C"
         PyObject * setXParameters(PyObject *, PyObject *);
         PyObject * setYParameters(PyObject*, PyObject *);
         PyObject * setRepeatTime(PyObject *, PyObject *);
-    
+
         PyObject * setDEM(PyObject *, PyObject *);
         PyObject * setVelocities(PyObject*, PyObject*);
         PyObject * setSearchRange(PyObject*, PyObject*);
@@ -51,7 +49,7 @@ extern "C"
         PyObject * setStableSurfaceMask(PyObject*, PyObject*);
         PyObject * setSlopes(PyObject*, PyObject*);
         PyObject * setNodataOut(PyObject *, PyObject *);
-    
+
         PyObject * setDtUnity(PyObject *, PyObject *);
         PyObject * setMaxFactor(PyObject *, PyObject *);
         PyObject * setUpperThreshold(PyObject*, PyObject *);
@@ -123,4 +121,3 @@ static PyMethodDef geogrid_methods[] =
         {NULL, NULL, 0, NULL}
 };
 #endif //geoGridOpticalmodule_h
-

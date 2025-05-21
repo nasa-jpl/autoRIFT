@@ -25,7 +25,6 @@
  * Authors: Piyush Agram, Yang Lei
  *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  */
-
 #ifndef GEOGRIDRADAR_H
 #define GEOGRIDRADAR_H
 
@@ -50,7 +49,7 @@ struct geoGridRadar
     std::string itime;
     std::string ftime;
     std::string forbit;
-    
+
     int epsgcode;
     double chipSizeX0;
     double gridSpacingX;
@@ -73,7 +72,7 @@ struct geoGridRadar
     double incidenceAngle;
     int pOff, lOff, pCount, lCount;
     double grd_res, azm_res;
-    
+
     //dt-varying search range rountine parameters
     double dt_unity;
     double max_factor;
@@ -100,7 +99,7 @@ struct geoGridRadarPoint
 {
     //Map coordinates
     double pos[3];
-    
+
     //DEM slope info
     double slope[2];
 

@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Copyright 2019 California Institute of Technology. ALL RIGHTS RESERVED.
 #
@@ -26,7 +24,6 @@
 #
 # Authors: Piyush Agram, Yang Lei
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 import pdb
 import subprocess
 import re
@@ -47,7 +44,6 @@ class GeogridRadar():
         from . import geogridRadar
 
         ##Determine appropriate EPSG system
-        #print('PROJECTION SYSTEM', self.getProjectionSystem())
         self.epsg = self.getProjectionSystem()
 
         ###Determine extent of data needed
@@ -67,53 +63,10 @@ class GeogridRadar():
         ##Run
         geogridRadar.geogridRadar_Py(self._geogrid)
 
-        #deg2rad = np.pi/180.0
-        #params=[];
-        #params.append(self.startingRange)
-        #params.append(self.rangePixelSize)
-        #params.append((self.sensingStart - self.sensingStart.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds())
-        #params.append(self.prf)
-        #params.append(self.numberOfSamples)
-        #params.append(self.numberOfLines)
-        #params.append(self.incidenceAngle)
-        #params.append(self.epsg)
-        #params.append(self.chipSizeX0)
-        #params.append(self.gridSpacingX)
-        #params.append(self.repeatTime)
-        #params.append(self._xlim[0])
-        #params.append(self._xlim[1])
-        #params.append(self._ylim[0])
-        #params.append(self._ylim[1])
-        #params.append(self.demname)
-        #params.append(self.dhdxname)
-        #params.append(self.dhdyname)
-        #params.append(self.vxname)
-        #params.append(self.vyname)
-        #params.append(self.srxname)
-        #params.append(self.sryname)
-        #params.append(self.csminxname)
-        #params.append(self.csminyname)
-        #params.append(self.csmaxxname)
-        #params.append(self.csmaxyname)
-        #params.append(self.ssmname)
-        #midsensing = self.sensingStart + datetime.timedelta(seconds = (np.floor(self.numberOfLines/2)-1) / self.prf)
-        #params.append(midsensing.strftime("%Y-%m-%dT%H:%M:%S.%f"))
-        #params.append((midsensing-datetime.timedelta(seconds = 600)).strftime("%Y-%m-%dT%H:%M:%S.%f"))
-        #params.append((midsensing+datetime.timedelta(seconds = 600)).strftime("%Y-%m-%dT%H:%M:%S.%f"))
-        #params.append(self.orbitname)
-
-        #params=[str(param) for param in params]
-
-        #cmdline = os.path.dirname(__file__)+"/geogrid "+" ".join(params)
-        #print(cmdline)
-
-        #subprocess.call(cmdline,shell=True)
-
         self.get_center_latlon()
 
         ##Get parameters
         self.getState()
-        #print('XOFF',geogridRadar.getXOff_Py(self._geogrid))
         output = open('output.txt')
         lines = output.readlines()
         for line in lines:
@@ -137,7 +90,6 @@ class GeogridRadar():
         '''
         Get center lat/lon of the image.
         '''
-        from osgeo import gdal
         self.epsg = 4326
         self.determineBbox()
         self.cen_lat = (self._ylim[0] + self._ylim[1]) / 2
@@ -149,7 +101,6 @@ class GeogridRadar():
         '''
         Testing with Greenland.
         '''
-        #print('DEM NAME',self.demname)
         if not self.demname:
             raise Exception('At least the DEM parameter must be set for geogrid')
 
@@ -157,9 +108,7 @@ class GeogridRadar():
         ds = gdal.Open(self.demname, gdal.GA_ReadOnly)
         srs = osr.SpatialReference()
         srs.ImportFromWkt(ds.GetProjection())
-        #srs.AutoIdentifyEPSG()
         ds = None
-#        pdb.set_trace()
 
         if srs.IsProjected():
             epsgstr = srs.GetAuthorityCode('PROJCS')
@@ -172,14 +121,10 @@ class GeogridRadar():
         if not epsgstr:  #Empty string->use shell command gdalsrsinfo for last trial
             cmd = 'gdalsrsinfo -o epsg {0}'.format(self.demname)
             epsgstr = subprocess.check_output(cmd, shell=True)
-#            pdb.set_trace()
             epsgstr = re.findall("EPSG:(\d+)", str(epsgstr))[0]
-#            pdb.set_trace()
         if not epsgstr:  #Empty string
             raise Exception('Could not auto-identify epsg code')
-#        pdb.set_trace()
         epsgcode = int(epsgstr)
-#        pdb.set_trace()
         return epsgcode
 
     def determineBbox(self, zrange=[-200,4000]):
@@ -187,7 +132,6 @@ class GeogridRadar():
         Dummy.
         '''
         import numpy as np
-        import datetime
         from osgeo import osr,gdal
         from isce3.geometry import rdr2geo, DEMInterpolator
         from isce3.core import Ellipsoid
@@ -195,10 +139,6 @@ class GeogridRadar():
 
         refElp = Ellipsoid(a=6378137.0, e2=0.0066943799901)
 
-#        import pdb
-#        pdb.set_trace()
-
-#        rng = self.startingRange + np.linspace(0, self.numberOfSamples, num=21)
         rng = self.startingRange + np.linspace(0, self.numberOfSamples-1, num=21) * self.rangePixelSize
         deltat = np.linspace(0, 1., num=21)[1:-1]
 
@@ -207,7 +147,6 @@ class GeogridRadar():
 
         coord = osr.SpatialReference()
         coord.ImportFromEPSG(self.epsg)
-        #print('EPSG',self.epsg)
 
         trans = osr.CoordinateTransformation(lonlat, coord)
         inv = osr.CoordinateTransformation(coord, lonlat)
@@ -220,7 +159,6 @@ class GeogridRadar():
         ###First range line
         for rr in rng:
             for zz in zrange:
-                #llh = rdr2geo(self.aztime, rr, ellipsoid=refElp, orbit=self.orbit, wvl=self.wavelength, side=self.lookSide, demInterpolatorHeight=zz)
                 llh = rdr2geo(self.aztime, rr, self.orbit, self.lookSide, 0.0, self.wavelength, DEMInterpolator(zz), refElp)
                 llht = copy.copy(llh)
                 llht[0]=llh[1]/deg2rad
@@ -230,17 +168,14 @@ class GeogridRadar():
                     x,y,z = trans.TransformPoint(llht[1], llht[0], llht[2])
                 else:
                     x,y,z = trans.TransformPoint(llht[0], llht[1], llht[2])
-                #llht=inv.TransformPoint(x,y,z)
-                #print('LLH',np.array(llht)/deg2rad)
-                #print('XYZ',x,y,z)
+
                 xyzs.append([x,y,z])
 
-        ##Last range line
+        # Last range line
         sensingStop = self.aztime + (self.numberOfLines-1) / self.prf
         for rr in rng:
             for zz in zrange:
                 llh = rdr2geo(sensingStop, rr, self.orbit, self.lookSide, 0.0, self.wavelength, DEMInterpolator(zz), refElp)
-                #llh = self.orbit.rdr2geo(sensingStop, rr, side=self.lookSide, height=zz)
                 llht = copy.copy(llh)
                 llht[0]=llh[1]/deg2rad
                 llht[1]=llh[0]/deg2rad
@@ -249,20 +184,16 @@ class GeogridRadar():
                     x,y,z = trans.TransformPoint(llht[1], llht[0], llht[2])
                 else:
                     x,y,z = trans.TransformPoint(llht[0], llht[1], llht[2])
-                #llht=inv.TransformPoint(x,y,z)
-                #print('LLH',np.array(llht)/deg2rad)
-                #print('XYZ',x,y,z)
+
                 xyzs.append([x,y,z])
 
 
-        ##For each line in middle, consider the edges
+        # For each line in middle, consider the edges
         for frac in deltat:
             sensingTime = self.aztime + frac * (self.numberOfLines-1)/self.prf
-#            print('sensing Time: %f %f %f'%(sensingTime.minute,sensingTime.second,sensingTime.microsecond))
             for rr in [rng[0], rng[-1]]:
                 for zz in zrange:
                     llh = rdr2geo(sensingTime, rr, self.orbit, self.lookSide, 0.0, self.wavelength, DEMInterpolator(zz), refElp)
-                    #llh = self.orbit.rdr2geo(sensingTime, rr, side=self.lookSide, height=zz)
                     llht = copy.copy(llh)
                     llht[0]=llh[1]/deg2rad
                     llht[1]=llh[0]/deg2rad
@@ -271,20 +202,15 @@ class GeogridRadar():
                         x,y,z = trans.TransformPoint(llht[1], llht[0], llht[2])
                     else:
                         x,y,z = trans.TransformPoint(llht[0], llht[1], llht[2])
-                    #llht=inv.TransformPoint(x,y,z)
-                    #print('LLH',np.array(llht))
-                    #print('XYZ',x,y,z)
+
                     xyzs.append([x,y,z])
 
 
         llhs = np.array(llhs)
         xyzs = np.array(xyzs)
-        #print('LIMS',xyzs)
 
         if str(self.epsg)=='4326':
-            #self._xlim = [np.min(xyzs[:,0])/deg2rad, np.max(xyzs[:,0])/deg2rad]
             self._xlim = [np.min(xyzs[:,1]), np.max(xyzs[:,1])]
-            #self._ylim = [np.min(xyzs[:,1])/deg2rad, np.max(xyzs[:,1])/deg2rad]
             self._ylim = [np.min(xyzs[:,0]), np.max(xyzs[:,0])]
         else:
             self._xlim = [np.min(xyzs[:,0]), np.max(xyzs[:,0])]
@@ -295,11 +221,9 @@ class GeogridRadar():
         Dummy.
         '''
         import numpy as np
-        import datetime
-        from osgeo import osr,gdal
+
         from isce3.core import Ellipsoid
         from isce3.geometry import rdr2geo, DEMInterpolator
-        #from isceobj.Util.geo.ellipsoid import Ellipsoid
 
         refElp = Ellipsoid(a=6378137.0, e2=0.0066943799901)
 
@@ -311,19 +235,14 @@ class GeogridRadar():
         midsensing = self.aztime + (np.floor(self.numberOfLines/2)-1) / self.prf
         master_pos, master_vel= self.orbit.interpolate(midsensing)
         mxyz = master_pos
-        #print('MXYZ',mxyz)
 
         for zz in zrange:
             llh = rdr2geo(midsensing, midrng, self.orbit, self.lookSide, 0.0, self.wavelength, DEMInterpolator(zz), refElp)
-            #print('LLH',llh)
             targxyz = np.array(refElp.lon_lat_to_xyz(llh).tolist())
             los = (mxyz-targxyz) / np.linalg.norm(mxyz-targxyz)
             n_vec = np.array([np.cos(llh[1])*np.cos(llh[0]), np.cos(llh[1])*np.sin(llh[0]), np.sin(llh[1])])
-            #print('LOS',los)
-            #print('N_VEC',n_vec)
-            #print('DOT',np.dot(los, n_vec))
+
             theta = np.arccos(np.dot(los, n_vec))
-            #print('THETA',theta)
             thetas.append([theta])
 
         thetas = np.array(thetas)
@@ -414,9 +333,6 @@ class GeogridRadar():
         geogrid.setSFFilename_Py( self._geogrid, self.winsfname)
         geogrid.setLookSide_Py(self._geogrid, self.lookSide)
         geogrid.setNodataOut_Py(self._geogrid, self.nodata_out)
-
-        #self._orbit  = self.orbit.exportToC()
-        #geogrid.setOrbit_Py(self._geogrid, self._orbit)
 
     def checkState(self):
         '''

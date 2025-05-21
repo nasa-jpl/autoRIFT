@@ -39,8 +39,6 @@ def cmdLineParse():
             help='Input master image file name (in GeoTIFF format and Cartesian coordinates)')
     parser.add_argument('-s', '--input_s', dest='indir_s', type=str, required=True,
             help='Input slave image file name (in GeoTIFF format and Cartesian coordinates)')
-#    parser.add_argument('-o', '--output', dest='outfile', type=str, default='geogrid.csv',
-#            help='Output grid mapping')
     parser.add_argument('-d', '--dem', dest='demfile', type=str, required=True,
             help='Input DEM')
     parser.add_argument('-sx', '--dhdx', dest='dhdxfile', type=str, default="",
@@ -108,18 +106,11 @@ def loadMetadata(safe,orbit_path,swath,buffer=0):
     '''
     Input file.
     '''
-    import os
     import numpy as np
-    from datetime import datetime, timedelta
+    from datetime import timedelta
     from s1reader import load_bursts
     import isce3
 
-    #frames = []
-    #for swath in range(2,3):
-    #    inxml = os.path.join(indir, 'IW{0}.xml'.format(swath))
-    #    if os.path.exists(inxml):
-    #        ifg = loadProduct(inxml)
-    #        frames.append(ifg)
     pol = getPol(safe,orbit_path)
     bursts = load_bursts(safe,orbit_path,swath,pol)
 
@@ -128,7 +119,6 @@ def loadMetadata(safe,orbit_path,swath,buffer=0):
             burst = bur
 
     info = Dummy()
-    #info.sensingStart = min([x.sensingStart for x in frames])
 
     info.prf = 1 / burst.azimuth_time_interval
     info.startingRange = burst.starting_range
@@ -137,7 +127,6 @@ def loadMetadata(safe,orbit_path,swath,buffer=0):
     length, width = burst.shape
     info.sensingStart = burst.sensing_start
     info.aztime = float((isce3.core.DateTime(burst.sensing_start)-burst.orbit.reference_epoch).total_seconds())
-    #print('aztime',float(info.aztime))
     info.sensingStop = (info.sensingStart + timedelta(seconds=(length-1.0)/info.prf))
     info.orbitname = orbit_path
     info.farRange = info.startingRange + (width-1.0)*info.rangePixelSize
@@ -149,8 +138,6 @@ def loadMetadata(safe,orbit_path,swath,buffer=0):
 
     info.numberOfLines = int( np.round( (info.sensingStop - info.sensingStart).total_seconds() * info.prf)) + 1
     info.numberOfSamples = int( np.round( (info.farRange - info.startingRange)/info.rangePixelSize)) + 1  + 2 * buffer
-    #print(length,width)
-    #print(info.numberOfLines,info.numberOfSamples)
 
     info.orbit = getMergedOrbit(safe,orbit_path,swath)
 
@@ -161,9 +148,8 @@ def loadMetadataSlc(safe,orbit_path,buffer=0,swaths=None):
     '''
     Input file.
     '''
-    import os
     import numpy as np
-    from datetime import datetime, timedelta
+    from datetime import timedelta
     from s1reader import load_bursts
     import isce3
 
@@ -218,10 +204,8 @@ def coregisterLoadMetadata(indir_m, indir_s):
     Input file.
     '''
     import os
-    import numpy as np
 
-    from osgeo import gdal, osr
-    import struct
+    from osgeo import gdal
     import re
 
     from geogrid import GeogridOptical
@@ -301,7 +285,6 @@ def runGeogrid(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, csminy, c
         d1 = date(int(info1.time[0:4]),int(info1.time[4:6]),int(info1.time[6:8]))
         date_dt_base = d1 - d0
         obj.repeatTime = date_dt_base.total_seconds()
-    #    obj.repeatTime = (info1.time - info.time) * 24.0 * 3600.0
         obj.numberOfLines = info.numberOfLines
         obj.numberOfSamples = info.numberOfSamples
         obj.nodata_out = -32767
@@ -330,11 +313,11 @@ def runGeogrid(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, csminy, c
         obj.winro2vxname = "window_rdr_off2vel_x_vec.tif"
         obj.winro2vyname = "window_rdr_off2vel_y_vec.tif"
         obj.winsfname = "window_scale_factor.tif"
-        ##dt-varying search range scale (srs) rountine parameters
-    #    obj.srs_dt_unity = 32
-    #    obj.srs_max_scale = 10
-    #    obj.srs_max_search = 20000
-    #    obj.srs_min_search = 0
+        # dt-varying search range scale (srs) routine parameters
+        # obj.srs_dt_unity = 32
+        # obj.srs_max_scale = 10
+        # obj.srs_max_search = 20000
+        # obj.srs_min_search = 0
 
         obj.runGeogrid()
 
@@ -403,11 +386,11 @@ def runGeogrid(info, info1, dem, dhdx, dhdy, vx, vy, srx, sry, csminx, csminy, c
         obj.winro2vxname = "window_rdr_off2vel_x_vec.tif"
         obj.winro2vyname = "window_rdr_off2vel_y_vec.tif"
         obj.winsfname = "window_scale_factor.tif"
-        ##dt-varying search range scale (srs) rountine parameters
-        #    obj.srs_dt_unity = 5
-        #    obj.srs_max_scale = 10
-        #    obj.srs_max_search = 20000
-        #    obj.srs_min_search = 0
+        # dt-varying search range scale (srs) rountine parameters
+        # obj.srs_dt_unity = 5
+        # obj.srs_max_scale = 10
+        # obj.srs_max_search = 20000
+        # obj.srs_min_search = 0
 
         obj.getIncidenceAngle()
         obj.geogridRadar()
