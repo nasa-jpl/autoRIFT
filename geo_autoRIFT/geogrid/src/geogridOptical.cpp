@@ -1099,7 +1099,7 @@ void geoGridOptical::geogridOptical()
                         ssm_raster[jj] = ssmLine[jj];
                     }
                 }
-
+            }
         }
 
 
