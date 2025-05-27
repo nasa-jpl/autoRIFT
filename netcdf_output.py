@@ -1337,7 +1337,10 @@ def cal_swath_offset_bias(
     flight_direction_s = flight_direction_s.lower()
 
     if swaths[0].platform_id == swaths_s[0].platform_id:
-        print('subswath offset bias correction not performed for non-S1A/B combination')
+        print(f'subswath offset bias correction not performed for {swaths[0].platform_id},{swaths_s[0].platform_id} combination')
+        return DX, DY, flight_direction, flight_direction_s
+    elif len(swaths) < 3:
+        print('subswath offset bias correction not performed for products with less than 3 swaths')
         return DX, DY, flight_direction, flight_direction_s
     else:
         if swaths[0].platform_id[2] == 'B':
