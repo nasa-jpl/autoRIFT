@@ -637,7 +637,7 @@ def generateAutoriftProduct(
         preprocessing_methods = ['hps', 'hps']
         for ii, name in enumerate((m_name, s_name)):
             if len(re.findall('L[EO]07_', name)) > 0:
-                    preprocessing_methods[ii] = 'wallis_fill'
+                preprocessing_methods[ii] = 'wallis_fill'
             elif len(re.findall('LT0[45]_', name)) > 0:
                 preprocessing_methods[ii] = 'fft'
 
