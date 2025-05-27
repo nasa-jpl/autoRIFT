@@ -26,14 +26,22 @@
 #
 # Authors: Piyush Agram, Yang Lei
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+import argparse
+import os
+import re
+from datetime import date, timedelta
+
+import isce3
+import numpy as np
+from geogrid import GeogridOptical, GeogridRadar
+from osgeo import gdal
+from s1reader import load_bursts
 
 
 def cmdLineParse():
     """
     Command line parser.
     """
-    import argparse
-
     parser = argparse.ArgumentParser(description='Output geo grid')
     parser.add_argument(
         '-m',
@@ -72,24 +80,6 @@ def cmdLineParse():
         default=0,
         help='flag for reading optical data (e.g. Landsat): use 1 for on and 0 (default) for off',
     )
-    # FIXME: used?
-    parser.add_argument(
-        '-b',
-        '--buffer',
-        dest='buffer',
-        type=bool,
-        required=False,
-        default=0,
-        help='buffer to add to the starting/end range accounting for all passes from the same relative orbit',
-    )
-    parser.add_argument(
-        '-p',
-        '--parse',
-        dest='parse',
-        action='store_true',
-        default=False,
-        help='Parse the SAFE zip file to get radar image and orbit metadata; no need to run ISCE',
-    )
 
     return parser.parse_args()
 
@@ -99,22 +89,19 @@ class Dummy(object):
 
 
 def getPol(safe, orbit_path):
-    from s1reader import load_bursts
-
     pols = ['vv', 'vh', 'hh', 'hv']
     for pol in pols:
-        try:
-            bursts = load_bursts(safe, orbit_path, 1, pol)
-            print('Polarization ' + pol)
-            return pol
-        except:
-            pass
+        for swath in [1, 2, 3]:
+            try:
+                _ = load_bursts(safe, orbit_path, swath, pol)
+                print(f'Polarization {pol}')
+                return pol
+            except:
+                pass
     raise ValueError(f'No polarization information found for {safe}.')
 
 
 def getMergedOrbit(safe, orbit_path, swath):
-    from s1reader import load_bursts
-
     pol = getPol(safe, orbit_path)
 
     bursts = load_bursts(safe, orbit_path, swath, pol)
@@ -127,11 +114,6 @@ def loadMetadata(safe, orbit_path, swath, buffer=0):
     """
     Input file.
     """
-    import numpy as np
-    from datetime import timedelta
-    from s1reader import load_bursts
-    import isce3
-
     pol = getPol(safe, orbit_path)
     bursts = load_bursts(safe, orbit_path, swath, pol)
 
@@ -169,11 +151,6 @@ def loadMetadataSlc(safe, orbit_path, buffer=0, swaths=None):
     """
     Input file.
     """
-    import numpy as np
-    from datetime import timedelta
-    from s1reader import load_bursts
-    import isce3
-
     if swaths is None:
         swaths = [1, 2, 3]
 
@@ -228,12 +205,6 @@ def coregisterLoadMetadata(indir_m, indir_s):
     """
     Input file.
     """
-    import os
-
-    from osgeo import gdal
-    import re
-
-    from geogrid import GeogridOptical
 
     obj = GeogridOptical()
 
@@ -295,9 +266,6 @@ def runGeogrid(
     """
 
     if optical_flag:
-        from geogrid import GeogridOptical
-        from osgeo import gdal
-
         dem_info = gdal.Info(dem, format='json')
 
         obj = GeogridOptical()
@@ -306,8 +274,6 @@ def runGeogrid(
         obj.startingY = info.startingY
         obj.XSize = info.XSize
         obj.YSize = info.YSize
-        from datetime import date
-        import numpy as np
 
         d0 = date(int(info.time[0:4]), int(info.time[4:6]), int(info.time[6:8]))
         d1 = date(int(info1.time[0:4]), int(info1.time[4:6]), int(info1.time[6:8]))
@@ -370,9 +336,6 @@ def runGeogrid(
         }
 
     else:
-        from geogrid import GeogridRadar
-        from osgeo import gdal
-
         dem_info = gdal.Info(dem, format='json')
 
         obj = GeogridRadar()

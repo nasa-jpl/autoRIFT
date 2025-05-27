@@ -27,29 +27,26 @@
 # Author: Yang Lei
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-import datetime
+import argparse
 import glob
 import os
 import re
+import subprocess
+import time
 import warnings
-
-from pathlib import Path
 from datetime import datetime, timedelta
+from pathlib import Path
 
+import cv2
+import numpy as np
+from autoRIFT import __version__ as version
+from autoRIFT import autoRIFT
+from geogrid import GeogridOptical
 from osgeo import gdal
 from s1reader import load_bursts
 
-
-def getPol(safe, orbit_path):
-    pols = ['vv', 'vh', 'hh', 'hv']
-    for pol in pols:
-        try:
-            bursts = load_bursts(safe, orbit_path, 1, pol)
-            print('Polarization ' + pol)
-            return pol
-        except:
-            pass
-    raise ValueError(f'No polarization information found for {safe}.')
+import netcdf_output as no
+from testGeogrid import getPol
 
 
 def get_topsinsar_config():
@@ -112,8 +109,6 @@ def get_topsinsar_config():
 
 
 def runCmd(cmd):
-    import subprocess
-
     out = subprocess.getoutput(cmd)
     return out
 
@@ -122,8 +117,6 @@ def cmdLineParse():
     """
     Command line parser.
     """
-    import argparse
-
     SUPPORTED_MISSIONS = ['S1', 'S2', 'L4', 'L5', 'L7', 'L8', 'L9']
 
     parser = argparse.ArgumentParser(description='Output geo grid')
@@ -241,8 +234,6 @@ class Dummy(object):
 
 
 def loadProduct(filename):
-    import numpy as np
-
     ds = gdal.Open(filename, gdal.GA_ReadOnly)
     band = ds.GetRasterBand(1)
     img = band.ReadAsArray().astype(np.float32)
@@ -253,13 +244,9 @@ def loadProduct(filename):
 
 
 def loadProductOptical(file_m, file_s):
-    import numpy as np
-
     """
     Load the product using Product Manager.
     """
-    from geogrid import GeogridOptical
-
     obj = GeogridOptical()
 
     x1a, y1a, xsize1, ysize1, x2a, y2a, xsize2, ysize2, trans = obj.coregister(file_m, file_s)
@@ -303,10 +290,6 @@ def runAutorift(
     """
     Wire and run geogrid.
     """
-    from autoRIFT import autoRIFT
-    import numpy as np
-    import time
-
     obj = autoRIFT()
 
     obj.WallisFilterWidth = preprocessing_filter_width
@@ -486,8 +469,6 @@ def runAutorift(
     print('AutoRIFT Done!!!')
     print(time.time() - t1)
 
-    import cv2
-
     kernel = np.ones((3, 3), np.uint8)
     noDataMask = cv2.dilate(noDataMask.astype(np.uint8), kernel, iterations=1)
     noDataMask = noDataMask.astype(bool)
@@ -549,12 +530,6 @@ def generateAutoriftProduct(
     ncname,
     geogrid_run_info=None,
 ):
-    import numpy as np
-    import time
-    import os
-
-    from autoRIFT import __version__ as version
-
     if optical_flag == 1:
         data_m, data_s = loadProductOptical(indir_m, indir_s)
     else:
@@ -636,8 +611,6 @@ def generateAutoriftProduct(
     intermediate_nc_file = 'autoRIFT_intermediate.nc'
 
     if os.path.exists(intermediate_nc_file):
-        import netcdf_output as no
-
         (
             Dx,
             Dy,
@@ -664,9 +637,7 @@ def generateAutoriftProduct(
         preprocessing_methods = ['hps', 'hps']
         for ii, name in enumerate((m_name, s_name)):
             if len(re.findall('L[EO]07_', name)) > 0:
-                acquisition = datetime.strptime(name.split('_')[3], '%Y%m%d')
-                if acquisition >= datetime(2003, 5, 31):
-                    preprocessing_methods[ii] = 'wallis_fill'
+                preprocessing_methods[ii] = 'wallis_fill'
             elif len(re.findall('LT0[45]_', name)) > 0:
                 preprocessing_methods[ii] = 'fft'
 
@@ -705,8 +676,6 @@ def generateAutoriftProduct(
             preprocessing_filter_width=preprocessing_filter_width,
         )
         if nc_sensor is not None:
-            import netcdf_output as no
-
             no.netCDF_packaging_intermediate(
                 Dx,
                 Dy,
@@ -753,10 +722,6 @@ def generateAutoriftProduct(
     CHIPSIZEX[SEARCHLIMITX == 0] = 0
     if SSM is not None:
         SSM[SEARCHLIMITX == 0] = False
-
-    import scipy.io as sio
-
-    sio.savemat('offset.mat', {'Dx': DX, 'Dy': DY, 'InterpMask': INTERPMASK, 'ChipSizeX': CHIPSIZEX})
 
     netcdf_file = None
     if grid_location is not None:
@@ -849,7 +814,6 @@ def generateAutoriftProduct(
             if nc_sensor is not None:
                 if nc_sensor == 'S1':
                     swath_offset_bias_ref = [-0.01, 0.019, -0.0068, 0.006]
-                    import netcdf_output as no
 
                     DX, DY, flight_direction_m, flight_direction_s = no.cal_swath_offset_bias(
                         indir_m,
@@ -1016,8 +980,6 @@ def generateAutoriftProduct(
                     master_split = str.split(master_filename, '_')
                     slave_split = str.split(slave_filename, '_')
 
-                    import netcdf_output as no
-
                     pair_type = 'radar'
                     detection_method = 'feature'
                     coordinates = 'radar, map'
@@ -1029,10 +991,16 @@ def generateAutoriftProduct(
                         raise Exception('Input search range is all zero everywhere, thus no search conducted')
                     PPP = roi_valid_percentage * 100
                     if ncname is None:
-                        out_nc_filename = (
-                            f'./{master_filename[0:-4]}_X_{slave_filename[0:-4]}'
-                            f'_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc'
-                        )
+                        if '.zip' in master_filename:
+                            out_nc_filename = (
+                                f'./{master_filename[0:-4]}_X_{slave_filename[0:-4]}'
+                                f'_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc'
+                            )
+                        elif '.SAFE' in master_filename:
+                            out_nc_filename = (
+                                f'./{master_filename[0:-5]}_X_{slave_filename[0:-5]}'
+                                f'_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc'
+                            )
                     else:
                         out_nc_filename = f'{ncname}_G{gridspacingx:04.0f}V02_P{np.floor(PPP):03.0f}.nc'
                     CHIPSIZEY = np.round(CHIPSIZEX * ScaleChipSizeY / 2) * 2
@@ -1152,8 +1120,6 @@ def generateAutoriftProduct(
 
                     master_split = str.split(master_filename, '_')
                     slave_split = str.split(slave_filename, '_')
-
-                    import netcdf_output as no
 
                     pair_type = 'optical'
                     detection_method = 'feature'
@@ -1302,8 +1268,6 @@ def generateAutoriftProduct(
                     else:
                         master_filename = os.path.basename(master_path)[:-8]
                         slave_filename = os.path.basename(slave_path)[:-8]
-
-                    import netcdf_output as no
 
                     pair_type = 'optical'
                     detection_method = 'feature'
