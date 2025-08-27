@@ -1,0 +1,77 @@
+cff-version: 1.2.0
+title: autoRIFT (autonomous Repeat Image Feature Tracking)
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Yang
+    family-names: Li
+    orcid: 'https://orcid.org/0000-0002-8377-1980'
+    affiliation: >-
+      Division of Geological and Planetary Sciences,
+      California Institute of Technology,
+      Pasadena, CA 91125, USA
+  - given-names: Alex
+    family-names: Gardner
+    email: alex.s.gardner@jpl.nasa.gov
+    affiliation: >-
+      Jet Propulsion Laboratory,
+      California Institute of Technology,
+      Pasadena, CA 91109, USA
+    orcid: 'https://orcid.org/0000-0002-8394-8889'
+  - email: piyush@gps.caltech.edu
+    given-names: Piyush
+    family-names: Agram
+    affiliation: >-
+      Division of Geological and Planetary Sciences,
+      California Institute of Technology,
+      Pasadena, CA 91125, USA
+    orcid: 'https://orcid.org/0000-0003-0711-0264'
+  - given-names: Joseph
+    name-particle: H
+    family-names: Kennedy
+    email: jhkennedy@alaska.edu
+    affiliation: >-
+      Alaska Satellite Facility,
+      Geophysical Institute,
+      University of Alaska Fairbanks,
+      Fairbanks, AK 997775, USA
+    orcid: 'https://orcid.org/0000-0002-9348-693X'
+  - given-names: Andrew
+    family-names: Player
+    email: asplayer@alaska.edu
+    affiliation: >-
+      Alaska Satellite Facility,
+      Geophysical Institute,
+      University of Alaska Fairbanks,
+      Fairbanks, AK 997775, USA
+  - orcid: 'https://orcid.org/0000-0001-8721-6020'
+    affiliation: >-
+      Alaska Satellite Facility,
+      Geophysical Institute,
+      University of Alaska Fairbanks,
+      Fairbanks, AK 997775, USA
+    email: ffwilliams2@alaska.edu
+    given-names: Forrest
+    family-names: Williams
+  - given-names: Mario
+    family-names: Angarita
+    email: mfangaritasr@alaska.edu
+    affiliation: >-
+      Alaska Satellite Facility,
+      Geophysical Institute,
+      University of Alaska Fairbanks,
+      Fairbanks, AK 997775, USA
+    orcid: 'https://orcid.org/0000-0001-7455-2455'
+  - email: kmarnoult@alaska.edu
+    affiliation: >-
+      Alaska Satellite Facility,
+      Geophysical Institute,
+      University of Alaska Fairbanks,
+      Fairbanks, AK 997775, USA
+    given-names: Kenneth
+    family-names: Arnoult
+    name-suffix: Jr
+    orcid: 'https://orcid.org/0009-0006-2854-9224'
+license: Apache-2.0
