@@ -10,6 +10,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 - Support for the use of pre-generated radar-geometry topographic corrections for ISCE3 when processing Sentinel-1 scenes.
+- A `citation.cff` file to provide citation metadata for both humans and machines (e.g., zenodo integration).
 
 ## [2.0.0]
 
