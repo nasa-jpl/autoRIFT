@@ -110,7 +110,7 @@ def getMergedOrbit(safe, orbit_path, swath):
     return burst.orbit
 
 
-def loadMetadata(safe, orbit_path, swath, buffer=0):
+def loadMetadata(safe, orbit_path, swath, buffer=0, burst_shape=None):
     """
     Input file.
     """
@@ -127,27 +127,34 @@ def loadMetadata(safe, orbit_path, swath, buffer=0):
     info.startingRange = burst.starting_range
     info.rangePixelSize = burst.range_pixel_spacing
     info.wavelength = burst.wavelength
-    length, width = burst.shape
+
+    if burst_shape:
+        length, width = burst_shape
+    else:
+        length, width = burst.shape
+
     info.sensingStart = burst.sensing_start
     info.aztime = float((isce3.core.DateTime(burst.sensing_start) - burst.orbit.reference_epoch).total_seconds())
     info.sensingStop = info.sensingStart + timedelta(seconds=(length - 1.0) / info.prf)
     info.orbitname = orbit_path
     info.farRange = info.startingRange + (width - 1.0) * info.rangePixelSize
-
     info.lookSide = isce3.core.LookSide.Right
-
     info.startingRange -= buffer * info.rangePixelSize
     info.farRange += buffer * info.rangePixelSize
 
-    info.numberOfLines = int(np.round((info.sensingStop - info.sensingStart).total_seconds() * info.prf)) + 1
-    info.numberOfSamples = int(np.round((info.farRange - info.startingRange) / info.rangePixelSize)) + 1 + 2 * buffer
+    if burst_shape:
+        info.numberOfLines = burst_shape[0]
+        info.numberOfSamples = burst_shape[1]
+    else:
+        info.numberOfLines = int(np.round((info.sensingStop - info.sensingStart).total_seconds() * info.prf)) + 1
+        info.numberOfSamples = int(np.round((info.farRange - info.startingRange) / info.rangePixelSize)) + 1 + 2 * buffer
 
     info.orbit = getMergedOrbit(safe, orbit_path, swath)
 
     return info
 
 
-def loadMetadataSlc(safe, orbit_path, buffer=0, swaths=None):
+def loadMetadataSlc(safe, orbit_path, buffer=0, swaths=None, slc_shape=None):
     """
     Input file.
     """
@@ -179,21 +186,27 @@ def loadMetadataSlc(safe, orbit_path, buffer=0, swaths=None):
         if info.sensingStop < sensingStopt:
             info.sensingStop = sensingStopt
 
-    total_width = (
-        int(np.round((bursts[-1].starting_range - bursts[0].starting_range) / bursts[0].range_pixel_spacing))
-        + bursts[-1].shape[1]
-    )
+    if slc_shape:
+        total_width = slc_shape[1]
+    else:
+        total_width = (
+            int(np.round((bursts[-1].starting_range - bursts[0].starting_range) / bursts[0].range_pixel_spacing))
+            + bursts[-1].shape[1]
+        )
+
     info.aztime = float((isce3.core.DateTime(info.sensingStart) - bursts[0].orbit.reference_epoch).total_seconds())
     info.orbitname = orbit_path
     info.farRange = info.startingRange + (total_width - 1.0) * info.rangePixelSize
-
     info.lookSide = isce3.core.LookSide.Right
-
     info.startingRange -= buffer * info.rangePixelSize
     info.farRange += buffer * info.rangePixelSize
 
-    info.numberOfLines = int(np.round((info.sensingStop - info.sensingStart).total_seconds() * info.prf)) + 1
-    info.numberOfSamples = int(np.round((info.farRange - info.startingRange) / info.rangePixelSize)) + 1 + 2 * buffer
+    if slc_shape:
+        info.numberOfLines, info.numberOfSamples = slc_shape
+    else:
+        info.numberOfLines = int(np.round((info.sensingStop - info.sensingStart).total_seconds() * info.prf)) + 1
+        info.numberOfSamples = int(np.round((info.farRange - info.startingRange) / info.rangePixelSize)) + 1 + 2 * buffer
+
     print('SIZE', info.numberOfLines, info.numberOfSamples)
 
     info.orbit = getMergedOrbit(safe, orbit_path, swaths[0])
