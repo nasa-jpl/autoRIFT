@@ -267,8 +267,8 @@ def loadProductOptical(file_m, file_s):
 
 
 def runAutorift(
-    I1,
-    I2,
+    indir_m,
+    indir_s,
     xGrid,
     yGrid,
     Dx0,
@@ -301,13 +301,11 @@ def runAutorift(
 
     obj.MultiThread = mpflag
 
-    # take the amplitude only for the radar images
-    if optflag == 0:
-        I1 = np.abs(I1)
-        I2 = np.abs(I2)
-
-    obj.I1 = I1
-    obj.I2 = I2
+    if optflag == 1:
+        obj.I1, obj.I2 = loadProductOptical(indir_m, indir_s)
+    else:
+        obj.I1 = loadProduct(indir_m)
+        obj.I2 = loadProduct(indir_s)
 
     # create the grid if it does not exist
     if xGrid is None:
@@ -333,8 +331,8 @@ def runAutorift(
         for ii in range(obj.xGrid.shape[0]):
             for jj in range(obj.xGrid.shape[1]):
                 if (obj.yGrid[ii, jj] != nodata) & (obj.xGrid[ii, jj] != nodata):
-                    if (I1[obj.yGrid[ii, jj] - 1, obj.xGrid[ii, jj] - 1] == 0) | (
-                        I2[obj.yGrid[ii, jj] - 1, obj.xGrid[ii, jj] - 1] == 0
+                    if (obj.I1[obj.yGrid[ii, jj] - 1, obj.xGrid[ii, jj] - 1] == 0) | (
+                        obj.I2[obj.yGrid[ii, jj] - 1, obj.xGrid[ii, jj] - 1] == 0
                     ):
                         noDataMask[ii, jj] = True
 
@@ -433,7 +431,36 @@ def runAutorift(
     print(time.time() - t1)
 
     t1 = time.time()
-    obj.uniform_data_type()
+
+    if obj.zeroMask is not None:
+        validData = np.isfinite(obj.I1)
+        S1 = np.std(obj.I1[validData]) * np.sqrt(obj.I1[validData].size / (obj.I1[validData].size - 1.0))
+        M1 = np.mean(obj.I1[validData])
+    else:
+        S1 = np.std(obj.I1) * np.sqrt(obj.I1.size / (obj.I1.size - 1.0))
+        M1 = np.mean(obj.I1)
+
+    obj.I1 = (obj.I1 - (M1 - 3 * S1)) / (6 * S1) * (2**8 - 0)
+    del S1, M1
+    obj.I1 = np.round(np.clip(obj.I1, 0, 255)).astype(np.uint8)
+
+    if obj.zeroMask is not None:
+        validData = np.isfinite(obj.I2)
+        S2 = np.std(obj.I2[validData]) * np.sqrt(obj.I2[validData].size / (obj.I2[validData].size - 1.0))
+        M2 = np.mean(obj.I2[validData])
+    else:
+        S2 = np.std(obj.I2) * np.sqrt(obj.I2.size / (obj.I2.size - 1.0))
+        M2 = np.mean(obj.I2)
+
+    obj.I2 = (obj.I2 - (M2 - 3 * S2)) / (6 * S2) * (2**8 - 0)
+    del S2, M2
+    obj.I2 = np.round(np.clip(obj.I2, 0, 255)).astype(np.uint8)
+
+    if obj.zeroMask is not None:
+        obj.I1[obj.zeroMask] = 0
+        obj.I2[obj.zeroMask] = 0
+        obj.zeroMask = None
+
     print('Uniform Data Type Done!!!')
     print(time.time() - t1)
 
@@ -530,12 +557,6 @@ def generateAutoriftProduct(
     ncname,
     geogrid_run_info=None,
 ):
-    if optical_flag == 1:
-        data_m, data_s = loadProductOptical(indir_m, indir_s)
-    else:
-        data_m = loadProduct(indir_m)
-        data_s = loadProduct(indir_s)
-
     xGrid = None
     yGrid = None
     Dx0 = None
@@ -655,8 +676,8 @@ def generateAutoriftProduct(
             origSize,
             noDataMask,
         ) = runAutorift(
-            data_m,
-            data_s,
+            indir_m,
+            indir_s,
             xGrid,
             yGrid,
             Dx0,
