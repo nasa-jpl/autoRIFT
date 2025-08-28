@@ -3,7 +3,7 @@
 [![Conda Version](https://img.shields.io/conda/vn/conda-forge/autorift.svg)](https://anaconda.org/conda-forge/autorift)
 [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/autorift.svg)](https://anaconda.org/conda-forge/autorift)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/nasa-jpl/autoRIFT/blob/main/LICENSE)
-[![Citation](https://zenodo.org/badge/433556103.svg)](https://doi.org/10.5281/zenodo.6975251)
+[![Citation](https://zenodo.org/badge/200903796.svg)](https://doi.org/10.5281/zenodo.16989574)
 
 
 A Python module of a fast and intelligent algorithm for finding the pixel displacement between two images that can be used for all dense feature tracking applications, including the measurement of surface displacements occurring between two repeat satellite images as a result of glacier flow, large earthquake displacements, and land slides.
