@@ -1,0 +1,82 @@
+cff-version: 1.2.0
+title: autoRIFT (autonomous Repeat Image Feature Tracking)
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+license: Apache-2.0
+keywords:
+  -  feature tracking
+  -  optical
+  -  radar
+  -  satellite imagery
+  -  surface displacement
+  -  glacier velocity
+  -  earthquake displacement
+  -  landslide
+  -  remote sensing
+  -  ice displacement
+authors:
+  - given-names: Alex
+    family-names: Gardner
+    orcid: 'https://orcid.org/0000-0002-8394-8889'
+    affiliation: >-
+      Jet Propulsion Laboratory,
+      California Institute of Technology,
+      Pasadena, CA 91109, USA
+  - given-names: Joseph
+    name-particle: H
+    family-names: Kennedy
+    orcid: 'https://orcid.org/0000-0002-9348-693X'
+    affiliation: >-
+      Alaska Satellite Facility,
+      Geophysical Institute,
+      University of Alaska Fairbanks,
+      Fairbanks, AK 997775, USA
+  - given-names: Yang
+    family-names: Li
+    orcid: 'https://orcid.org/0000-0002-8377-1980'
+    affiliation: >-
+      Division of Geological and Planetary Sciences,
+      California Institute of Technology,
+      Pasadena, CA 91125, USA
+  - given-names: Piyush
+    family-names: Agram
+    orcid: 'https://orcid.org/0000-0003-0711-0264'
+    affiliation: >-
+      Division of Geological and Planetary Sciences,
+      California Institute of Technology,
+      Pasadena, CA 91125, USA
+  - given-names: Andrew
+    family-names: Player
+    orcid: 'https://orcid.org/0009-0008-9736-7314'
+    affiliation: >-
+      Alaska Satellite Facility,
+      Geophysical Institute,
+      University of Alaska Fairbanks,
+      Fairbanks, AK 997775, USA
+  - given-names: Mario
+    family-names: Angarita
+    orcid: 'https://orcid.org/0000-0001-7455-2455'
+    affiliation: >-
+      Alaska Satellite Facility,
+      Geophysical Institute,
+      University of Alaska Fairbanks,
+      Fairbanks, AK 997775, USA
+  - given-names: Kenneth
+    family-names: Arnoult
+    name-suffix: Jr
+    orcid: 'https://orcid.org/0009-0006-2854-9224'
+    affiliation: >-
+      Alaska Satellite Facility,
+      Geophysical Institute,
+      University of Alaska Fairbanks,
+      Fairbanks, AK 997775, USA
+  - given-names: Forrest
+    family-names: Williams
+    orcid: 'https://orcid.org/0000-0001-8721-6020'
+    affiliation: >-
+      Alaska Satellite Facility,
+      Geophysical Institute,
+      University of Alaska Fairbanks,
+      Fairbanks, AK 997775, USA
