@@ -5,6 +5,17 @@ message: >-
   metadata from this file.
 type: software
 license: Apache-2.0
+keywords:
+  -  feature tracking
+  -  optical
+  -  radar
+  -  satellite imagery
+  -  surface displacement
+  -  glacier velocity
+  -  earthquake displacement
+  -  landslide
+  -  remote sensing
+  -  ice displacement
 authors:
   - given-names: Yang
     family-names: Li
