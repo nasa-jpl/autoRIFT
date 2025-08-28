@@ -17,14 +17,6 @@ keywords:
   -  remote sensing
   -  ice displacement
 authors:
-  - given-names: Yang
-    family-names: Li
-    email: leiyangfrancis@gmail.com
-    orcid: 'https://orcid.org/0000-0002-8377-1980'
-    affiliation: >-
-      Division of Geological and Planetary Sciences,
-      California Institute of Technology,
-      Pasadena, CA 91125, USA
   - given-names: Alex
     family-names: Gardner
     email: alex.s.gardner@jpl.nasa.gov
@@ -33,14 +25,6 @@ authors:
       Jet Propulsion Laboratory,
       California Institute of Technology,
       Pasadena, CA 91109, USA
-  - given-names: Piyush
-    family-names: Agram
-    email: piyush@gps.caltech.edu
-    orcid: 'https://orcid.org/0000-0003-0711-0264'
-    affiliation: >-
-      Division of Geological and Planetary Sciences,
-      California Institute of Technology,
-      Pasadena, CA 91125, USA
   - given-names: Joseph
     name-particle: H
     family-names: Kennedy
@@ -51,18 +35,25 @@ authors:
       Geophysical Institute,
       University of Alaska Fairbanks,
       Fairbanks, AK 997775, USA
+  - given-names: Yang
+    family-names: Li
+    email: leiyangfrancis@gmail.com
+    orcid: 'https://orcid.org/0000-0002-8377-1980'
+    affiliation: >-
+      Division of Geological and Planetary Sciences,
+      California Institute of Technology,
+      Pasadena, CA 91125, USA
+- given-names: Piyush
+    family-names: Agram
+    email: piyush@gps.caltech.edu
+    orcid: 'https://orcid.org/0000-0003-0711-0264'
+    affiliation: >-
+      Division of Geological and Planetary Sciences,
+      California Institute of Technology,
+      Pasadena, CA 91125, USA
   - given-names: Andrew
     family-names: Player
     email: asplayer@alaska.edu
-    affiliation: >-
-      Alaska Satellite Facility,
-      Geophysical Institute,
-      University of Alaska Fairbanks,
-      Fairbanks, AK 997775, USA
-  - given-names: Forrest
-    family-names: Williams
-    email: ffwilliams2@alaska.edu
-    orcid: 'https://orcid.org/0000-0001-8721-6020'
     affiliation: >-
       Alaska Satellite Facility,
       Geophysical Institute,
@@ -82,6 +73,15 @@ authors:
     name-suffix: Jr
     email: kmarnoult@alaska.edu
     orcid: 'https://orcid.org/0009-0006-2854-9224'
+    affiliation: >-
+      Alaska Satellite Facility,
+      Geophysical Institute,
+      University of Alaska Fairbanks,
+      Fairbanks, AK 997775, USA
+  - given-names: Forrest
+    family-names: Williams
+    email: ffwilliams2@alaska.edu
+    orcid: 'https://orcid.org/0000-0001-8721-6020'
     affiliation: >-
       Alaska Satellite Facility,
       Geophysical Institute,
