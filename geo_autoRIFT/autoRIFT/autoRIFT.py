@@ -1062,8 +1062,8 @@ def arImgDisp_u(
     SLy_max = np.max(SearchLimitY + np.abs(Dy0))
     Py = int(np.max(ChipSizeY) / 2 + SLy_max + 2)
 
-    I1 = np.lib.pad(I1, ((Py, Py), (Px, Px)), 'constant')
-    I2 = np.lib.pad(I2, ((Py, Py), (Px, Px)), 'constant')
+    I1 = np.pad(I1, ((Py, Py), (Px, Px)), 'constant')
+    I2 = np.pad(I2, ((Py, Py), (Px, Px)), 'constant')
 
     # adjust center location by the padarray size and 0.5 is added because we need to extract the chip centered at X+1
     # with -chipsize/2:chipsize/2-1, which equivalently centers at X+0.5 (X is the original grid point location). So for
@@ -1230,8 +1230,8 @@ def arImgDisp_s(
     SLy_max = np.max(SearchLimitY + np.abs(Dy0))
     Py = int(np.max(ChipSizeY) / 2 + SLy_max + 2)
 
-    I1 = np.lib.pad(I1, ((Py, Py), (Px, Px)), 'constant')
-    I2 = np.lib.pad(I2, ((Py, Py), (Px, Px)), 'constant')
+    I1 = np.pad(I1, ((Py, Py), (Px, Px)), 'constant')
+    I2 = np.pad(I2, ((Py, Py), (Px, Px)), 'constant')
 
     # adjust center location by the padarray size and 0.5 is added because we need to extract the chip centered at X+1
     # with -chipsize/2:chipsize/2-1, which equivalently centers at X+0.5 (X is the original grid point location). So for
