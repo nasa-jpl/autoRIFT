@@ -43,6 +43,17 @@ find geo_autoRIFT -iname "*.h" -exec clang-format -i {} \;
 find geo_autoRIFT -iname "*.cpp" -exec clang-format -i {} \;
 ```
 
+### (Optional) Development using Docker
+
+A containerized development environment with the necessary dependencies can be created using Docker. The following commands can be used to build the container and enter it:
+
+```
+docker built --rm -t autorift .
+docker run -v .:/project -it autorift /bin/bash
+```
+
+Note that `/project` is the working directory inside the container. The argument `-v .:/project` binds the local source code directory to the live installation inside the container.
+
 ## Usage
 
 > [!WARNING]
