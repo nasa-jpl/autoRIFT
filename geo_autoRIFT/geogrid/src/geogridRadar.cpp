@@ -1036,7 +1036,6 @@ void geoGridRadar::geogridRadar() {
       // Solve the range doppler eqns iteratively
       // Initial guess
       zsch = height;
-      int lookSide = -1;
       for (int kk = 0; kk < 10; kk++) {
         a = satDist;
         b = (radius + zsch);
