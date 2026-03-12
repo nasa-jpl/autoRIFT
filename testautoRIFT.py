@@ -121,20 +121,20 @@ def cmdLineParse():
 
     parser = argparse.ArgumentParser(description='Output geo grid')
     parser.add_argument(
-        '-m',
-        '--input_m',
-        dest='indir_m',
+        '-r',
+        '--input_r',
+        dest='indir_r',
         type=str,
         required=True,
-        help='Input master image file name (in ISCE format and radar coordinates) or Input master image file name (in GeoTIFF format and Cartesian coordinates)',
+        help='Input reference image file name (in ISCE format and radar coordinates) or Input reference image file name (in GeoTIFF format and Cartesian coordinates)',
     )
     parser.add_argument(
-        '-s',
-        '--input_s',
-        dest='indir_s',
+        '-t',
+        '--input_t',
+        dest='indir_t',
         type=str,
         required=True,
-        help='Input slave image file name (in ISCE format and radar coordinates) or Input slave image file name (in GeoTIFF format and Cartesian coordinates)',
+        help='Input test image file name (in ISCE format and radar coordinates) or Input test image file name (in GeoTIFF format and Cartesian coordinates)',
     )
     parser.add_argument(
         '-g', '--input_g', dest='grid_location', type=str, required=False, help='Input pixel indices file name'
@@ -267,8 +267,8 @@ def loadProductOptical(file_m, file_s):
 
 
 def runAutorift(
-    indir_m,
-    indir_s,
+    indir_r,
+    indir_t,
     xGrid,
     yGrid,
     Dx0,
@@ -302,10 +302,10 @@ def runAutorift(
     obj.MultiThread = mpflag
 
     if optflag == 1:
-        obj.I1, obj.I2 = loadProductOptical(indir_m, indir_s)
+        obj.I1, obj.I2 = loadProductOptical(indir_r, indir_t)
     else:
-        obj.I1 = loadProduct(indir_m)
-        obj.I2 = loadProduct(indir_s)
+        obj.I1 = loadProduct(indir_r)
+        obj.I2 = loadProduct(indir_t)
 
     # create the grid if it does not exist
     if xGrid is None:
@@ -521,8 +521,8 @@ def main():
     inps = cmdLineParse()
 
     generateAutoriftProduct(
-        indir_m=inps.indir_m,
-        indir_s=inps.indir_s,
+        indir_r=inps.indir_r,
+        indir_t=inps.indir_t,
         grid_location=inps.grid_location,
         init_offset=inps.init_offset,
         search_range=inps.search_range,
@@ -540,8 +540,8 @@ def main():
 
 
 def generateAutoriftProduct(
-    indir_m,
-    indir_s,
+    indir_r,
+    indir_t,
     grid_location,
     init_offset,
     search_range,
@@ -645,8 +645,8 @@ def generateAutoriftProduct(
             noDataMask,
         ) = no.netCDF_read_intermediate(intermediate_nc_file)
     else:
-        m_name = os.path.basename(indir_m)
-        s_name = os.path.basename(indir_s)
+        m_name = os.path.basename(indir_r)
+        s_name = os.path.basename(indir_t)
 
         # FIXME: Filter width is a magic variable here and not exposed well.
         preprocessing_filter_width = 5
@@ -676,8 +676,8 @@ def generateAutoriftProduct(
             origSize,
             noDataMask,
         ) = runAutorift(
-            indir_m,
-            indir_s,
+            indir_r,
+            indir_t,
             xGrid,
             yGrid,
             Dx0,
@@ -837,7 +837,7 @@ def generateAutoriftProduct(
                     swath_offset_bias_ref = [-0.01, 0.019, -0.0068, 0.006]
 
                     DX, DY, flight_direction_m, flight_direction_s = no.cal_swath_offset_bias(
-                        indir_m,
+                        indir_r,
                         xGrid,
                         yGrid,
                         VX,
@@ -1133,8 +1133,8 @@ def generateAutoriftProduct(
                         YPixelSize = geogrid_run_info['YPixelSize']
                         epsg = geogrid_run_info['epsg']
 
-                    master_path = indir_m
-                    slave_path = indir_s
+                    master_path = indir_r
+                    slave_path = indir_t
 
                     master_filename = os.path.basename(master_path)
                     slave_filename = os.path.basename(slave_path)
@@ -1271,8 +1271,8 @@ def generateAutoriftProduct(
                         YPixelSize = geogrid_run_info['YPixelSize']
                         epsg = geogrid_run_info['epsg']
 
-                    master_path = indir_m
-                    slave_path = indir_s
+                    master_path = indir_r
+                    slave_path = indir_t
 
                     master_split = master_path.split('_')
                     slave_split = slave_path.split('_')
