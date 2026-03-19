@@ -119,9 +119,9 @@ PyObject *arPixDisp_u(PyObject *self, PyObject *args) {
   cv::Mat chip_size_x = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float *>(PyArray_DATA(ChipSizeX)));
   cv::Mat chip_size_y = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float *>(PyArray_DATA(ChipSizeY)));
 
-#pragma omp parallel for collapse(2)
-  for (int j = 0; j < widX; j++) {
-    for (int i = 0; i < lenX; i++) {
+  #pragma omp parallel for schedule(dynamic, 1)
+  for (int i = 0; i < lenX; i++) {
+    for (int j = 0; j < widX; j++) {
       if (search_limit_x.at<float>(i, j) == 0 and search_limit_y.at<float>(i, j) == 0) {
         continue;
       }
@@ -211,9 +211,9 @@ PyObject *arSubPixDisp_u(PyObject *self, PyObject *args) {
   cv::Mat chip_size_x = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float *>(PyArray_DATA(ChipSizeX)));
   cv::Mat chip_size_y = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float *>(PyArray_DATA(ChipSizeY)));
 
-#pragma omp parallel for collapse(2)
-  for (int j = 0; j < widX; j++) {
-    for (int i = 0; i < lenX; i++) {
+  #pragma omp parallel for schedule(dynamic, 1)
+  for (int i = 0; i < lenX; i++) {
+    for (int j = 0; j < widX; j++) {
       if (search_limit_x.at<float>(i, j) == 0 and search_limit_y.at<float>(i, j) == 0) {
         continue;
       }
@@ -333,9 +333,9 @@ PyObject *arPixDisp_s(PyObject *self, PyObject *args) {
   cv::Mat chip_size_x = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float *>(PyArray_DATA(ChipSizeX)));
   cv::Mat chip_size_y = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float *>(PyArray_DATA(ChipSizeY)));
 
-#pragma omp parallel for collapse(2)
-  for (int j = 0; j < widX; j++) {
-    for (int i = 0; i < lenX; i++) {
+  #pragma omp parallel for schedule(dynamic, 1)
+  for (int i = 0; i < lenX; i++) {
+    for (int j = 0; j < widX; j++) {
       if (search_limit_x.at<float>(i, j) == 0 and search_limit_y.at<float>(i, j) == 0) {
         continue;
       }
@@ -425,9 +425,10 @@ PyObject *arSubPixDisp_s(PyObject *self, PyObject *args) {
   cv::Mat chip_size_x = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float *>(PyArray_DATA(ChipSizeX)));
   cv::Mat chip_size_y = cv::Mat(cv::Size(widX, lenX), CV_32FC1, reinterpret_cast<float *>(PyArray_DATA(ChipSizeY)));
 
-#pragma omp parallel for collapse(2)
-  for (int j = 0; j < widX; j++) {
-    for (int i = 0; i < lenX; i++) {
+
+  #pragma omp parallel for schedule(dynamic, 1)
+  for (int i = 0; i < lenX; i++) {
+    for (int j = 0; j < widX; j++) {
       if (search_limit_x.at<float>(i, j) == 0 and search_limit_y.at<float>(i, j) == 0) {
         continue;
       }
