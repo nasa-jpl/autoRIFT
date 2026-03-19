@@ -44,20 +44,20 @@ def cmdLineParse():
     """
     parser = argparse.ArgumentParser(description='Output geo grid')
     parser.add_argument(
-        '-m',
-        '--input_m',
-        dest='indir_m',
+        '-r',
+        '--input_r',
+        dest='indir_r',
         type=str,
         required=True,
-        help='Input master image file name (in GeoTIFF format and Cartesian coordinates)',
+        help='Input reference image file name (in GeoTIFF format and Cartesian coordinates)',
     )
     parser.add_argument(
-        '-s',
-        '--input_s',
-        dest='indir_s',
+        '-t',
+        '--input_t',
+        dest='indir_t',
         type=str,
         required=True,
-        help='Input slave image file name (in GeoTIFF format and Cartesian coordinates)',
+        help='Input test image file name (in GeoTIFF format and Cartesian coordinates)',
     )
     parser.add_argument('-d', '--dem', dest='demfile', type=str, required=True, help='Input DEM')
     parser.add_argument('-sx', '--dhdx', dest='dhdxfile', type=str, default='', help='Input slope in X')
@@ -214,16 +214,16 @@ def loadMetadataSlc(safe, orbit_path, buffer=0, swaths=None, slc_shape=None):
     return info
 
 
-def coregisterLoadMetadata(indir_m, indir_s):
+def coregisterLoadMetadata(indir_r, indir_t):
     """
     Input file.
     """
 
     obj = GeogridOptical()
 
-    x1a, y1a, xsize1, ysize1, x2a, y2a, xsize2, ysize2, trans = obj.coregister(indir_m, indir_s)
+    x1a, y1a, xsize1, ysize1, x2a, y2a, xsize2, ysize2, trans = obj.coregister(indir_r, indir_t)
 
-    DS = gdal.Open(indir_m, gdal.GA_ReadOnly)
+    DS = gdal.Open(indir_r, gdal.GA_ReadOnly)
 
     info = Dummy()
     info.startingX = trans[0]
@@ -248,9 +248,9 @@ def coregisterLoadMetadata(indir_m, indir_s):
     info.numberOfLines = ysize1
     info.numberOfSamples = xsize1
 
-    info.filename = indir_m
+    info.filename = indir_r
 
-    DS1 = gdal.Open(indir_s, gdal.GA_ReadOnly)
+    DS1 = gdal.Open(indir_t, gdal.GA_ReadOnly)
 
     info1 = Dummy()
 
@@ -429,7 +429,7 @@ def main():
 
     inps = cmdLineParse()
 
-    metadata_m, metadata_s = coregisterLoadMetadata(inps.indir_m, inps.indir_s)
+    metadata_m, metadata_s = coregisterLoadMetadata(inps.indir_r, inps.indir_t)
 
     runGeogrid(
         metadata_m,
