@@ -748,24 +748,47 @@ def generateAutoriftProduct(
     if grid_location is not None:
         t1 = time.time()
         print('Write Outputs Start!!!')
+        out_width = int(xGrid.shape[1])
+        out_height = int(xGrid.shape[0])
+        out_tran = tran
+        out_proj = proj
+        out_dx = DX
+        out_dy = DY
+        out_interp = INTERPMASK
+        out_chip = CHIPSIZEX
+    elif Dx is not None and Dx.size > 0:
+        # Regular image grid (demo 5.1): offset.tif was skipped when -g is omitted (#110)
+        t1 = time.time()
+        print('Write Outputs Start!!!')
+        out_width = int(Dx.shape[1])
+        out_height = int(Dx.shape[0])
+        out_tran = (0, 1, 0, 0, 0, -1)
+        out_proj = ''
+        out_dx = Dx
+        out_dy = Dy
+        out_interp = InterpMask
+        out_chip = ChipSizeX
+    else:
+        out_width = None
 
+    if out_width is not None:
         # Create the GeoTiff
         driver = gdal.GetDriverByName('GTiff')
 
-        outRaster = driver.Create('offset.tif', int(xGrid.shape[1]), int(xGrid.shape[0]), 4, gdal.GDT_Float32)
-        outRaster.SetGeoTransform(tran)
-        outRaster.SetProjection(proj)
+        outRaster = driver.Create('offset.tif', out_width, out_height, 4, gdal.GDT_Float32)
+        outRaster.SetGeoTransform(out_tran)
+        outRaster.SetProjection(out_proj)
         outband = outRaster.GetRasterBand(1)
-        outband.WriteArray(DX)
+        outband.WriteArray(out_dx)
         outband.FlushCache()
         outband = outRaster.GetRasterBand(2)
-        outband.WriteArray(DY)
+        outband.WriteArray(out_dy)
         outband.FlushCache()
         outband = outRaster.GetRasterBand(3)
-        outband.WriteArray(INTERPMASK)
+        outband.WriteArray(out_interp)
         outband.FlushCache()
         outband = outRaster.GetRasterBand(4)
-        outband.WriteArray(CHIPSIZEX)
+        outband.WriteArray(out_chip)
         outband.FlushCache()
         del outRaster
 
