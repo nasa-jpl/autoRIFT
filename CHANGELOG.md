@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- `testautoRIFT.py` writes `offset.tif` for the regular image-grid workflow (`-fo 1` without `-g`), matching `docs/demo.md` section 5.1 ([#110](https://github.com/nasa-jpl/autoRIFT/issues/110)).
+
 ## [2.1.2]
 
 ### Fixed
