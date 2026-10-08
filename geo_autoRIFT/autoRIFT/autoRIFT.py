@@ -668,6 +668,7 @@ class autoRIFT:
                     Dy0C.copy(),
                     SubPixFlag,
                     overSampleRatio,
+                    self.MinChipValidFraction,
                 )
             elif self.I1.dtype == np.float32:
                 DxC, DyC = arImgDisp_s(
@@ -683,6 +684,7 @@ class autoRIFT:
                     Dy0C.copy(),
                     SubPixFlag,
                     overSampleRatio,
+                    self.MinChipValidFraction,
                 )
             else:
                 sys.exit('invalid data type for the image pair which must be unsigned integer 8 or 32-bit float')
@@ -742,6 +744,7 @@ class autoRIFT:
                     Dy00.copy(),
                     SubPixFlag,
                     overSampleRatio,
+                    self.MinChipValidFraction,
                 )
             elif self.I1.dtype == np.float32:
                 DxF, DyF = arImgDisp_s(
@@ -757,6 +760,7 @@ class autoRIFT:
                     Dy00.copy(),
                     SubPixFlag,
                     overSampleRatio,
+                    self.MinChipValidFraction,
                 )
             else:
                 sys.exit('invalid data type for the image pair which must be unsigned integer 8 or 32-bit float')
@@ -953,6 +957,8 @@ class autoRIFT:
         self.colfiltChunkSize = 4
         self.BuffDistanceC = 8
         self.CoarseCorCutoff = 0.01
+        # A chip is searched only if more than this fraction of it is nonzero; nodata is zero.
+        self.MinChipValidFraction = 0.65
         self.OverSampleRatio = 16
         self.DataType = 0
         self.MultiThread = 0
@@ -993,6 +999,7 @@ def arImgDisp_u(
     Dy0,
     SubPixFlag,
     oversample,
+    min_valid_fraction,
 ):
     import numpy as np
     from . import autoriftcore
@@ -1100,6 +1107,7 @@ def arImgDisp_u(
                 Dy.ravel(),
                 Dx0.ravel(),
                 Dy0.ravel(),
+                min_valid_fraction,
             )
         )
     else:
@@ -1127,6 +1135,7 @@ def arImgDisp_u(
                 Dx0.ravel(),
                 Dy0.ravel(),
                 oversample,
+                min_valid_fraction,
             )
         )
 
@@ -1161,6 +1170,7 @@ def arImgDisp_s(
     Dy0,
     SubPixFlag,
     oversample,
+    min_valid_fraction,
 ):
     import numpy as np
     from . import autoriftcore
@@ -1268,6 +1278,7 @@ def arImgDisp_s(
                 Dy.ravel(),
                 Dx0.ravel(),
                 Dy0.ravel(),
+                min_valid_fraction,
             )
         )
     else:
@@ -1295,6 +1306,7 @@ def arImgDisp_s(
                 Dx0.ravel(),
                 Dy0.ravel(),
                 oversample,
+                min_valid_fraction,
             )
         )
 

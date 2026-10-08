@@ -327,13 +327,13 @@ def runAutorift(
     #        and prevents autoRIFT from looking at large parts of the images, but untangling the logic here
     #        has proved too difficult, so lets just turn it off if `wallis_fill` preprocessing is going to be used.
     # generate the nodata mask where offset searching will be skipped based on 1) imported nodata mask and/or 2) zero values in the image
+    zero_mask = None
     if 'wallis_fill' not in preprocessing_methods:
+        zero_mask = np.isclose(obj.I1, 0.0) | np.isclose(obj.I2, 0.0)
         for ii in range(obj.xGrid.shape[0]):
             for jj in range(obj.xGrid.shape[1]):
                 if (obj.yGrid[ii, jj] != nodata) & (obj.xGrid[ii, jj] != nodata):
-                    if (obj.I1[obj.yGrid[ii, jj] - 1, obj.xGrid[ii, jj] - 1] == 0) | (
-                        obj.I2[obj.yGrid[ii, jj] - 1, obj.xGrid[ii, jj] - 1] == 0
-                    ):
+                    if zero_mask[obj.yGrid[ii, jj] - 1, obj.xGrid[ii, jj] - 1]:
                         noDataMask[ii, jj] = True
 
     # mask out nodata to skip the offset searching using the nodata mask (by setting SearchLimit to be 0)
@@ -407,6 +407,9 @@ def runAutorift(
     print('Pre-process Start!!!')
     print(f'Using Wallis Filter Width: {obj.WallisFilterWidth}')
 
+    # Pixels set back to zero after the uint8 conversion below; the Wallis filters replace this with their own mask.
+    obj.zeroMask = zero_mask
+
     # TODO: Allow different filters to be applied images independently
     # default to most stringent filtering
     if 'wallis_fill' in preprocessing_methods:
@@ -432,25 +435,19 @@ def runAutorift(
 
     t1 = time.time()
 
-    if obj.zeroMask is not None:
-        validData = np.isfinite(obj.I1)
-        S1 = np.std(obj.I1[validData]) * np.sqrt(obj.I1[validData].size / (obj.I1[validData].size - 1.0))
-        M1 = np.mean(obj.I1[validData])
-    else:
-        S1 = np.std(obj.I1) * np.sqrt(obj.I1.size / (obj.I1.size - 1.0))
-        M1 = np.mean(obj.I1)
+    validData = obj.I1[np.isfinite(obj.I1)]
+    S1 = np.std(validData) * np.sqrt(validData.size / (validData.size - 1.0))
+    M1 = np.mean(validData)
+    del validData
 
     obj.I1 = (obj.I1 - (M1 - 3 * S1)) / (6 * S1) * (2**8 - 0)
     del S1, M1
     obj.I1 = np.round(np.clip(obj.I1, 0, 255)).astype(np.uint8)
 
-    if obj.zeroMask is not None:
-        validData = np.isfinite(obj.I2)
-        S2 = np.std(obj.I2[validData]) * np.sqrt(obj.I2[validData].size / (obj.I2[validData].size - 1.0))
-        M2 = np.mean(obj.I2[validData])
-    else:
-        S2 = np.std(obj.I2) * np.sqrt(obj.I2.size / (obj.I2.size - 1.0))
-        M2 = np.mean(obj.I2)
+    validData = obj.I2[np.isfinite(obj.I2)]
+    S2 = np.std(validData) * np.sqrt(validData.size / (validData.size - 1.0))
+    M2 = np.mean(validData)
+    del validData
 
     obj.I2 = (obj.I2 - (M2 - 3 * S2)) / (6 * S2) * (2**8 - 0)
     del S2, M2

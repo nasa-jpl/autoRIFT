@@ -97,10 +97,11 @@ PyObject *arPixDisp_u(PyObject *self, PyObject *args) {
   int widY, lenY;
   int widC, lenC;
   int widR, lenR;
+  float min_valid_fraction;
 
-  if (!PyArg_ParseTuple(args, "KiiOiiOiiOiiOOOOOOOOO", &ptr, &widC, &lenC, &I1, &widR, &lenR, &I2, &widX, &lenX, &xGrid,
-                        &widY, &lenY, &yGrid, &SearchLimitX, &SearchLimitY, &ChipSizeX, &ChipSizeY, &Dx, &Dy, &Dx0,
-                        &Dy0)) {
+  if (!PyArg_ParseTuple(args, "KiiOiiOiiOiiOOOOOOOOOf", &ptr, &widC, &lenC, &I1, &widR, &lenR, &I2, &widX, &lenX,
+                        &xGrid, &widY, &lenY, &yGrid, &SearchLimitX, &SearchLimitY, &ChipSizeX, &ChipSizeY, &Dx, &Dy,
+                        &Dx0, &Dy0, &min_valid_fraction)) {
     return NULL;
   }
 
@@ -144,6 +145,11 @@ PyObject *arPixDisp_u(PyObject *self, PyObject *args) {
       cv::Range search_y_range = cv::Range(search_y_start, search_y_end);
 
       cv::Mat chip = sec_img(chip_y_range, chip_x_range);
+      // Skip a chip that is mostly nodata, which reads as zero.
+      if (cv::countNonZero(chip) <= min_valid_fraction * chip.total()) {
+        continue;
+      }
+
       cv::Mat ref = ref_img(search_y_range, search_x_range);
 
       cv::Point ref_min_loc;
@@ -188,11 +194,12 @@ PyObject *arSubPixDisp_u(PyObject *self, PyObject *args) {
   int widY, lenY;
   int widC, lenC;
   int widR, lenR;
+  float min_valid_fraction;
   int overSampleNC;
 
-  if (!PyArg_ParseTuple(args, "KiiOiiOiiOiiOOOOOOOOOi", &ptr, &widC, &lenC, &I1, &widR, &lenR, &I2, &widX, &lenX,
+  if (!PyArg_ParseTuple(args, "KiiOiiOiiOiiOOOOOOOOOif", &ptr, &widC, &lenC, &I1, &widR, &lenR, &I2, &widX, &lenX,
                         &xGrid, &widY, &lenY, &yGrid, &SearchLimitX, &SearchLimitY, &ChipSizeX, &ChipSizeY, &Dx, &Dy,
-                        &Dx0, &Dy0, &overSampleNC)) {
+                        &Dx0, &Dy0, &overSampleNC, &min_valid_fraction)) {
     return NULL;
   }
 
@@ -236,6 +243,11 @@ PyObject *arSubPixDisp_u(PyObject *self, PyObject *args) {
       cv::Range search_y_range = cv::Range(search_y_start, search_y_end);
 
       cv::Mat chip = sec_img(chip_y_range, chip_x_range).clone();
+      // Skip a chip that is mostly nodata, which reads as zero.
+      if (cv::countNonZero(chip) <= min_valid_fraction * chip.total()) {
+        continue;
+      }
+
       cv::Mat ref = ref_img(search_y_range, search_x_range).clone();
 
       cv::Point ref_min_loc;
@@ -311,10 +323,11 @@ PyObject *arPixDisp_s(PyObject *self, PyObject *args) {
   int widY, lenY;
   int widC, lenC;
   int widR, lenR;
+  float min_valid_fraction;
 
-  if (!PyArg_ParseTuple(args, "KiiOiiOiiOiiOOOOOOOOO", &ptr, &widC, &lenC, &I1, &widR, &lenR, &I2, &widX, &lenX, &xGrid,
-                        &widY, &lenY, &yGrid, &SearchLimitX, &SearchLimitY, &ChipSizeX, &ChipSizeY, &Dx, &Dy, &Dx0,
-                        &Dy0)) {
+  if (!PyArg_ParseTuple(args, "KiiOiiOiiOiiOOOOOOOOOf", &ptr, &widC, &lenC, &I1, &widR, &lenR, &I2, &widX, &lenX,
+                        &xGrid, &widY, &lenY, &yGrid, &SearchLimitX, &SearchLimitY, &ChipSizeX, &ChipSizeY, &Dx, &Dy,
+                        &Dx0, &Dy0, &min_valid_fraction)) {
     return NULL;
   }
 
@@ -358,6 +371,11 @@ PyObject *arPixDisp_s(PyObject *self, PyObject *args) {
       cv::Range search_y_range = cv::Range(search_y_start, search_y_end);
 
       cv::Mat chip = sec_img(chip_y_range, chip_x_range).clone();
+      // Skip a chip that is mostly nodata, which reads as zero.
+      if (cv::countNonZero(chip) <= min_valid_fraction * chip.total()) {
+        continue;
+      }
+
       cv::Mat ref = ref_img(search_y_range, search_x_range).clone();
 
       cv::Point ref_min_loc;
@@ -402,11 +420,12 @@ PyObject *arSubPixDisp_s(PyObject *self, PyObject *args) {
   int widY, lenY;
   int widC, lenC;
   int widR, lenR;
+  float min_valid_fraction;
   int overSampleNC;
 
-  if (!PyArg_ParseTuple(args, "KiiOiiOiiOiiOOOOOOOOOi", &ptr, &widC, &lenC, &I1, &widR, &lenR, &I2, &widX, &lenX,
+  if (!PyArg_ParseTuple(args, "KiiOiiOiiOiiOOOOOOOOOif", &ptr, &widC, &lenC, &I1, &widR, &lenR, &I2, &widX, &lenX,
                         &xGrid, &widY, &lenY, &yGrid, &SearchLimitX, &SearchLimitY, &ChipSizeX, &ChipSizeY, &Dx, &Dy,
-                        &Dx0, &Dy0, &overSampleNC)) {
+                        &Dx0, &Dy0, &overSampleNC, &min_valid_fraction)) {
     return NULL;
   }
 
@@ -451,6 +470,11 @@ PyObject *arSubPixDisp_s(PyObject *self, PyObject *args) {
       cv::Range search_y_range = cv::Range(search_y_start, search_y_end);
 
       cv::Mat chip = sec_img(chip_y_range, chip_x_range).clone();
+      // Skip a chip that is mostly nodata, which reads as zero.
+      if (cv::countNonZero(chip) <= min_valid_fraction * chip.total()) {
+        continue;
+      }
+
       cv::Mat ref = ref_img(search_y_range, search_x_range).clone();
 
       cv::Point ref_min_loc;

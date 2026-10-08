@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0]
+
+### Added
+- `autoRIFT.MinChipValidFraction` (default `0.65`): a grid point is searched only if more than this fraction of its chip is nonzero, so a chip that is mostly nodata no longer returns an offset.
+
+### Fixed
+- `testautoRIFT.py` now sets nodata back to zero after the uint8 conversion for every preprocessing method, not only the Wallis filters, and finds zeros with `np.isclose`.
+
 ## [2.1.2]
 
 ### Fixed
